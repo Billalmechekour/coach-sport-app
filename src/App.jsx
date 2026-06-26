@@ -1,0 +1,14493 @@
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import coachHero from "./assets/images/hicham-hero-v2.jpg";
+import coachHeroAlt from "./assets/images/image hci.jpeg";
+import transfo1 from "./assets/transfo-1.svg";
+import transfo2 from "./assets/transfo-2.svg";
+import transfo3 from "./assets/transfo-3.svg";
+import coachingIlage from "./assets/certifications/coaching-ilage.jpg";
+import ifbbDiploma from "./assets/certifications/diplome-ifbb.jpeg";
+import ifbbCard from "./assets/certifications/carte-ifbb.jpeg";
+import mmImage from "./assets/certifications/mm.jpg";
+import hmLogo from "./assets/images/logo-trident.png";
+
+const portfolioData = {
+  fr: {
+    nav: {
+      coachLabel: "Réveille ton instinct sportif",
+      services: "Services",
+      certifications: "Certifications",
+      experiences: "Experiences",
+      results: "Resultats",
+      contact: "Contact",
+      reserve: "Reserver",
+      viewCv: "Consulter CV",
+      downloadCv: "Telecharger CV"
+    },
+    controls: {
+      lightMode: "Clair",
+      darkMode: "Nuit"
+    },
+    hero: {
+      chip: "Coaching premium",
+      line1: "Transforme ton corps.",
+      line2: "Garde des resultats durables.",
+      description:
+        "J'aide les personnes actives a perdre du gras, gagner en energie et retrouver confiance grace a un coaching structure, humain et oriente resultats.",
+      primaryCta: "Écrivez votre avis",
+      secondaryCta: "Voir les transformations",
+      downloadCvCta: "Telecharger le CV"
+    },
+    stats: [
+      { value: "12 ans", labelLines: ["D'EXPERIENCE"] },
+      { value: "+50", labelLines: ["CLIENTS", "ACCOMPAGNES"] },
+      { value: "4.9/5", labelLines: ["SATISFACTION", "MOYENNE"] }
+    ],
+    servicesSection: {
+      chip: "Accompagnement",
+      title: "Services",
+      subtitle: "Une methode claire pour progresser rapidement sans regime extreme ni entrainement inutile."
+    },
+    services: [
+      {
+        title: "Coaching personnalise",
+        description: "Programme d'entrainement adapte a votre morphologie. Analyse morpho-anatomique.",
+        icon: "01"
+      },
+      {
+        title: "Nutrition",
+        description: "Nutrition sportive et therapeutique avec un suivi personnalise.",
+        icon: "02"
+      },
+      {
+        title: "Suivi continu",
+        description:
+          "Suivi continu avec ajustements strategiques, bilans reguliers et accompagnement motive vers des resultats significatifs.",
+        icon: "03"
+      }
+    ],
+    certificationsSection: {
+      chip: "Formation",
+      title: "Diplomes et Certifications",
+      subtitle: "Des certifications solides pour garantir un accompagnement professionnel et securise."
+    },
+    certifications: [
+      {
+        title: "Certificat d'entraineur personnel",
+        organization: "IFBB Academy",
+        dateLocation: "Juillet 2024, Tunisie",
+        serial: "C / 52609",
+        sliderImages: [ifbbDiploma, ifbbCard],
+        imagePosition: "right",
+        details: ["Certifie Personal Trainer avec accreditation IFBB.", "Numero de serie: C / 52609."]
+      },
+      {
+        title: "Fitness et Bodybuilding Coach Diploma",
+        organization: "BYB Training Company LTD",
+        dateLocation: "Juin 2023, Batna (Algerie)",
+        serial: "11005",
+        image: coachingIlage,
+        imagePosition: "left",
+        details: [
+          "Diplome de Fitness et Bodybuilding Coach par BYB Training Company LTD.",
+          "Numero de serie: 11005."
+        ]
+      },
+      {
+        title: "Certificat en Communication Effective",
+        organization: "Algerian Global Company for Training",
+        dateLocation: "Juin 2023, Batna (Algerie)",
+        image: mmImage,
+        imagePosition: "right",
+        details: [
+          "Comprendre les besoins des clients et les orienter.",
+          "Simplifier l'explication des exercices et techniques d'entrainement."
+        ]
+      }
+    ],
+    experiencesSection: {
+      chip: "Parcours",
+      title: "Experiences",
+      subtitle: "Experience terrain en coaching, management de salle et competition sportive."
+    },
+    experiences: [
+      {
+        role: "Coach de Fitness et Bodybuilding",
+        company: "Spartan Athletic Club",
+        dateLocation: "Nov 2022 - Juil 2023, Seddouk (Algerie)",
+        points: [
+          "Coach de fitness et bodybuilding dans ma salle.",
+          "Personnalisation des programmes d'entrainement et de nutrition."
+        ]
+      },
+      {
+        role: "Gerant de Salle de Sport",
+        company: "Spartan Athletic Club",
+        dateLocation: "Nov 2022 - Juil 2023, Seddouk (Algerie)",
+        points: [
+          "Management de toutes les sessions d'entrainement dans ma salle.",
+          "Securite des clients et maintien des equipements et machines."
+        ]
+      },
+      {
+        role: "Athlete Competitif",
+        company: "Competition regionale",
+        dateLocation: "22 Fev 2022, Bejaia (Algerie)",
+        points: ["Participation au championnat regional categorie Men's Physique."]
+      },
+      {
+        role: "Coach en Salle de Sport",
+        company: "Gym Bodysam",
+        dateLocation: "Jan 2018 - Jan 2019, Seddouk (Algerie)",
+        points: ["Coaching et orientation en Fitness et Bodybuilding."]
+      }
+    ],
+    aboutSection: {
+      chip: "Identite",
+      title: "A propos",
+      subtitle: "Une vision claire, une methode personnalisee et un accompagnement humain.",
+      missionTitle: "Mission",
+      missionText:
+        "Je suis Hicham Mechekour, coach sportif certifie. Ma mission est de rendre le fitness accessible, efficace et durable pour chaque client.",
+      approachTitle: "Approche",
+      approachText:
+        "Un plan d'entrainement intelligent, une nutrition flexible et une discipline progressive, ajustes selon ton niveau et ton mode de vie.",
+      objectiveTitle: "Objectif",
+      objectiveText:
+        "Construire une progression stable, visible et durable grace a un suivi humain et des ajustements hebdomadaires."
+    },
+    resultsSection: {
+      chip: "Transformation",
+      title: "Resultats clients",
+      subtitle: "Des progres concrets sur la perte de gras, la prise de muscle et la performance.",
+      witnessPrefix: "Temoignage de"
+    },
+    results: [
+      { name: "Yassine", detail: "-8kg en 12 semaines", image: transfo1 },
+      { name: "Nadia", detail: "+4kg de masse musculaire", image: transfo2 },
+      { name: "Karim", detail: "Semi-marathon termine", image: transfo3 }
+    ],
+    contact: {
+      chip: "Passe a l'action",
+      title: "Ecrivez votre avis",
+      subtitle: "Mets une note et partage ton ressenti directement.",
+      fields: {
+        nom: "Nom",
+        prenom: "Prenom",
+        message: "Message",
+        nomPlaceholder: "Votre nom",
+        prenomPlaceholder: "Votre prenom",
+        messagePlaceholder: "Partage ton experience avec le coaching, tes resultats ou ton ressenti."
+      },
+      ratingLabel: "Rating sur 5",
+      ratingAction: "Donner",
+      submit: "Partager mon avis",
+      submitEdit: "Enregistrer la modification",
+      reviewsTitle: "Avis des athletes",
+      reviewsSubtitle: "",
+      reviewAccountLabel: "Avis publie avec ton compte",
+      reviewAccountRequired: "Compte requis",
+      singleReviewNote: "Tu peux partager un seul avis. Ensuite, tu peux le modifier ou le supprimer depuis ta carte.",
+      reviewEdit: "Modifier",
+      reviewDelete: "Supprimer",
+      viewMyReview: "Voir mon avis",
+      reviewsPrevious: "Precedent",
+      reviewsNext: "Suivant",
+      socialTitle: "Reseaux et contact",
+      backTop: "Revenir en haut",
+      feedbackRequired: "Merci d'ajouter une note et ton commentaire.",
+      feedbackLength: "Le commentaire doit contenir entre 10 et 200 caracteres.",
+      feedbackSuccess: "Avis partagé avec succès.",
+      feedbackEditSuccess: "Avis modifié avec succès.",
+      feedbackDeleteSuccess: "Avis supprimé avec succès.",
+      loginRequired: "Connecte-toi à ton compte pour partager ton avis",
+      auth: {
+        title: "Application Hicham-fit",
+        subtitle: "Cree un compte ou connecte-toi pour acceder a ton espace",
+        loginTab: "Connexion",
+        registerTab: "Creer un compte",
+        accessSpace: "Accéder à mon espace",
+        accessAthleteSpace: "Accéder à mon espace athlète",
+        firstName: "Prenom",
+        lastName: "Nom",
+        birthDate: "Date de naissance",
+        sex: "Sexe",
+        country: "Pays de residence",
+        email: "Email",
+        password: "Mot de passe",
+        confirmPassword: "Confirmer le mot de passe",
+        firstNamePlaceholder: "Votre prenom",
+        lastNamePlaceholder: "Votre nom",
+        birthDatePlaceholder: "Selectionner la date",
+        sexPlaceholder: "Choisir le sexe",
+        countryPlaceholder: "Choisir le pays de residence",
+        sexOptions: {
+          male: "Homme",
+          female: "Femme"
+        },
+        signupSteps: {
+          personal: "Informations personnelles",
+          connection: "Informations de connexion",
+          next: "Continuer",
+          back: "Retour",
+          complete: "Termine",
+          active: "En cours",
+          step: "Etape"
+        },
+        emailPlaceholder: "votre@email.com",
+        passwordPlaceholder: "******",
+        confirmPasswordPlaceholder: "Retapez le mot de passe",
+        forgotPassword: "Mot de passe oublie ?",
+        forgotPasswordInfo: "Code de reinitialisation envoye. Consulte ta boite mail puis saisis le code recu.",
+        forgotPasswordFillEmail: "Entre ton adresse email pour recevoir le code de reinitialisation.",
+        accountNotFound: "Ce compte n'existe pas avec cette adresse mail.",
+        loginButton: "Se connecter",
+        registerButton: "Creer mon compte",
+        resetButton: "Mettre a jour le mot de passe",
+        logoutButton: "Se deconnecter",
+        resetCodeTab: "Code de verification",
+        resetCodeSubtitle: "Saisis le code recu par email pour acceder a la reinitialisation de ton mot de passe.",
+        resetCodeLabel: "Code recu par email",
+        resetCodePlaceholder: "Exemple : A1b2C3",
+        resetCodeButton: "Verifier le code",
+        resetCodeCopied: "Code copie.",
+        resetCodeCopyBlocked: "Le code est rempli. Si la copie est bloquee par le navigateur, selectionne-le manuellement.",
+        resendCodeButton: "Renvoyer le code",
+        resendCodeWait: "Tu pourras renvoyer un code dans",
+        resetCodeRetryWait: "Un code est deja actif. Tu peux reessayer apres",
+        resetCodeCountdown: "Code valide pendant",
+        resetCodeRequired: "Entre le code recu dans ton email.",
+        resetCodeInvalid: "Code invalide. Le code doit contenir exactement 6 caracteres alphanumeriques.",
+        resetCodeExpired: "Le code de reinitialisation a expire. Clique sur Renvoyer le code.",
+        resetTab: "Nouveau mot de passe",
+        resetSubtitle: "Definis un nouveau mot de passe pour recuperer l'acces a ton compte.",
+        resetExpiresNotice: "Cette page est valide pendant 3 minutes.",
+        resetExpiresCountdown: "Temps restant",
+        connectedAs: "Connecte en tant que",
+        statusReady: "Compte actif dans l'application.",
+        fillAll: "Merci de remplir tous les champs.",
+        ageRestriction: "Vous devez avoir 18 ans ou plus pour utiliser cette application.",
+        invalidEmail: "Adresse email invalide.",
+        passwordShort: "Le mot de passe ne respecte pas encore toutes les conditions.",
+        passwordRule: "Mot de passe securise : respecte toutes les conditions ci-dessous.",
+        passwordStrongRequired: "Le mot de passe doit respecter toutes les conditions indiquees.",
+        passwordRequirements: {
+          minLength: "Au moins 12 caracteres",
+          lowercase: "Au moins une lettre minuscule : a-z",
+          uppercase: "Au moins une lettre majuscule : A-Z",
+          digit: "Au moins un chiffre : 0-9",
+          symbol: "Au moins un symbole autorise : ! @ # $ % & * _ - ? ."
+        },
+        passwordMismatch: "Les mots de passe ne correspondent pas.",
+        userExists: "Un compte existe deja avec cette adresse mail.",
+        invalidCredentials: "Email ou mot de passe incorrect.",
+        networkError: "Le service ne répond pas pour le moment. Réessaie dans un instant.",
+        emailNotConfirmed: "Confirme ton email via le lien recu, puis connecte-toi.",
+        emailRateLimit: "Trop de tentatives. Attends 60 secondes puis reessaie.",
+        confirmEmailRequired:
+          "Activation email desactivee dans Supabase. Active Confirm email pour envoyer automatiquement le lien.",
+        supabaseConfigMissing: "Configuration serveur manquante (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY).",
+        loginSuccess: "Connexion reussie.",
+        registerSuccess: "Email de confirmation envoye. Clique sur le lien recu pour creer et activer ton compte.",
+        signupConfirmInvalid: "Le lien de confirmation est invalide ou deja utilise.",
+        signupConfirmExpired: "Le lien de confirmation a expire. Cree un nouveau compte.",
+        resetSuccess: "Mot de passe mis a jour. Connecte-toi avec ton nouveau mot de passe.",
+        logoutSuccess: "Vous etes deconnecte.",
+        accountCreatedTitle: "Compte cree avec succes",
+        accountCreatedSubtitle: "Ton email est confirme. Tu peux maintenant te connecter a ton espace.",
+        accountCreatedAction: "Continuer",
+        accountReadyLogin: "Vous pouvez acceder a votre espace personnel.",
+        mailboxPromptTitle: "Consulte ta boite mail",
+        mailboxPromptSubtitle: "Pour activer ton compte, confirme ton email depuis le lien recu.",
+        resetMailboxSubtitle: "Pour reinitialiser ton mot de passe, consulte ton email puis saisis le code recu.",
+        mailboxPromptAction: "Acceder a ma boite email",
+        mailboxPromptBack: "Aller a la connexion",
+        resetLinkInvalid: "Le lien de reinitialisation est invalide. Demande un nouveau lien.",
+        resetLinkExpired: "Le lien de reinitialisation a expire. Demande un nouveau lien."
+      },
+      labels: {
+        serial: "Serie",
+        facebook: "Facebook",
+        tiktok: "TikTok",
+        instagram: "Instagram",
+        whatsapp: "WhatsApp",
+        email: "Email"
+      }
+    },
+    sportsProfile: {
+      title: "Completer mon profil sportif",
+      subtitle: "Ces informations permettent de preparer un accompagnement adapte.",
+      physicalTitle: "1. Informations physiques",
+      sportTitle: "3. Informations sportives",
+      supplementsTitle: "2. Complements alimentaires",
+      healthTitle: "4. Blessures et informations medicales",
+      required: "Obligatoire",
+      optional: "Optionnel",
+      heightCm: "Taille en cm",
+      currentWeightKg: "Poids actuel en kg",
+      sportPracticed: "Sport pratique",
+      sportLevel: "Niveau sportif",
+      sportGoal: "Objectif principal",
+      sportGoalCustom: "Precise ton objectif",
+      sessionsPerWeek: "Nombre de seances par semaine",
+      noSport: "Aucun sport pratique",
+      addSport: "Ajouter un sport",
+      removeSport: "Supprimer",
+      sportNumber: "Sport",
+      noSupplement: "Aucun complement alimentaire",
+      noInjury: "Aucune blessure",
+      noMedicalInformation: "Aucune information medicale",
+      supplementNumber: "Complement",
+      addSupplement: "Ajouter un complement",
+      removeSupplement: "Supprimer",
+      supplementName: "Nom du complement",
+      supplementDose: "Dose / Quantite",
+      supplementUnit: "Unite",
+      supplementFrequency: "Frequence",
+      supplementTiming: "Moment de prise",
+      supplementCategory: "Categorie",
+      supplementStartDate: "Date de debut",
+      supplementStatus: "Statut",
+      supplementStatusHelp: {
+        title: "Signification du statut",
+        ongoing: "En cours : vous utilisez encore ce complement actuellement.",
+        stopped: "Arrete : vous n'utilisez plus ce complement actuellement."
+      },
+      supplementCustomValue: "Precise",
+      supplementRemark: "Remarque",
+      supplementRemarkPlaceholder: "Exemple : a prendre avec de l’eau, apres le repas ...",
+      injuries: "Blessures",
+      injuryNumber: "Blessure",
+      addInjury: "Ajouter une blessure",
+      removeInjury: "Supprimer",
+      injuryZone: "Zone concernee",
+      injuryStartDate: "Date de debut",
+      injuryStatus: "Statut",
+      injuryStatusHelp: {
+        title: "Signification du statut",
+        ongoing: "En cours : la blessure est encore presente ou surveillee.",
+        completed: "Termine : la blessure n'est plus active actuellement."
+      },
+      injuryRemark: "Remarque",
+      injuryRemarkPlaceholder: "Exemple : douleur legere apres l’entrainement",
+      medicalTitle: "Informations medicales",
+      medicalNumber: "Probleme medical",
+      addMedical: "Ajouter un probleme medical",
+      removeMedical: "Supprimer",
+      medicalProblemName: "Nom du probleme medical",
+      medicalDescription: "Description",
+      medicalStartDate: "Date de debut",
+      medicalStatus: "Statut",
+      medicalStatusHelp: {
+        title: "Signification du statut",
+        ongoing: "En cours : le probleme medical est encore present ou suivi.",
+        completed: "Termine : le probleme medical n'est plus actif actuellement."
+      },
+      medicalRemark: "Remarque",
+      medicalRemarkPlaceholder: "Exemple : je ressens parfois une gene pendant l’effort physique",
+      remarks: "Remarques",
+      save: "Enregistrer mon profil",
+      saving: "Enregistrement...",
+      success: "Profil sportif complete.",
+      requiredError: "Merci de remplir toutes les informations obligatoires.",
+      sessionExpired: "Connexion à actualiser. Reconnecte-toi pour compléter ton profil.",
+      dashboardTitle: "Tableau de bord athlète",
+      dashboardSubtitle: "Ton profil sportif est pret.",
+      editProfile: "Modifier mon profil sportif",
+      logout: "Se deconnecter",
+      levelOptions: {
+        beginner: "Debutant",
+        intermediate: "Intermediaire",
+        advanced: "Avance"
+      },
+      goalOptions: {
+        weight_loss: "Perte de poids",
+        fat_loss_cut: "Perte de gras / Seche",
+        muscle_hypertrophy: "Hypertrophie musculaire",
+        vascular_hypertrophy: "Hypertrophie vasculaire",
+        mobility: "Mobilite",
+        strength: "Force musculaire",
+        body_recomposition: "Recomposition corporelle / metabolique",
+        other: "Autre"
+      }
+    },
+    footer: {
+      rights: "Tous les droits sont reserves - Hicham Mechekour"
+    }
+  },
+  en: {
+    nav: {
+      coachLabel: "Awaken your athletic instinct",
+      services: "Services",
+      certifications: "Certifications",
+      experiences: "Experience",
+      results: "Results",
+      contact: "Contact",
+      reserve: "Book",
+      viewCv: "View CV",
+      downloadCv: "Download CV"
+    },
+    controls: {
+      lightMode: "Light",
+      darkMode: "Night"
+    },
+    hero: {
+      chip: "Premium coaching",
+      line1: "Transform your body.",
+      line2: "Keep long-term results.",
+      description:
+        "I help active people lose fat, build energy, and regain confidence through structured, human coaching focused on real outcomes.",
+      primaryCta: "Write your review",
+      secondaryCta: "See transformations",
+      downloadCvCta: "Download CV"
+    },
+    stats: [
+      { value: "12 years", labelLines: ["OF EXPERIENCE"] },
+      { value: "+50", labelLines: ["CLIENTS", "COACHED"] },
+      { value: "4.9/5", labelLines: ["AVERAGE", "RATING"] }
+    ],
+    servicesSection: {
+      chip: "Support",
+      title: "Services",
+      subtitle: "A clear method to progress fast without extreme diets or useless training."
+    },
+    services: [
+      {
+        title: "Personal coaching",
+        description: "Training program adapted to your morphology. Morpho-anatomical analysis.",
+        icon: "01"
+      },
+      {
+        title: "Nutrition",
+        description: "Sports and therapeutic nutrition with personalized follow-up.",
+        icon: "02"
+      },
+      {
+        title: "Continuous follow-up",
+        description: "Weekly adjustments, regular check-ins and motivation for significant results.",
+        icon: "03"
+      }
+    ],
+    certificationsSection: {
+      chip: "Training",
+      title: "Diplomas and Certifications",
+      subtitle: "Strong certifications to guarantee professional and safe support."
+    },
+    certifications: [
+      {
+        title: "Personal Trainer Certificate",
+        organization: "IFBB Academy",
+        dateLocation: "July 2024, Tunisia",
+        serial: "C / 52609",
+        sliderImages: [ifbbDiploma, ifbbCard],
+        imagePosition: "right",
+        details: ["Certified Personal Trainer with IFBB accreditation.", "Serial number: C / 52609."]
+      },
+      {
+        title: "Fitness and Bodybuilding Coach Diploma",
+        organization: "BYB Training Company LTD",
+        dateLocation: "June 2023, Batna (Algeria)",
+        serial: "11005",
+        image: coachingIlage,
+        imagePosition: "left",
+        details: [
+          "Fitness and Bodybuilding Coach Diploma by BYB Training Company LTD.",
+          "Serial number: 11005."
+        ]
+      },
+      {
+        title: "Effective Communication Certificate",
+        organization: "Algerian Global Company for Training",
+        dateLocation: "June 2023, Batna (Algeria)",
+        image: mmImage,
+        imagePosition: "right",
+        details: [
+          "Understand clients' needs and guide them clearly.",
+          "Simplify exercise and training technique explanations."
+        ]
+      }
+    ],
+    experiencesSection: {
+      chip: "Journey",
+      title: "Experience",
+      subtitle: "Field experience in coaching, gym management and competition."
+    },
+    experiences: [
+      {
+        role: "Fitness and Bodybuilding Coach",
+        company: "Spartan Athletic Club",
+        dateLocation: "Nov 2022 - Jul 2023, Seddouk (Algeria)",
+        points: [
+          "Fitness and bodybuilding coaching in my gym.",
+          "Personalized training and nutrition plans."
+        ]
+      },
+      {
+        role: "Gym Manager",
+        company: "Spartan Athletic Club",
+        dateLocation: "Nov 2022 - Jul 2023, Seddouk (Algeria)",
+        points: [
+          "Managed all training sessions in my gym.",
+          "Ensured client safety and equipment maintenance."
+        ]
+      },
+      {
+        role: "Competitive Athlete",
+        company: "Regional competition",
+        dateLocation: "22 Feb 2022, Bejaia (Algeria)",
+        points: ["Participated in the regional Men's Physique championship."]
+      },
+      {
+        role: "Gym Coach",
+        company: "Gym Bodysam",
+        dateLocation: "Jan 2018 - Jan 2019, Seddouk (Algeria)",
+        points: ["Coaching and guidance in Fitness and Bodybuilding."]
+      }
+    ],
+    aboutSection: {
+      chip: "Identity",
+      title: "About",
+      subtitle: "A clear vision, a personalized method, and human support.",
+      missionTitle: "Mission",
+      missionText:
+        "I am Hicham Mechekour, a certified fitness coach. My mission is to make fitness accessible, effective, and sustainable for every client.",
+      approachTitle: "Approach",
+      approachText:
+        "Smart training, flexible nutrition, and progressive discipline, adapted to your level and your lifestyle.",
+      objectiveTitle: "Objective",
+      objectiveText:
+        "Build stable, visible, and lasting progress with human follow-up and weekly adjustments."
+    },
+    resultsSection: {
+      chip: "Transformation",
+      title: "Client results",
+      subtitle: "Concrete progress in fat loss, muscle gain and performance.",
+      witnessPrefix: "Testimonial from"
+    },
+    results: [
+      { name: "Yassine", detail: "-8kg in 12 weeks", image: transfo1 },
+      { name: "Nadia", detail: "+4kg muscle mass", image: transfo2 },
+      { name: "Karim", detail: "Completed a half marathon", image: transfo3 }
+    ],
+    contact: {
+      chip: "Take action",
+      title: "Write your review",
+      subtitle: "Add a rating and share your experience directly.",
+      fields: {
+        nom: "Last name",
+        prenom: "First name",
+        message: "Message",
+        nomPlaceholder: "Your last name",
+        prenomPlaceholder: "Your first name",
+        messagePlaceholder: "Share your coaching experience, results, or feeling."
+      },
+      ratingLabel: "Rating out of 5",
+      ratingAction: "Give",
+      submit: "Share my review",
+      submitEdit: "Save change",
+      reviewsTitle: "Athlete reviews",
+      reviewsSubtitle: "",
+      reviewAccountLabel: "Review published with your account",
+      reviewAccountRequired: "Account required",
+      singleReviewNote: "You can share one review only. After that, you can edit or delete it from your card.",
+      reviewEdit: "Edit",
+      reviewDelete: "Delete",
+      viewMyReview: "View my review",
+      reviewsPrevious: "Previous",
+      reviewsNext: "Next",
+      socialTitle: "Networks and contact",
+      backTop: "Back to top",
+      feedbackRequired: "Please add a rating and your message.",
+      feedbackLength: "The comment must contain between 10 and 200 characters.",
+      feedbackSuccess: "Review published successfully.",
+      feedbackEditSuccess: "Review updated successfully.",
+      feedbackDeleteSuccess: "Review deleted successfully.",
+      loginRequired: "Sign in or create an account to share your review.",
+      auth: {
+        title: "Hicham-fit App",
+        subtitle: "Create an account or sign in to access your space.",
+        loginTab: "Sign in",
+        registerTab: "Create account",
+        accessSpace: "Access my space",
+        accessAthleteSpace: "Access my athlete space",
+        firstName: "First name",
+        lastName: "Last name",
+        birthDate: "Birth date",
+        sex: "Sex",
+        country: "Country of residence",
+        email: "Email",
+        password: "Password",
+        confirmPassword: "Confirm password",
+        firstNamePlaceholder: "Your first name",
+        lastNamePlaceholder: "Your last name",
+        birthDatePlaceholder: "Select birth date",
+        sexPlaceholder: "Select sex",
+        countryPlaceholder: "Select country of residence",
+        sexOptions: {
+          male: "Male",
+          female: "Female"
+        },
+        signupSteps: {
+          personal: "Personal information",
+          connection: "Login information",
+          next: "Continue",
+          back: "Back",
+          complete: "Complete",
+          active: "Current",
+          step: "Step"
+        },
+        emailPlaceholder: "you@email.com",
+        passwordPlaceholder: "******",
+        confirmPasswordPlaceholder: "Type password again",
+        forgotPassword: "Forgot password?",
+        forgotPasswordInfo: "Password reset code sent. Check your mailbox and enter the code you received.",
+        forgotPasswordFillEmail: "Enter your email address to receive the reset code.",
+        accountNotFound: "No account exists with this email address.",
+        loginButton: "Sign in",
+        registerButton: "Create my account",
+        resetButton: "Update password",
+        logoutButton: "Log out",
+        resetCodeTab: "Verification code",
+        resetCodeSubtitle: "Enter the code sent by email to access the password reset page.",
+        resetCodeLabel: "Code received by email",
+        resetCodePlaceholder: "Example: A1b2C3",
+        resetCodeButton: "Verify code",
+        resetCodeCopied: "Code copied.",
+        resetCodeCopyBlocked: "The code is filled in. If the browser blocks copying, select it manually.",
+        resendCodeButton: "Resend code",
+        resendCodeWait: "You can resend a code in",
+        resetCodeRetryWait: "A code is already active. You can try again after",
+        resetCodeCountdown: "Code valid for",
+        resetCodeRequired: "Enter the code received in your email.",
+        resetCodeInvalid: "Invalid code. The code must contain exactly 6 alphanumeric characters.",
+        resetCodeExpired: "The reset code has expired. Click Resend code.",
+        resetTab: "New password",
+        resetSubtitle: "Set a new password to recover access to your account.",
+        resetExpiresNotice: "This page stays valid for 3 minutes.",
+        resetExpiresCountdown: "Time remaining",
+        connectedAs: "Signed in as",
+        statusReady: "Account active in the application.",
+        fillAll: "Please fill in all fields.",
+        ageRestriction: "You must be at least 18 years old to use this application.",
+        invalidEmail: "Invalid email address.",
+        passwordShort: "Password does not meet all requirements yet.",
+        passwordRule: "Secure password: meet all the requirements below.",
+        passwordStrongRequired: "Password must meet all listed requirements.",
+        passwordRequirements: {
+          minLength: "At least 12 characters",
+          lowercase: "At least one lowercase letter: a-z",
+          uppercase: "At least one uppercase letter: A-Z",
+          digit: "At least one digit: 0-9",
+          symbol: "At least one allowed symbol: ! @ # $ % & * _ - ? ."
+        },
+        passwordMismatch: "Passwords do not match.",
+        userExists: "This email already exists.",
+        invalidCredentials: "Incorrect email or password.",
+        networkError: "Unable to reach the server. Check your connection and try again.",
+        emailNotConfirmed: "Please confirm your email from the received link, then sign in.",
+        emailRateLimit: "Too many attempts. Please wait 60 seconds and try again.",
+        confirmEmailRequired:
+          "Email activation is disabled in Supabase. Enable Confirm email to send the verification link automatically.",
+        supabaseConfigMissing: "Server configuration missing (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY).",
+        loginSuccess: "Signed in successfully.",
+        registerSuccess: "Confirmation email sent. Click the received link to create and activate your account.",
+        signupConfirmInvalid: "This confirmation link is invalid or already used.",
+        signupConfirmExpired: "This confirmation link has expired. Create a new account.",
+        resetSuccess: "Password updated. Sign in with your new password.",
+        logoutSuccess: "You are logged out.",
+        accountCreatedTitle: "Account created successfully",
+        accountCreatedSubtitle: "Your email is confirmed. You can now sign in to your space.",
+        accountCreatedAction: "Continue",
+        accountReadyLogin: "You can access your personal space.",
+        mailboxPromptTitle: "Check your mailbox",
+        mailboxPromptSubtitle: "To activate your account, confirm your email using the received link.",
+        resetMailboxSubtitle: "To reset your password, check your mailbox and enter the code you received.",
+        mailboxPromptAction: "Open my email inbox",
+        mailboxPromptBack: "Go to sign in",
+        resetLinkInvalid: "This reset link is invalid. Request a new one.",
+        resetLinkExpired: "This reset link has expired. Request a new one."
+      },
+      labels: {
+        serial: "Serial",
+        facebook: "Facebook",
+        tiktok: "TikTok",
+        instagram: "Instagram",
+        whatsapp: "WhatsApp",
+        email: "Email"
+      }
+    },
+    sportsProfile: {
+      title: "Complete my sports profile",
+      subtitle: "These details help prepare coaching adapted to you.",
+      physicalTitle: "1. Physical information",
+      sportTitle: "3. Sports information",
+      supplementsTitle: "2. Dietary supplements",
+      healthTitle: "4. Injuries and medical information",
+      required: "Required",
+      optional: "Optional",
+      heightCm: "Height in cm",
+      currentWeightKg: "Current weight in kg",
+      sportPracticed: "Sport practiced",
+      sportLevel: "Sports level",
+      sportGoal: "Main goal",
+      sportGoalCustom: "Specify your goal",
+      sessionsPerWeek: "Sessions per week",
+      noSport: "No sport practiced",
+      addSport: "Add a sport",
+      removeSport: "Remove",
+      sportNumber: "Sport",
+      noSupplement: "No dietary supplement",
+      noInjury: "No injury",
+      noMedicalInformation: "No medical information",
+      supplementNumber: "Supplement",
+      addSupplement: "Add a supplement",
+      removeSupplement: "Remove",
+      supplementName: "Supplement name",
+      supplementDose: "Dose / Quantity",
+      supplementUnit: "Unit",
+      supplementFrequency: "Frequency",
+      supplementTiming: "Time of intake",
+      supplementCategory: "Category",
+      supplementStartDate: "Start date",
+      supplementStatus: "Status",
+      supplementStatusHelp: {
+        title: "Status meaning",
+        ongoing: "Ongoing: you are still using this supplement.",
+        stopped: "Stopped: you are not using this supplement anymore."
+      },
+      supplementCustomValue: "Specify",
+      supplementRemark: "Remark",
+      supplementRemarkPlaceholder: "Example: take with water, after the meal ...",
+      injuries: "Injuries",
+      injuryNumber: "Injury",
+      addInjury: "Add an injury",
+      removeInjury: "Remove",
+      injuryZone: "Affected area",
+      injuryStartDate: "Start date",
+      injuryStatus: "Status",
+      injuryStatusHelp: {
+        title: "Status meaning",
+        ongoing: "Ongoing: the injury is still present or monitored.",
+        completed: "Completed: the injury is not active anymore."
+      },
+      injuryRemark: "Remark",
+      injuryRemarkPlaceholder: "Example: mild pain after training",
+      medicalTitle: "Medical information",
+      medicalNumber: "Medical issue",
+      addMedical: "Add a medical issue",
+      removeMedical: "Remove",
+      medicalProblemName: "Medical issue name",
+      medicalDescription: "Description",
+      medicalStartDate: "Start date",
+      medicalStatus: "Status",
+      medicalStatusHelp: {
+        title: "Status meaning",
+        ongoing: "Ongoing: the medical issue is still present or monitored.",
+        completed: "Completed: the medical issue is not active anymore."
+      },
+      medicalRemark: "Remark",
+      medicalRemarkPlaceholder: "Example: I sometimes feel discomfort during physical effort",
+      remarks: "Remarks",
+      save: "Save my profile",
+      saving: "Saving...",
+      success: "Sports profile completed.",
+      requiredError: "Please fill in all required information.",
+      sessionExpired: "Connection needs refreshing. Sign in again to complete your profile.",
+      dashboardTitle: "Athlete dashboard",
+      dashboardSubtitle: "Your sports profile is ready.",
+      editProfile: "Edit my sports profile",
+      logout: "Log out",
+      levelOptions: {
+        beginner: "Beginner",
+        intermediate: "Intermediate",
+        advanced: "Advanced"
+      },
+      goalOptions: {
+        weight_loss: "Weight loss",
+        fat_loss_cut: "Fat loss / Cut",
+        muscle_hypertrophy: "Muscle hypertrophy",
+        vascular_hypertrophy: "Vascular hypertrophy",
+        mobility: "Mobility",
+        strength: "Muscular strength",
+        body_recomposition: "Body / metabolic recomposition",
+        other: "Other"
+      }
+    },
+    footer: {
+      rights: "All rights reserved - Hicham Mechekour"
+    }
+  },
+  ar: {
+    nav: {
+      coachLabel: "أيقظ غريزتك الرياضية",
+      services: "الخدمات",
+      certifications: "الشهادات",
+      experiences: "الخبرات",
+      results: "النتائج",
+      contact: "التواصل",
+      reserve: "احجز",
+      viewCv: "عرض السيرة",
+      downloadCv: "تحميل السيرة"
+    },
+    controls: {
+      lightMode: "فاتح",
+      darkMode: "ليلي"
+    },
+    hero: {
+      chip: "تدريب مميز",
+      line1: "غيّر جسمك.",
+      line2: "واحافظ على نتائج دائمة.",
+      description:
+        "اساعد الاشخاص النشيطين على خسارة الدهون وزيادة الطاقة واسترجاع الثقة عبر تدريب منظم وانساني يركز على النتائج.",
+      primaryCta: "اكتب رأيك",
+      secondaryCta: "شاهد التحولات",
+      downloadCvCta: "تحميل السيرة الذاتية"
+    },
+    stats: [
+      { value: "12 سنة", labelLines: ["خبرة"] },
+      { value: "+50", labelLines: ["عميل", "تمت مرافقتهم"] },
+      { value: "4.9/5", labelLines: ["معدل", "الرضا"] }
+    ],
+    servicesSection: {
+      chip: "المرافقة",
+      title: "الخدمات",
+      subtitle: "طريقة واضحة للتطور بسرعة بدون حمية قاسية او تمارين غير مفيدة."
+    },
+    services: [
+      {
+        title: "تدريب شخصي",
+        description: "برنامج تدريبي مناسب لبنية جسمك مع تحليل مورفولوجي وتشريحي.",
+        icon: "01"
+      },
+      {
+        title: "التغذية",
+        description: "تغذية رياضية وعلاجية مع متابعة شخصية مستمرة.",
+        icon: "02"
+      },
+      {
+        title: "متابعة مستمرة",
+        description: "تعديلات اسبوعية وتقارير منتظمة وتحفيز دائم لنتائج واضحة.",
+        icon: "03"
+      }
+    ],
+    certificationsSection: {
+      chip: "التكوين",
+      title: "الدبلومات والشهادات",
+      subtitle: "شهادات قوية لضمان مرافقة احترافية وآمنة."
+    },
+    certifications: [
+      {
+        title: "شهادة مدرب شخصي",
+        organization: "IFBB Academy",
+        dateLocation: "يوليو 2024، تونس",
+        serial: "C / 52609",
+        sliderImages: [ifbbDiploma, ifbbCard],
+        imagePosition: "right",
+        details: ["مدرب شخصي معتمد من IFBB.", "رقم السلسلة: C / 52609."]
+      },
+      {
+        title: "دبلوم مدرب لياقة وكمال اجسام",
+        organization: "BYB Training Company LTD",
+        dateLocation: "يونيو 2023، باتنة (الجزائر)",
+        serial: "11005",
+        image: coachingIlage,
+        imagePosition: "left",
+        details: ["دبلوم تدريب لياقة وكمال اجسام من BYB Training Company LTD.", "رقم السلسلة: 11005."]
+      },
+      {
+        title: "شهادة التواصل الفعال",
+        organization: "Algerian Global Company for Training",
+        dateLocation: "يونيو 2023، باتنة (الجزائر)",
+        image: mmImage,
+        imagePosition: "right",
+        details: ["فهم احتياجات العملاء وتوجيههم بشكل صحيح.", "تبسيط شرح التمارين وتقنيات التدريب."]
+      }
+    ],
+    experiencesSection: {
+      chip: "المسار",
+      title: "الخبرات",
+      subtitle: "خبرة ميدانية في التدريب، تسيير القاعات والمنافسات الرياضية."
+    },
+    experiences: [
+      {
+        role: "مدرب لياقة وكمال اجسام",
+        company: "Spartan Athletic Club",
+        dateLocation: "نوفمبر 2022 - يوليو 2023، صدوق (الجزائر)",
+        points: ["تدريب اللياقة وكمال الاجسام داخل القاعة.", "تخصيص برامج التدريب والتغذية لكل متدرب."]
+      },
+      {
+        role: "مسير قاعة رياضية",
+        company: "Spartan Athletic Club",
+        dateLocation: "نوفمبر 2022 - يوليو 2023، صدوق (الجزائر)",
+        points: ["تسيير جميع حصص التدريب داخل القاعة.", "ضمان سلامة العملاء وصيانة الاجهزة والمعدات."]
+      },
+      {
+        role: "رياضي تنافسي",
+        company: "منافسة جهوية",
+        dateLocation: "22 فيفري 2022، بجاية (الجزائر)",
+        points: ["المشاركة في البطولة الجهوية لفئة Men's Physique."]
+      },
+      {
+        role: "مدرب في القاعة",
+        company: "Gym Bodysam",
+        dateLocation: "جانفي 2018 - جانفي 2019، صدوق (الجزائر)",
+        points: ["تدريب وتوجيه في اللياقة وكمال الاجسام."]
+      }
+    ],
+    aboutSection: {
+      chip: "الهوية",
+      title: "نبذة",
+      subtitle: "رؤية واضحة، منهج شخصي، ومرافقة انسانية مستمرة.",
+      missionTitle: "المهمة",
+      missionText: "انا هشام مشكور، مدرب رياضي معتمد. مهمتي جعل اللياقة سهلة وفعالة ومستدامة لكل عميل.",
+      approachTitle: "المنهج",
+      approachText: "تدريب ذكي، تغذية مرنة، وانضباط تدريجي حسب مستواك ونمط حياتك.",
+      objectiveTitle: "الهدف",
+      objectiveText: "بناء تطور ثابت ومرئي ودائم عبر متابعة انسانية وتعديلات اسبوعية."
+    },
+    resultsSection: {
+      chip: "التحول",
+      title: "نتائج العملاء",
+      subtitle: "تقدم حقيقي في خسارة الدهون، زيادة العضلات وتحسين الاداء.",
+      witnessPrefix: "شهادة"
+    },
+    results: [
+      { name: "ياسين", detail: "-8 كلغ خلال 12 اسبوع", image: transfo1 },
+      { name: "نادية", detail: "+4 كلغ كتلة عضلية", image: transfo2 },
+      { name: "كريم", detail: "اكمل نصف ماراثون", image: transfo3 }
+    ],
+    contact: {
+      chip: "ابدأ الآن",
+      title: "اكتب رأيك",
+      subtitle: "ضع تقييما وشارك تجربتك مباشرة.",
+      fields: {
+        nom: "اللقب",
+        prenom: "الاسم",
+        message: "الرسالة",
+        nomPlaceholder: "اكتب لقبك",
+        prenomPlaceholder: "اكتب اسمك",
+        messagePlaceholder: "شارك تجربتك مع التدريب او نتائجك او احساسك."
+      },
+      ratingLabel: "التقييم من 5",
+      ratingAction: "اعطاء",
+      submit: "مشاركة رأيي",
+      submitEdit: "حفظ التعديل",
+      reviewsTitle: "آراء الرياضيين",
+      reviewsSubtitle: "",
+      reviewAccountLabel: "ينشر الرأي بحسابك",
+      reviewAccountRequired: "الحساب مطلوب",
+      singleReviewNote: "يمكنك مشاركة رأي واحد فقط. بعد ذلك يمكنك تعديله او حذفه من بطاقتك.",
+      reviewEdit: "تعديل",
+      reviewDelete: "حذف",
+      viewMyReview: "رؤية رأيي",
+      reviewsPrevious: "السابق",
+      reviewsNext: "التالي",
+      socialTitle: "الشبكات والتواصل",
+      backTop: "العودة للاعلى",
+      feedbackRequired: "يرجى اضافة تقييم ورسالتك.",
+      feedbackLength: "يجب ان يكون التعليق بين 10 و200 حرف.",
+      feedbackSuccess: "تم نشر الرأي بنجاح.",
+      feedbackEditSuccess: "تم تعديل الرأي بنجاح.",
+      feedbackDeleteSuccess: "تم حذف الرأي بنجاح.",
+      loginRequired: "سجل الدخول او انشئ حسابا لمشاركة رأيك.",
+      auth: {
+        title: "تطبيق Hicham-fit",
+        subtitle: "انشئ حسابا او سجّل الدخول للوصول الى مساحتك.",
+        loginTab: "تسجيل الدخول",
+        registerTab: "انشاء حساب",
+        accessSpace: "الدخول الى مساحتي",
+        accessAthleteSpace: "الدخول الى مساحة الرياضي",
+        firstName: "الاسم",
+        lastName: "اللقب",
+        birthDate: "تاريخ الميلاد",
+        sex: "الجنس",
+        country: "بلد الإقامة",
+        email: "البريد الالكتروني",
+        password: "كلمة المرور",
+        confirmPassword: "تأكيد كلمة المرور",
+        firstNamePlaceholder: "اكتب اسمك",
+        lastNamePlaceholder: "اكتب لقبك",
+        birthDatePlaceholder: "اختر تاريخ الميلاد",
+        sexPlaceholder: "اختر الجنس",
+        countryPlaceholder: "اختر بلد الإقامة",
+        sexOptions: {
+          male: "ذكر",
+          female: "انثى"
+        },
+        signupSteps: {
+          personal: "المعلومات الشخصية",
+          connection: "معلومات الدخول",
+          next: "متابعة",
+          back: "رجوع",
+          complete: "مكتمل",
+          active: "جارية",
+          step: "خطوة"
+        },
+        emailPlaceholder: "you@email.com",
+        passwordPlaceholder: "******",
+        confirmPasswordPlaceholder: "اعد كتابة كلمة المرور",
+        forgotPassword: "نسيت كلمة المرور؟",
+        forgotPasswordInfo: "تم ارسال رمز اعادة التعيين. افحص بريدك ثم اكتب الرمز الذي وصلك.",
+        forgotPasswordFillEmail: "اكتب بريدك الالكتروني للحصول على رمز اعادة التعيين.",
+        accountNotFound: "لا يوجد حساب بهذا البريد الالكتروني.",
+        loginButton: "دخول",
+        registerButton: "انشاء حسابي",
+        resetButton: "تحديث كلمة المرور",
+        logoutButton: "تسجيل الخروج",
+        resetCodeTab: "رمز التحقق",
+        resetCodeSubtitle: "اكتب الرمز الذي وصلك عبر البريد للوصول الى صفحة تغيير كلمة المرور.",
+        resetCodeLabel: "الرمز المرسل عبر البريد",
+        resetCodePlaceholder: "مثال: A1b2C3",
+        resetCodeButton: "تحقق من الرمز",
+        resetCodeCopied: "تم نسخ الرمز.",
+        resetCodeCopyBlocked: "تم ملء الرمز. اذا منع المتصفح النسخ، حدده يدويا.",
+        resendCodeButton: "اعادة ارسال الرمز",
+        resendCodeWait: "يمكنك اعادة ارسال رمز خلال",
+        resetCodeRetryWait: "يوجد رمز فعال حاليا. يمكنك المحاولة بعد",
+        resetCodeCountdown: "صلاحية الرمز",
+        resetCodeRequired: "اكتب الرمز الذي وصلك في البريد.",
+        resetCodeInvalid: "الرمز غير صالح. يجب ان يحتوي على 6 احرف او ارقام بالضبط.",
+        resetCodeExpired: "انتهت صلاحية رمز اعادة التعيين. اضغط على اعادة ارسال الرمز.",
+        resetTab: "كلمة مرور جديدة",
+        resetSubtitle: "حدد كلمة مرور جديدة لاستعادة الوصول الى حسابك.",
+        resetExpiresNotice: "هذه الصفحة صالحة لمدة 3 دقائق.",
+        resetExpiresCountdown: "الوقت المتبقي",
+        connectedAs: "متصل باسم",
+        statusReady: "الحساب مفعل داخل التطبيق.",
+        fillAll: "يرجى ملء جميع الحقول.",
+        ageRestriction: "يجب ان يكون عمرك 18 سنة او اكثر لاستخدام هذا التطبيق.",
+        invalidEmail: "البريد الالكتروني غير صالح.",
+        passwordShort: "كلمة المرور لا تحترم كل الشروط بعد.",
+        passwordRule: "كلمة مرور قوية: يجب احترام كل الشروط التالية.",
+        passwordStrongRequired: "كلمة المرور يجب ان تحترم كل الشروط المذكورة.",
+        passwordRequirements: {
+          minLength: "12 حرفا على الاقل",
+          lowercase: "حرف صغير واحد على الاقل: a-z",
+          uppercase: "حرف كبير واحد على الاقل: A-Z",
+          digit: "رقم واحد على الاقل: 0-9",
+          symbol: "رمز مسموح واحد على الاقل: ! @ # $ % & * _ - ? ."
+        },
+        passwordMismatch: "كلمتا المرور غير متطابقتين.",
+        userExists: "هذا البريد موجود مسبقا.",
+        invalidCredentials: "البريد او كلمة المرور غير صحيحة.",
+        networkError: "تعذر الاتصال بالخادم. تحقق من اتصالك ثم حاول مرة اخرى.",
+        emailNotConfirmed: "يرجى تأكيد بريدك عبر الرابط المرسل ثم تسجيل الدخول.",
+        emailRateLimit: "محاولات كثيرة. انتظر 60 ثانية ثم حاول مرة اخرى.",
+        confirmEmailRequired:
+          "تفعيل البريد غير مفعل في Supabase. فعّل Confirm email لإرسال رابط التفعيل تلقائيا.",
+        supabaseConfigMissing: "اعدادات الخادم ناقصة (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY).",
+        loginSuccess: "تم تسجيل الدخول بنجاح.",
+        registerSuccess: "تم ارسال بريد التأكيد. اضغط على الرابط المرسل لانشاء وتفعيل حسابك.",
+        signupConfirmInvalid: "رابط التأكيد غير صالح او تم استخدامه من قبل.",
+        signupConfirmExpired: "انتهت صلاحية رابط التأكيد. انشئ حسابا جديدا.",
+        resetSuccess: "تم تحديث كلمة المرور. سجل الدخول بكلمة المرور الجديدة.",
+        logoutSuccess: "تم تسجيل الخروج.",
+        accountCreatedTitle: "تم انشاء الحساب بنجاح",
+        accountCreatedSubtitle: "تم تأكيد بريدك الالكتروني. يمكنك الآن تسجيل الدخول الى مساحتك.",
+        accountCreatedAction: "متابعة",
+        accountReadyLogin: "يمكنك الدخول الى مساحتك الشخصية.",
+        mailboxPromptTitle: "افحص بريدك الالكتروني",
+        mailboxPromptSubtitle: "لتفعيل حسابك، قم بتأكيد بريدك عبر الرابط المرسل.",
+        resetMailboxSubtitle: "لاعادة تعيين كلمة المرور، افحص بريدك ثم اكتب الرمز الذي وصلك.",
+        mailboxPromptAction: "الذهاب الى صندوق البريد",
+        mailboxPromptBack: "الذهاب الى تسجيل الدخول",
+        resetLinkInvalid: "رابط اعادة التعيين غير صالح. اطلب رابطا جديدا.",
+        resetLinkExpired: "انتهت صلاحية رابط اعادة التعيين. اطلب رابطا جديدا."
+      },
+      labels: {
+        serial: "الرقم",
+        facebook: "فيسبوك",
+        tiktok: "تيك توك",
+        instagram: "انستغرام",
+        whatsapp: "واتساب",
+        email: "البريد"
+      }
+    },
+    sportsProfile: {
+      title: "اكمال الملف الرياضي",
+      subtitle: "هذه المعلومات تساعد على تحضير متابعة مناسبة لك.",
+      physicalTitle: "1. المعلومات الجسدية",
+      sportTitle: "3. المعلومات الرياضية",
+      supplementsTitle: "2. المكملات الغذائية",
+      healthTitle: "4. الاصابات والمعلومات الطبية",
+      required: "اجباري",
+      optional: "اختياري",
+      heightCm: "الطول بالسنتيمتر",
+      currentWeightKg: "الوزن الحالي بالكيلوغرام",
+      sportPracticed: "الرياضة الممارسة",
+      sportLevel: "المستوى الرياضي",
+      sportGoal: "الهدف الرئيسي",
+      sportGoalCustom: "حدد هدفك",
+      sessionsPerWeek: "عدد الحصص في الاسبوع",
+      noSport: "لا امارس اي رياضة",
+      addSport: "اضافة رياضة",
+      removeSport: "حذف",
+      sportNumber: "رياضة",
+      noSupplement: "لا أستخدم أي مكمل غذائي",
+      noInjury: "لا توجد إصابة",
+      noMedicalInformation: "لا توجد معلومات طبية",
+      supplementNumber: "مكمل",
+      addSupplement: "اضافة مكمل",
+      removeSupplement: "حذف",
+      supplementName: "اسم المكمل",
+      supplementDose: "الجرعة / الكمية",
+      supplementUnit: "الوحدة",
+      supplementFrequency: "التكرار",
+      supplementTiming: "وقت التناول",
+      supplementCategory: "الفئة",
+      supplementStartDate: "تاريخ البداية",
+      supplementStatus: "الحالة",
+      supplementStatusHelp: {
+        title: "معنى الحالة",
+        ongoing: "قيد الاستخدام: ما زلت تستخدم هذا المكمل حاليا.",
+        stopped: "متوقف: لم تعد تستخدم هذا المكمل حاليا."
+      },
+      supplementCustomValue: "حدد",
+      supplementRemark: "ملاحظة",
+      supplementRemarkPlaceholder: "مثال: يؤخذ مع الماء، بعد الوجبة ...",
+      injuries: "الاصابات",
+      injuryNumber: "اصابة",
+      addInjury: "اضافة اصابة",
+      removeInjury: "حذف",
+      injuryZone: "المنطقة المعنية",
+      injuryStartDate: "تاريخ البداية",
+      injuryStatus: "الحالة",
+      injuryStatusHelp: {
+        title: "معنى الحالة",
+        ongoing: "قيد المتابعة: الاصابة ما زالت موجودة او تحت المراقبة.",
+        completed: "منتهية: الاصابة لم تعد نشطة حاليا."
+      },
+      injuryRemark: "ملاحظة",
+      injuryRemarkPlaceholder: "مثال: ألم خفيف بعد التدريب",
+      medicalTitle: "معلومات طبية",
+      medicalNumber: "مشكلة طبية",
+      addMedical: "اضافة مشكلة طبية",
+      removeMedical: "حذف",
+      medicalProblemName: "اسم المشكلة الطبية",
+      medicalDescription: "الوصف",
+      medicalStartDate: "تاريخ البداية",
+      medicalStatus: "الحالة",
+      medicalStatusHelp: {
+        title: "معنى الحالة",
+        ongoing: "قيد المتابعة: المشكلة الطبية ما زالت موجودة او تحت المراقبة.",
+        completed: "منتهية: المشكلة الطبية لم تعد نشطة حاليا."
+      },
+      medicalRemark: "ملاحظة",
+      medicalRemarkPlaceholder: "مثال: أشعر أحيانا بانزعاج أثناء المجهود البدني",
+      remarks: "ملاحظات",
+      save: "حفظ الملف",
+      saving: "جار الحفظ...",
+      success: "تم اكمال الملف الرياضي.",
+      requiredError: "يرجى ملء كل المعلومات الاجبارية.",
+      sessionExpired: "يجب تحديث الاتصال. سجل الدخول من جديد لاكمال ملفك.",
+      dashboardTitle: "لوحة التحكم",
+      dashboardSubtitle: "ملفك الرياضي جاهز.",
+      editProfile: "تعديل الملف الرياضي",
+      logout: "تسجيل الخروج",
+      levelOptions: {
+        beginner: "مبتدئ",
+        intermediate: "متوسط",
+        advanced: "متقدم"
+      },
+      goalOptions: {
+        weight_loss: "خسارة الوزن",
+        fat_loss_cut: "خسارة الدهون / تنشيف",
+        muscle_hypertrophy: "تضخم عضلي",
+        vascular_hypertrophy: "تضخم وعائي",
+        mobility: "مرونة وحركة",
+        strength: "قوة عضلية",
+        body_recomposition: "اعادة تركيب الجسم / الايض",
+        other: "آخر"
+      }
+    },
+    footer: {
+      rights: "جميع الحقوق محفوظة - هشام مشكور"
+    }
+  }
+};
+
+const languageOptions = {
+  fr: { label: "FR", flag: "🇫🇷", name: "Francais" },
+  en: { label: "EN", flag: "🇬🇧", name: "English" },
+  ar: { label: "AR", flag: "🇸🇦", name: "العربية" }
+};
+const countryCodes =
+  "AF AX AL DZ AS AD AO AI AQ AG AR AM AW AU AT AZ BS BH BD BB BY BE BZ BJ BM BT BO BQ BA BW BV BR IO BN BG BF BI CV KH CM CA KY CF TD CL CN CX CC CO KM CG CD CK CR CI HR CU CW CY CZ DK DJ DM DO EC EG SV GQ ER EE SZ ET FK FO FJ FI FR GF PF TF GA GM GE DE GH GI GR GL GD GP GU GT GG GN GW GY HT HM VA HN HK HU IS IN ID IR IQ IE IM IL IT JM JP JE JO KZ KE KI KP KR KW KG LA LV LB LS LR LY LI LT LU MO MG MW MY MV ML MT MH MQ MR MU YT MX FM MD MC MN ME MS MA MZ MM NA NR NP NL NC NZ NI NE NG NU NF MK MP NO OM PK PW PS PA PG PY PE PH PN PL PT PR QA RE RO RU RW BL SH KN LC MF PM VC WS SM ST SA SN RS SC SL SG SX SK SI SB SO ZA GS SS ES LK SD SR SJ SE CH SY TW TJ TZ TH TL TG TK TO TT TN TR TM TC TV UG UA AE GB US UM UY UZ VU VE VN VG VI WF EH YE ZM ZW".split(" ");
+const countryLocaleMap = { fr: "fr", en: "en", ar: "ar" };
+const countryOptionsCache = new Map();
+const todayInputDate = new Date().toISOString().slice(0, 10);
+const sportLevelValues = ["beginner", "intermediate", "advanced"];
+const sportGoalValues = [
+  "weight_loss",
+  "fat_loss_cut",
+  "muscle_hypertrophy",
+  "vascular_hypertrophy",
+  "mobility",
+  "strength",
+  "body_recomposition",
+  "other"
+];
+const supplementNameOptions = [
+  "Whey protéine",
+  "Créatine",
+  "BCAA",
+  "EAA",
+  "Oméga-3",
+  "Magnésium",
+  "Vitamine D",
+  "Multivitamines",
+  "Pré-workout",
+  "Caféine",
+  "Électrolytes",
+  "Collagène",
+  "Zinc",
+  "Fer",
+  "Glutamine",
+  "Protéines végétales",
+  "Autre"
+];
+const supplementUnitOptions = [
+  "g",
+  "mg",
+  "µg",
+  "ml",
+  "L",
+  "capsule",
+  "gélule",
+  "comprimé",
+  "dosette",
+  "sachet",
+  "goutte",
+  "cuillère",
+  "portion",
+  "dose",
+  "ampoule",
+  "flacon",
+  "spray",
+  "autre"
+];
+const supplementFrequencyOptions = [
+  "Tous les jours",
+  "Avant l’entraînement",
+  "Après l’entraînement",
+  "Le matin",
+  "Le soir",
+  "1 fois par semaine",
+  "Autre"
+];
+const supplementTimingOptions = [
+  "Le matin",
+  "Le midi",
+  "Le soir",
+  "Avant l’entraînement",
+  "Après l’entraînement",
+  "Pendant l’entraînement",
+  "Au coucher",
+  "Avec un repas",
+  "À jeun",
+  "Selon besoin",
+  "Autre"
+];
+const supplementCategoryOptions = [
+  "Protéines",
+  "Performance",
+  "Vitamines",
+  "Minéraux",
+  "Récupération",
+  "Énergie",
+  "Santé générale",
+  "Autre"
+];
+const supplementStatusValues = [
+  { value: "ongoing", label: "En cours" },
+  { value: "stopped", label: "Arrêté" }
+];
+const injuryZoneOptions = [
+  "Cou",
+  "Épaules",
+  "Bras",
+  "Coudes",
+  "Poignets",
+  "Main",
+  "Dos",
+  "Lombaires",
+  "Hanches",
+  "Genoux",
+  "Chevilles",
+  "Pieds",
+  "Poitrine",
+  "Abdominaux",
+  "Jambes",
+  "Mollets",
+  "Autre"
+];
+const medicalProblemOptions = [
+  "Asthme",
+  "Diabète",
+  "Hypertension",
+  "Problème cardiaque",
+  "Problème respiratoire",
+  "Problème articulaire",
+  "Problème de dos",
+  "Problème de genou",
+  "Problème d’épaule",
+  "Problème de hanche",
+  "Problème de cheville",
+  "Trouble de la thyroïde",
+  "Anémie",
+  "Épilepsie",
+  "Autre"
+];
+const healthStatusValues = [
+  { value: "ongoing", label: "En cours" },
+  { value: "completed", label: "Terminé" }
+];
+const dashboardNavKeys = new Set(["dashboard", "programs", "shop", "exercises", "appointments", "settings"]);
+const sportProfileFields =
+  "first_name,last_name,date_of_birth,sex,country_code,avatar_url,phone_number,phone_country_code,phone_verified_at,address_line1,address_line2,postal_code,city,region,created_at,height_cm,current_weight_kg,has_no_sport,sport_practices,sport_practiced,sport_level,sport_goal,sport_goal_custom,sessions_per_week,injuries,remarks,has_no_supplement,dietary_supplements,has_no_injury,injury_history,has_no_medical_information,medical_information,sport_profile_completed_at";
+const countryDialCodeMap = {
+  AF: "+93",
+  AX: "+358",
+  AL: "+355",
+  DZ: "+213",
+  AS: "+1",
+  AD: "+376",
+  AO: "+244",
+  AI: "+1",
+  AQ: "+672",
+  AG: "+1",
+  AR: "+54",
+  AM: "+374",
+  AW: "+297",
+  AU: "+61",
+  AT: "+43",
+  AZ: "+994",
+  BS: "+1",
+  BH: "+973",
+  BD: "+880",
+  BB: "+1",
+  BY: "+375",
+  FR: "+33",
+  BE: "+32",
+  BZ: "+501",
+  BJ: "+229",
+  BM: "+1",
+  BT: "+975",
+  BO: "+591",
+  BQ: "+599",
+  BA: "+387",
+  BW: "+267",
+  BV: "+47",
+  BR: "+55",
+  IO: "+246",
+  BN: "+673",
+  BG: "+359",
+  BF: "+226",
+  BI: "+257",
+  CV: "+238",
+  KH: "+855",
+  CM: "+237",
+  CA: "+1",
+  KY: "+1",
+  CF: "+236",
+  TD: "+235",
+  CL: "+56",
+  CN: "+86",
+  CX: "+61",
+  CC: "+61",
+  CO: "+57",
+  KM: "+269",
+  CG: "+242",
+  CD: "+243",
+  CK: "+682",
+  CR: "+506",
+  CI: "+225",
+  HR: "+385",
+  CU: "+53",
+  CW: "+599",
+  CY: "+357",
+  CZ: "+420",
+  DK: "+45",
+  DJ: "+253",
+  DM: "+1",
+  DO: "+1",
+  EC: "+593",
+  EG: "+20",
+  SV: "+503",
+  GQ: "+240",
+  ER: "+291",
+  EE: "+372",
+  SZ: "+268",
+  ET: "+251",
+  FK: "+500",
+  FO: "+298",
+  FJ: "+679",
+  FI: "+358",
+  GF: "+594",
+  PF: "+689",
+  TF: "+262",
+  GA: "+241",
+  GM: "+220",
+  GE: "+995",
+  DE: "+49",
+  GH: "+233",
+  GI: "+350",
+  GR: "+30",
+  GL: "+299",
+  GD: "+1",
+  GP: "+590",
+  GU: "+1",
+  GT: "+502",
+  GG: "+44",
+  GN: "+224",
+  GW: "+245",
+  GY: "+592",
+  HT: "+509",
+  HM: "+672",
+  VA: "+39",
+  HN: "+504",
+  HK: "+852",
+  HU: "+36",
+  IS: "+354",
+  IN: "+91",
+  ID: "+62",
+  IR: "+98",
+  IQ: "+964",
+  IE: "+353",
+  IM: "+44",
+  IL: "+972",
+  IT: "+39",
+  JM: "+1",
+  JP: "+81",
+  JE: "+44",
+  JO: "+962",
+  KZ: "+7",
+  KE: "+254",
+  KI: "+686",
+  KP: "+850",
+  KR: "+82",
+  KW: "+965",
+  KG: "+996",
+  LA: "+856",
+  LV: "+371",
+  LB: "+961",
+  LS: "+266",
+  LR: "+231",
+  LY: "+218",
+  LI: "+423",
+  LT: "+370",
+  LU: "+352",
+  MO: "+853",
+  MG: "+261",
+  MW: "+265",
+  MY: "+60",
+  MV: "+960",
+  SN: "+221",
+  ML: "+223",
+  MT: "+356",
+  MH: "+692",
+  MQ: "+596",
+  MR: "+222",
+  MU: "+230",
+  YT: "+262",
+  MX: "+52",
+  FM: "+691",
+  MD: "+373",
+  MC: "+377",
+  MN: "+976",
+  ME: "+382",
+  MS: "+1",
+  MA: "+212",
+  MZ: "+258",
+  MM: "+95",
+  NA: "+264",
+  NR: "+674",
+  NP: "+977",
+  NL: "+31",
+  NC: "+687",
+  NZ: "+64",
+  NI: "+505",
+  NE: "+227",
+  NG: "+234",
+  NU: "+683",
+  NF: "+672",
+  MK: "+389",
+  MP: "+1",
+  NO: "+47",
+  OM: "+968",
+  PK: "+92",
+  PW: "+680",
+  PS: "+970",
+  PA: "+507",
+  PG: "+675",
+  PY: "+595",
+  PE: "+51",
+  PH: "+63",
+  PN: "+64",
+  PL: "+48",
+  PT: "+351",
+  PR: "+1",
+  QA: "+974",
+  RE: "+262",
+  RO: "+40",
+  RU: "+7",
+  RW: "+250",
+  BL: "+590",
+  SH: "+290",
+  KN: "+1",
+  LC: "+1",
+  MF: "+590",
+  PM: "+508",
+  VC: "+1",
+  WS: "+685",
+  SM: "+378",
+  ST: "+239",
+  SA: "+966",
+  RS: "+381",
+  SC: "+248",
+  SL: "+232",
+  SG: "+65",
+  SX: "+1",
+  SK: "+421",
+  SI: "+386",
+  SB: "+677",
+  SO: "+252",
+  ZA: "+27",
+  GS: "+500",
+  SS: "+211",
+  ES: "+34",
+  LK: "+94",
+  SD: "+249",
+  SR: "+597",
+  SJ: "+47",
+  SE: "+46",
+  CH: "+41",
+  SY: "+963",
+  TW: "+886",
+  TJ: "+992",
+  TZ: "+255",
+  TH: "+66",
+  TL: "+670",
+  TG: "+228",
+  TK: "+690",
+  TO: "+676",
+  TT: "+1",
+  TN: "+216",
+  TR: "+90",
+  TM: "+993",
+  TC: "+1",
+  TV: "+688",
+  UG: "+256",
+  UA: "+380",
+  AE: "+971",
+  GB: "+44",
+  US: "+1",
+  UM: "+1",
+  UY: "+598",
+  UZ: "+998",
+  VU: "+678",
+  VE: "+58",
+  VN: "+84",
+  VG: "+1",
+  VI: "+1",
+  WF: "+681",
+  EH: "+212",
+  YE: "+967",
+  ZM: "+260",
+  ZW: "+263",
+};
+const emptySportEntry = {
+  sportPracticed: "",
+  sportLevel: "",
+  sessionsPerWeek: ""
+};
+const emptySupplementEntry = {
+  name: "",
+  customName: "",
+  dose: "",
+  unit: "",
+  customUnit: "",
+  frequency: "",
+  customFrequency: "",
+  timing: "",
+  customTiming: "",
+  category: "",
+  customCategory: "",
+  startDate: "",
+  status: "ongoing",
+  remark: ""
+};
+const emptyInjuryEntry = {
+  zone: "",
+  customZone: "",
+  startDate: "",
+  status: "ongoing",
+  remark: ""
+};
+const emptyMedicalEntry = {
+  name: "",
+  customName: "",
+  description: "",
+  startDate: "",
+  status: "ongoing",
+  remark: ""
+};
+const emptySportProfileForm = {
+  heightCm: "",
+  currentWeightKg: "",
+  hasNoSport: false,
+  sports: [{ ...emptySportEntry }],
+  hasNoSupplement: false,
+  supplements: [{ ...emptySupplementEntry }],
+  hasNoInjury: false,
+  injuryEntries: [{ ...emptyInjuryEntry }],
+  hasNoMedicalInformation: false,
+  medicalEntries: [{ ...emptyMedicalEntry }],
+  sportGoal: "",
+  sportGoalCustom: "",
+  injuries: "",
+  remarks: ""
+};
+const emptySettingsForm = {
+  firstName: "",
+  lastName: "",
+  avatarUrl: "",
+  country: "",
+  phoneNumber: "",
+  phoneCountryCode: "",
+  phoneVerifiedAt: "",
+  addressLine1: "",
+  addressLine2: "",
+  postalCode: "",
+  city: "",
+  region: "",
+  newEmail: "",
+  currentPassword: "",
+  newPassword: "",
+  confirmNewPassword: ""
+};
+const athleteAvatarCatalog = {
+  male: Array.from({ length: 10 }, (_, index) => `/avatars/homme/avatar-homme-${index + 1}.png`),
+  female: Array.from({ length: 10 }, (_, index) => `/avatars/femme%20/avatar-femme-${index + 1}.png`)
+};
+
+function getAthleteAvatarOptions(sex) {
+  return String(sex || "").toLowerCase() === "female" ? athleteAvatarCatalog.female : athleteAvatarCatalog.male;
+}
+
+function getAthleteSexLabel(sex) {
+  return String(sex || "").toLowerCase() === "female" ? "Femme" : "Homme";
+}
+
+function getCountryDialCode(countryCode) {
+  return countryDialCodeMap[String(countryCode || "").toUpperCase()] || "+";
+}
+
+function getOrCreateSignupClientId() {
+  try {
+    const existing = window.localStorage.getItem("hm-signup-client-id");
+    if (existing) return existing;
+
+    const nextId =
+      typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `signup-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    window.localStorage.setItem("hm-signup-client-id", nextId);
+    return nextId;
+  } catch {
+    return "";
+  }
+}
+
+function isAdultBirthDate(value) {
+  if (!value) return false;
+  const [year, month, day] = value.split("-").map(Number);
+  if (!year || !month || !day) return false;
+
+  const today = new Date();
+  let age = today.getFullYear() - year;
+  const monthDelta = today.getMonth() + 1 - month;
+  if (monthDelta < 0 || (monthDelta === 0 && today.getDate() < day)) {
+    age -= 1;
+  }
+
+  return age >= 18;
+}
+
+function normalizeSupplementEntry(supplement = {}) {
+  const name = String(supplement.name || supplement.supplement_name || "").trim();
+  const unit = String(supplement.unit || "").trim();
+  const frequency = String(supplement.frequency || "").trim();
+  const timing = String(supplement.timing || supplement.moment || "").trim();
+  const category = String(supplement.category || "").trim();
+  const status = String(supplement.status || "ongoing").trim() === "stopped" ? "stopped" : "ongoing";
+
+  return {
+    name,
+    custom_name: String(supplement.custom_name || supplement.customName || "").trim(),
+    dose:
+      supplement.dose === null || supplement.dose === undefined || supplement.dose === ""
+        ? null
+        : Number(supplement.dose),
+    unit,
+    custom_unit: String(supplement.custom_unit || supplement.customUnit || "").trim(),
+    frequency,
+    custom_frequency: String(supplement.custom_frequency || supplement.customFrequency || "").trim(),
+    timing,
+    custom_timing: String(supplement.custom_timing || supplement.customTiming || "").trim(),
+    category,
+    custom_category: String(supplement.custom_category || supplement.customCategory || "").trim(),
+    start_date: supplement.start_date || supplement.startDate || "",
+    status,
+    remark: String(supplement.remark || supplement.notes || "").trim()
+  };
+}
+
+function normalizeInjuryEntry(injury = {}) {
+  const zone = String(injury.zone || "").trim();
+  const status = String(injury.status || "ongoing").trim() === "completed" ? "completed" : "ongoing";
+
+  return {
+    zone,
+    custom_zone: String(injury.custom_zone || injury.customZone || "").trim(),
+    start_date: injury.start_date || injury.startDate || "",
+    status,
+    remark: String(injury.remark || "").trim()
+  };
+}
+
+function normalizeMedicalEntry(medical = {}) {
+  const name = String(medical.name || medical.problem_name || medical.problemName || "").trim();
+  const status = String(medical.status || "ongoing").trim() === "completed" ? "completed" : "ongoing";
+
+  return {
+    name,
+    custom_name: String(medical.custom_name || medical.customName || "").trim(),
+    description: String(medical.description || "").trim(),
+    start_date: medical.start_date || medical.startDate || "",
+    status,
+    remark: String(medical.remark || "").trim()
+  };
+}
+
+function normalizeSportProfile(profile = {}) {
+  const rawSports = Array.isArray(profile.sport_practices) ? profile.sport_practices : [];
+  const legacySport =
+    profile.sport_practiced && profile.sport_practiced !== "none"
+      ? [
+        {
+          sport_practiced: profile.sport_practiced,
+          sport_level: profile.sport_level || "",
+          sessions_per_week: profile.sessions_per_week ?? null
+        }
+      ]
+      : [];
+  const normalizedSports = (rawSports.length ? rawSports : legacySport)
+    .map((sport) => ({
+      sport_practiced: String(sport?.sport_practiced || sport?.sportPracticed || "").trim(),
+      sport_level: String(sport?.sport_level || sport?.sportLevel || "").trim(),
+      sessions_per_week:
+        sport?.sessions_per_week === null || sport?.sessions_per_week === undefined
+          ? null
+          : Number(sport.sessions_per_week)
+    }))
+    .filter((sport) => sport.sport_practiced);
+  const hasNoSport = Boolean(profile.has_no_sport || profile.sport_practiced === "none");
+  const rawSupplements = Array.isArray(profile.dietary_supplements) ? profile.dietary_supplements : [];
+  const normalizedSupplements = rawSupplements
+    .map(normalizeSupplementEntry)
+    .filter((supplement) => supplement.name || supplement.custom_name);
+  const hasNoSupplement = Boolean(profile.has_no_supplement || profile.dietary_supplements_status === "none");
+  const normalizedInjuries = (Array.isArray(profile.injury_history) ? profile.injury_history : [])
+    .map(normalizeInjuryEntry)
+    .filter((injury) => injury.zone || injury.custom_zone);
+  const hasNoInjury = Boolean(profile.has_no_injury || profile.injury_history_status === "none");
+  const normalizedMedicalInformation = (Array.isArray(profile.medical_information) ? profile.medical_information : [])
+    .map(normalizeMedicalEntry)
+    .filter((medical) => medical.name || medical.custom_name);
+  const hasNoMedicalInformation = Boolean(
+    profile.has_no_medical_information ||
+    profile.has_no_medical ||
+    profile.medical_information_status === "none"
+  );
+  const sportGoal = String(profile.sport_goal || "").trim();
+  const sportGoalCustom = String(profile.sport_goal_custom || profile.sportGoalCustom || "").trim();
+
+  return {
+    first_name: profile.first_name || "",
+    last_name: profile.last_name || "",
+    date_of_birth: profile.date_of_birth || null,
+    sex: profile.sex || "",
+    country_code: profile.country_code || "",
+    avatar_url: profile.avatar_url || "",
+    phone_number: profile.phone_number || "",
+    phone_country_code: profile.phone_country_code || "",
+    phone_verified_at: profile.phone_verified_at || null,
+    address_line1: profile.address_line1 || "",
+    address_line2: profile.address_line2 || "",
+    postal_code: profile.postal_code || "",
+    city: profile.city || "",
+    region: profile.region || "",
+    created_at: profile.created_at || null,
+    height_cm: profile.height_cm ?? null,
+    current_weight_kg: profile.current_weight_kg ?? null,
+    has_no_sport: hasNoSport,
+    sport_practices: hasNoSport ? [] : normalizedSports,
+    has_no_supplement: hasNoSupplement,
+    dietary_supplements: hasNoSupplement ? [] : normalizedSupplements,
+    has_no_injury: hasNoInjury,
+    injury_history: hasNoInjury ? [] : normalizedInjuries,
+    has_no_medical_information: hasNoMedicalInformation,
+    medical_information: hasNoMedicalInformation ? [] : normalizedMedicalInformation,
+    sport_practiced: profile.sport_practiced || "",
+    sport_level: profile.sport_level || "",
+    sport_goal: sportGoal,
+    sport_goal_custom: sportGoal === "other" ? sportGoalCustom : "",
+    sessions_per_week: profile.sessions_per_week ?? null,
+    injuries: profile.injuries || "",
+    remarks: profile.remarks || "",
+    sport_profile_completed_at: profile.sport_profile_completed_at || null
+  };
+}
+
+function profileSettingsToForm(user = {}, profile = {}) {
+  const normalized = normalizeSportProfile(profile);
+  const country = normalized.country_code || user.country || "";
+
+  return {
+    firstName: normalized.first_name || user.firstName || "",
+    lastName: normalized.last_name || user.lastName || "",
+    avatarUrl: normalized.avatar_url || user.avatarUrl || "",
+    country,
+    phoneNumber: normalized.phone_number || user.phoneNumber || "",
+    phoneCountryCode: normalized.phone_country_code || user.phoneCountryCode || getCountryDialCode(country),
+    phoneVerifiedAt: normalized.phone_verified_at || user.phoneVerifiedAt || "",
+    addressLine1: normalized.address_line1 || user.addressLine1 || "",
+    addressLine2: normalized.address_line2 || user.addressLine2 || "",
+    postalCode: normalized.postal_code || user.postalCode || "",
+    city: normalized.city || user.city || "",
+    region: normalized.region || user.region || "",
+    newEmail: "",
+    currentPassword: "",
+    newPassword: "",
+    confirmNewPassword: ""
+  };
+}
+
+function settingsFormToProfilePayload(form) {
+  return {
+    first_name: form.firstName.trim(),
+    last_name: form.lastName.trim(),
+    country_code: form.country
+  };
+}
+
+function areSameSettingsSnapshot(a, b) {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function settingsProfileSnapshot(form = {}) {
+  return {
+    firstName: String(form.firstName || "").trim(),
+    lastName: String(form.lastName || "").trim(),
+    avatarUrl: String(form.avatarUrl || "").trim(),
+    country: String(form.country || "")
+  };
+}
+
+function settingsContactSnapshot(form = {}) {
+  return {
+    phoneNumber: String(form.phoneNumber || "").trim(),
+    phoneCountryCode: getCountryDialCode(form.country),
+    addressLine1: String(form.addressLine1 || "").trim(),
+    addressLine2: String(form.addressLine2 || "").trim(),
+    postalCode: String(form.postalCode || "").trim(),
+    city: String(form.city || "").trim(),
+    region: String(form.region || "").trim()
+  };
+}
+
+function sportCoreSnapshot(form = {}) {
+  const sports = form.hasNoSport
+    ? []
+    : (Array.isArray(form.sports) ? form.sports : [])
+      .map((sport) => ({
+        sport_practiced: String(sport.sportPracticed || "").trim(),
+        sport_level: String(sport.sportLevel || ""),
+        sessions_per_week:
+          sport.sessionsPerWeek === "" || sport.sessionsPerWeek === null || sport.sessionsPerWeek === undefined
+            ? null
+            : Number(sport.sessionsPerWeek)
+      }))
+      .filter((sport) => sport.sport_practiced);
+
+  return {
+    height_cm: form.heightCm === "" ? null : Number(form.heightCm),
+    current_weight_kg: form.currentWeightKg === "" ? null : Number(form.currentWeightKg),
+    has_no_sport: Boolean(form.hasNoSport),
+    sport_practices: sports,
+    sport_goal: String(form.sportGoal || ""),
+    sport_goal_custom: form.sportGoal === "other" ? String(form.sportGoalCustom || "").trim() : "",
+    remarks: String(form.remarks || "").trim()
+  };
+}
+
+function nutritionSnapshot(form = {}) {
+  return {
+    has_no_supplement: Boolean(form.hasNoSupplement),
+    dietary_supplements: sportProfileFormToSupplements(form)
+  };
+}
+
+function healthSnapshot(form = {}) {
+  return {
+    has_no_injury: Boolean(form.hasNoInjury),
+    injury_history: sportProfileFormToInjuries(form),
+    has_no_medical_information: Boolean(form.hasNoMedicalInformation),
+    medical_information: sportProfileFormToMedicalInformation(form)
+  };
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("PHOTO_READ_FAILED"));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function resizeAvatarFile(file) {
+  if (!file || !String(file.type || "").startsWith("image/")) {
+    throw new Error("PHOTO_INVALID");
+  }
+
+  if (file.size > 6 * 1024 * 1024) {
+    throw new Error("PHOTO_TOO_LARGE");
+  }
+
+  const dataUrl = await readFileAsDataUrl(file);
+
+  if (typeof window === "undefined" || typeof document === "undefined" || typeof Image === "undefined") {
+    return dataUrl;
+  }
+
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.onload = () => {
+      const maxSize = 640;
+      const ratio = Math.min(maxSize / image.width, maxSize / image.height, 1);
+      const width = Math.max(1, Math.round(image.width * ratio));
+      const height = Math.max(1, Math.round(image.height * ratio));
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+
+      if (!context) {
+        resolve(dataUrl);
+        return;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      context.drawImage(image, 0, 0, width, height);
+      resolve(canvas.toDataURL("image/jpeg", 0.86));
+    };
+    image.onerror = () => resolve(dataUrl);
+    image.src = dataUrl;
+  });
+}
+
+function isSportProfileComplete(profile = {}) {
+  const normalized = normalizeSportProfile(profile);
+  const hasValidSportInformation =
+    normalized.has_no_sport ||
+    (normalized.sport_practices.length > 0 &&
+      normalized.sport_practices.every(
+        (sport) =>
+          sport.sport_practiced.trim() &&
+          sportLevelValues.includes(sport.sport_level) &&
+          Number.isInteger(Number(sport.sessions_per_week)) &&
+          Number(sport.sessions_per_week) >= 0
+      ));
+  const hasValidSupplementInformation =
+    normalized.has_no_supplement ||
+    (normalized.dietary_supplements.length > 0 &&
+      normalized.dietary_supplements.every(
+        (supplement) =>
+          (supplement.name || supplement.custom_name) &&
+          Number(supplement.dose) > 0 &&
+          (supplement.unit || supplement.custom_unit) &&
+          (supplement.frequency || supplement.custom_frequency) &&
+          (supplement.timing || supplement.custom_timing) &&
+          (supplement.category || supplement.custom_category) &&
+          ["ongoing", "stopped"].includes(supplement.status)
+      ));
+  const hasValidInjuryInformation = normalized.has_no_injury || normalized.injury_history.length > 0;
+  const hasValidMedicalInformation =
+    normalized.has_no_medical_information || normalized.medical_information.length > 0;
+  const hasValidGoal =
+    sportGoalValues.includes(normalized.sport_goal) &&
+    (normalized.sport_goal !== "other" || Boolean(normalized.sport_goal_custom));
+
+  return Boolean(
+    Number(normalized.height_cm) > 0 &&
+    Number(normalized.current_weight_kg) > 0 &&
+    hasValidGoal &&
+    hasValidSportInformation &&
+    hasValidSupplementInformation &&
+    hasValidInjuryInformation &&
+    hasValidMedicalInformation
+  );
+}
+
+function sportProfileToForm(profile = {}) {
+  const normalized = normalizeSportProfile(profile);
+  const sports = normalized.sport_practices.length
+    ? normalized.sport_practices.map((sport) => ({
+      sportPracticed: sport.sport_practiced || "",
+      sportLevel: sport.sport_level || "",
+      sessionsPerWeek:
+        sport.sessions_per_week === null || sport.sessions_per_week === undefined
+          ? ""
+          : String(sport.sessions_per_week)
+    }))
+    : [{ ...emptySportEntry }];
+  const supplements = normalized.dietary_supplements.length
+    ? normalized.dietary_supplements.map((supplement) => ({
+      name: supplement.name || "",
+      customName: supplement.custom_name || "",
+      dose: supplement.dose === null || supplement.dose === undefined ? "" : String(supplement.dose),
+      unit: supplement.unit || "",
+      customUnit: supplement.custom_unit || "",
+      frequency: supplement.frequency || "",
+      customFrequency: supplement.custom_frequency || "",
+      timing: supplement.timing || "",
+      customTiming: supplement.custom_timing || "",
+      category: supplement.category || "",
+      customCategory: supplement.custom_category || "",
+      startDate: supplement.start_date || "",
+      status: supplement.status || "ongoing",
+      remark: supplement.remark || ""
+    }))
+    : [{ ...emptySupplementEntry }];
+  const injuryEntries = normalized.injury_history.length
+    ? normalized.injury_history.map((injury) => ({
+      zone: injury.zone || "",
+      customZone: injury.custom_zone || "",
+      startDate: injury.start_date || "",
+      status: injury.status || "ongoing",
+      remark: injury.remark || ""
+    }))
+    : [{ ...emptyInjuryEntry }];
+  const medicalEntries = normalized.medical_information.length
+    ? normalized.medical_information.map((medical) => ({
+      name: medical.name || "",
+      customName: medical.custom_name || "",
+      description: medical.description || "",
+      startDate: medical.start_date || "",
+      status: medical.status || "ongoing",
+      remark: medical.remark || ""
+    }))
+    : [{ ...emptyMedicalEntry }];
+
+  return {
+    heightCm: normalized.height_cm ? String(normalized.height_cm) : "",
+    currentWeightKg: normalized.current_weight_kg ? String(normalized.current_weight_kg) : "",
+    hasNoSport: normalized.has_no_sport,
+    sports,
+    hasNoSupplement: normalized.has_no_supplement,
+    supplements,
+    hasNoInjury: normalized.has_no_injury,
+    injuryEntries,
+    hasNoMedicalInformation: normalized.has_no_medical_information,
+    medicalEntries,
+    sportGoal: normalized.sport_goal,
+    sportGoalCustom: normalized.sport_goal_custom,
+    injuries: normalized.injuries,
+    remarks: normalized.remarks
+  };
+}
+
+function sportProfileFormToSupplements(form) {
+  if (form.hasNoSupplement) return [];
+
+  return form.supplements
+    .map((supplement) => ({
+      name: supplement.name,
+      custom_name: supplement.name === "Autre" ? supplement.customName.trim() : "",
+      dose: Number(supplement.dose),
+      unit: supplement.unit,
+      custom_unit: supplement.unit === "autre" ? supplement.customUnit.trim() : "",
+      frequency: supplement.frequency,
+      custom_frequency: supplement.frequency === "Autre" ? supplement.customFrequency.trim() : "",
+      timing: supplement.timing,
+      custom_timing: supplement.timing === "Autre" ? supplement.customTiming.trim() : "",
+      category: supplement.category,
+      custom_category: supplement.category === "Autre" ? supplement.customCategory.trim() : "",
+      start_date: supplement.startDate,
+      status: supplement.status === "stopped" ? "stopped" : "ongoing",
+      remark: supplement.remark.trim()
+    }))
+    .filter((supplement) => supplement.name || supplement.custom_name);
+}
+
+function sportProfileFormToInjuries(form) {
+  if (form.hasNoInjury) return [];
+
+  return form.injuryEntries
+    .map((injury) => ({
+      zone: injury.zone,
+      custom_zone: injury.zone === "Autre" ? injury.customZone.trim() : "",
+      start_date: injury.startDate,
+      status: injury.status === "completed" ? "completed" : "ongoing",
+      remark: injury.remark.trim()
+    }))
+    .filter((injury) => injury.zone || injury.custom_zone || injury.start_date || injury.remark);
+}
+
+function sportProfileFormToMedicalInformation(form) {
+  if (form.hasNoMedicalInformation) return [];
+
+  return form.medicalEntries
+    .map((medical) => ({
+      name: medical.name,
+      custom_name: medical.name === "Autre" ? medical.customName.trim() : "",
+      description: medical.description.trim(),
+      start_date: medical.startDate,
+      status: medical.status === "completed" ? "completed" : "ongoing",
+      remark: medical.remark.trim()
+    }))
+    .filter((medical) => medical.name || medical.custom_name || medical.description || medical.start_date || medical.remark);
+}
+
+function hasSportEntryContent(sport = {}) {
+  return Boolean(sport.sportPracticed?.trim() || sport.sportLevel || sport.sessionsPerWeek);
+}
+
+function areSportFieldsValid(form) {
+  if (form.hasNoSport) return true;
+  if (!Array.isArray(form.sports) || form.sports.length === 0) return false;
+
+  const filledSports = form.sports.filter(hasSportEntryContent);
+  if (filledSports.length === 0) return false;
+
+  return filledSports.every((sport) => {
+    const sessions = Number(sport.sessionsPerWeek);
+    return Boolean(
+      sport.sportPracticed.trim() &&
+      sportLevelValues.includes(sport.sportLevel) &&
+      Number.isInteger(sessions) &&
+      sessions >= 0 &&
+      sessions <= 21
+    );
+  });
+}
+
+function hasSupplementEntryContent(supplement = {}) {
+  return Boolean(
+    supplement.name ||
+    supplement.customName?.trim() ||
+    supplement.dose ||
+    supplement.unit ||
+    supplement.customUnit?.trim() ||
+    supplement.frequency ||
+    supplement.customFrequency?.trim() ||
+    supplement.timing ||
+    supplement.customTiming?.trim() ||
+    supplement.category ||
+    supplement.customCategory?.trim() ||
+    supplement.startDate ||
+    supplement.remark?.trim()
+  );
+}
+
+function hasInjuryEntryContent(injury = {}) {
+  return Boolean(injury.zone || injury.customZone?.trim() || injury.startDate || injury.remark?.trim());
+}
+
+function hasMedicalEntryContent(medical = {}) {
+  return Boolean(
+    medical.name || medical.customName?.trim() || medical.description?.trim() || medical.startDate || medical.remark?.trim()
+  );
+}
+
+function areSupplementFieldsValid(form) {
+  if (form.hasNoSupplement) return true;
+  if (!Array.isArray(form.supplements) || form.supplements.length === 0) return false;
+
+  const filledSupplements = form.supplements.filter(hasSupplementEntryContent);
+  if (filledSupplements.length === 0) return false;
+
+  return filledSupplements.every((supplement) => {
+    const dose = Number(supplement.dose);
+    const hasName = supplement.name && (supplement.name !== "Autre" || supplement.customName.trim());
+    const hasUnit = supplement.unit && (supplement.unit !== "autre" || supplement.customUnit.trim());
+    const hasFrequency =
+      supplement.frequency && (supplement.frequency !== "Autre" || supplement.customFrequency.trim());
+    const hasTiming = supplement.timing && (supplement.timing !== "Autre" || supplement.customTiming.trim());
+    const hasCategory =
+      supplement.category && (supplement.category !== "Autre" || supplement.customCategory.trim());
+
+    return Boolean(
+      hasName &&
+      Number.isFinite(dose) &&
+      dose > 0 &&
+      hasUnit &&
+      hasFrequency &&
+      hasTiming &&
+      hasCategory &&
+      ["ongoing", "stopped"].includes(supplement.status)
+    );
+  });
+}
+
+function areInjuryFieldsValid(form) {
+  if (form.hasNoInjury) return true;
+  if (!Array.isArray(form.injuryEntries) || form.injuryEntries.length === 0) return false;
+
+  const filledInjuries = form.injuryEntries.filter(hasInjuryEntryContent);
+  if (filledInjuries.length === 0) return false;
+
+  return filledInjuries.every((injury) => {
+    return Boolean(
+      injury.zone &&
+      (injury.zone !== "Autre" || injury.customZone.trim()) &&
+      ["ongoing", "completed"].includes(injury.status)
+    );
+  });
+}
+
+function areMedicalFieldsValid(form) {
+  if (form.hasNoMedicalInformation) return true;
+  if (!Array.isArray(form.medicalEntries) || form.medicalEntries.length === 0) return false;
+
+  const filledMedicalEntries = form.medicalEntries.filter(hasMedicalEntryContent);
+  if (filledMedicalEntries.length === 0) return false;
+
+  return filledMedicalEntries.every((medical) => {
+    return Boolean(
+      medical.name &&
+      (medical.name !== "Autre" || medical.customName.trim()) &&
+      medical.description.trim() &&
+      ["ongoing", "completed"].includes(medical.status)
+    );
+  });
+}
+
+function isSportGoalFieldValid(form) {
+  return Boolean(
+    sportGoalValues.includes(form.sportGoal) &&
+    (form.sportGoal !== "other" || String(form.sportGoalCustom || "").trim())
+  );
+}
+
+function sportProfileFormToPayload(form) {
+  const sports = form.hasNoSport
+    ? []
+    : form.sports
+      .map((sport) => ({
+        sport_practiced: sport.sportPracticed.trim(),
+        sport_level: sport.sportLevel,
+        sessions_per_week: Number(sport.sessionsPerWeek)
+      }))
+      .filter((sport) => sport.sport_practiced);
+  const firstSport = sports[0] || null;
+  const injuries = sportProfileFormToInjuries(form);
+
+  return {
+    height_cm: Number(form.heightCm),
+    current_weight_kg: Number(form.currentWeightKg),
+    has_no_sport: Boolean(form.hasNoSport),
+    sport_practices: sports,
+    sport_practiced: form.hasNoSport ? "none" : firstSport?.sport_practiced || "",
+    sport_level: form.hasNoSport ? "" : firstSport?.sport_level || "",
+    sport_goal: form.sportGoal,
+    sessions_per_week: form.hasNoSport ? null : firstSport?.sessions_per_week ?? null,
+    injuries: injuries
+      .map((injury) => `${injury.zone === "Autre" ? injury.custom_zone : injury.zone} - ${injury.status}`)
+      .join("\n"),
+    remarks: form.remarks.trim(),
+    sport_profile_completed_at: new Date().toISOString()
+  };
+}
+
+function sanitizePositiveNumberInput(value, { integer = false, maxDecimals = 1 } = {}) {
+  const normalized = String(value || "").replace(",", ".");
+  const digitsOnly = normalized.replace(/[^\d.]/g, "");
+  const [head = "", ...rest] = digitsOnly.split(".");
+  const safeHead = head.replace(/\D/g, "");
+
+  if (integer || rest.length === 0) {
+    return safeHead;
+  }
+
+  return `${safeHead}.${rest.join("").replace(/\D/g, "").slice(0, maxDecimals)}`;
+}
+
+function preventInvalidNumberKey(event) {
+  if (["-", "+", "e", "E"].includes(event.key)) {
+    event.preventDefault();
+  }
+}
+
+function formatDisplayDate(value, locale = "fr") {
+  if (!value) return "-";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return new Intl.DateTimeFormat(locale, {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  }).format(date);
+}
+
+function getAthleteMatricule(userId) {
+  const source = String(userId || "athlete").replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+  return `HF-${source.slice(0, 8).padEnd(8, "0")}`;
+}
+
+function getInitials(name = "") {
+  const parts = String(name).trim().split(/\s+/).filter(Boolean);
+  const initials = parts.slice(0, 2).map((part) => part[0]).join("");
+  return initials.toUpperCase() || "HF";
+}
+
+function getUserDisplayName(user) {
+  if (!user) return "";
+
+  const fullName = String(user.fullName || `${user.firstName || ""} ${user.lastName || ""}`).trim();
+  return fullName || user.email || "Athlete";
+}
+
+function normalizeClientReview(review = {}) {
+  const authorId = String(review.authorId || review.author_id || "").trim();
+  const authorName = String(review.authorName || review.author_name || "").trim();
+  const avatarUrl = String(review.avatarUrl || review.avatar_url || "").trim();
+  const message = String(review.message || "").trim();
+  const rating = Math.max(0, Math.min(5, Number(review.rating) || 0));
+
+  if (!authorName || !message || !rating) return null;
+
+  return {
+    id: String(review.id || `review-${Date.now()}`),
+    authorId,
+    authorName,
+    avatarUrl,
+    rating,
+    message,
+    createdAt: review.createdAt || review.created_at || new Date().toISOString()
+  };
+}
+
+function buildWeightSeries(currentWeight, range) {
+  const base = Number(currentWeight) || 78;
+  const length = range === "week" ? 7 : range === "year" ? 12 : 8;
+  const drift = range === "year" ? 0.45 : range === "month" ? 0.28 : 0.18;
+
+  return Array.from({ length }, (_, index) => {
+    const offset = index - (length - 1);
+    const wave = Math.sin(index * 0.9) * 0.35;
+    return Number((base + offset * drift + wave).toFixed(1));
+  });
+}
+
+function buildObjectiveSeries(goal) {
+  const map = {
+    fat_loss_cut: {
+      title: "Taux de masse grasse",
+      unit: "%",
+      values: [24, 23.2, 22.5, 21.8, 21.1, 20.4]
+    },
+    muscle_hypertrophy: {
+      title: "Mensurations",
+      unit: "cm",
+      values: [35, 35.4, 35.8, 36.1, 36.5, 37]
+    },
+    vascular_hypertrophy: {
+      title: "Seances realisees",
+      unit: "",
+      values: [3, 4, 4, 5, 5, 6]
+    },
+    mobility: {
+      title: "Score de mobilite",
+      unit: "%",
+      values: [60, 64, 68, 72, 76, 80]
+    },
+    strength: {
+      title: "Progression des charges",
+      unit: "kg",
+      values: [60, 64, 68, 72, 76, 80]
+    },
+    body_recomposition: {
+      title: "Masse grasse",
+      unit: "%",
+      values: [20, 19.2, 18.5, 17.6, 16.8, 16]
+    }
+  };
+
+  return map[goal] || null;
+}
+
+function getChartPath(values, width = 520, height = 180, padding = 18) {
+  if (!values.length) return "";
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = Math.max(max - min, 1);
+  const step = values.length > 1 ? (width - padding * 2) / (values.length - 1) : 0;
+
+  return values
+    .map((value, index) => {
+      const x = padding + index * step;
+      const y = height - padding - ((value - min) / range) * (height - padding * 2);
+      return `${index === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`;
+    })
+    .join(" ");
+}
+
+function ProgressChart({ title, unit, values, action, compact }) {
+  const path = getChartPath(values);
+  const lastValue = values[values.length - 1] ?? 0;
+  const gradientId = `chart-gradient-${title.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+
+  return (
+    <div className={`rounded-2xl border border-slate-600/45 bg-slate-950/30 ${compact ? "p-2" : "p-4"}`}>
+      <div className={`flex flex-wrap items-start justify-between gap-2 ${compact ? "" : "gap-3"}`}>
+        <div>
+          <p
+            className={`font-bold uppercase tracking-[0.14em] text-slate-400 ${compact ? "text-[9px]" : "text-[11px]"}`}
+          >
+            {title}
+          </p>
+          <p className={`font-black text-white ${compact ? "mt-0.5 text-base" : "mt-1 text-2xl"}`}>
+            {lastValue}
+            {unit ? (
+              <span className={`ml-1 text-slate-300 ${compact ? "text-xs" : "text-sm"}`}>{unit}</span>
+            ) : null}
+          </p>
+        </div>
+        {action}
+      </div>
+      <svg
+        viewBox="0 0 520 180"
+        className={`w-full overflow-visible ${compact ? "mt-1 h-[4.25rem] sm:h-[4.75rem]" : "mt-4 h-44"}`}
+      >
+        <defs>
+          <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="rgb(52,211,153)" stopOpacity="0.35" />
+            <stop offset="100%" stopColor="rgb(52,211,153)" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        {[0, 1, 2, 3].map((line) => (
+          <line
+            key={line}
+            x1="18"
+            x2="502"
+            y1={18 + line * 48}
+            y2={18 + line * 48}
+            stroke="rgba(148,163,184,0.18)"
+            strokeWidth="1"
+          />
+        ))}
+        <path d={`${path} L 502 162 L 18 162 Z`} fill={`url(#${gradientId})`} />
+        <path
+          d={path}
+          fill="none"
+          stroke="rgb(52,211,153)"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={compact ? "3" : "4"}
+        />
+        {values.map((value, index) => {
+          const min = Math.min(...values);
+          const max = Math.max(...values);
+          const range = Math.max(max - min, 1);
+          const x = 18 + index * (484 / Math.max(values.length - 1, 1));
+          const y = 162 - ((value - min) / range) * 144;
+          return <circle key={`${value}-${index}`} cx={x} cy={y} r="4.5" fill="rgb(16,185,129)" stroke="#0f172a" strokeWidth="2" />;
+        })}
+      </svg>
+    </div>
+  );
+}
+
+const athleteCardDecorUrl = "/decor de la carte athlete.png";
+
+function AthleteLuxuryCard({ language, fullName, matricule, email, birthDate, country, registrationDate, initials, photoUrl }) {
+  const ekgGradId = useId().replace(/:/g, "");
+  const [isFlipped, setIsFlipped] = useState(false);
+  const copy =
+    language === "en"
+      ? {
+        coaching: "Hicham Coaching",
+        cardBand: "Athlete card",
+        coachLead: "Coach",
+        coachName: "Hicham",
+        proBadge: "Pro athlete",
+        labels: ["Full name", "Athlete ID", "Date of birth", "Registration date"]
+      }
+      : language === "ar"
+        ? {
+          coaching: "هشام كوتشينغ",
+          cardBand: "بطاقة الرياضي",
+          coachLead: "المدرب",
+          coachName: "هشام",
+          proBadge: "رياضي محترف",
+          labels: ["الاسم الكامل", "رقم الرياضي", "تاريخ الميلاد", "تاريخ التسجيل"]
+        }
+        : {
+          coaching: "Hicham Coaching",
+          cardBand: "Carte athlète",
+          coachLead: "Coach",
+          coachName: "Hicham",
+          proBadge: "Athlète pro",
+          labels: [
+            "Nom complet",
+            "Matricule",
+            "Date de naissance",
+            "Date d'inscription"
+          ]
+        };
+
+  const values = [fullName, matricule || email, birthDate, registrationDate];
+  const iconClass = "h-3 w-3 text-slate-100";
+  const icons = [
+    <svg key="u" className={iconClass} viewBox="0 0 24 24" aria-hidden>
+      <path
+        fill="currentColor"
+        d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+      />
+    </svg>,
+    <svg key="id" className={iconClass} viewBox="0 0 24 24" aria-hidden>
+      <path
+        fill="currentColor"
+        d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6zm2 0v12h12V6H6zm2 2h8v2H8V8zm0 4h5v2H8v-2z"
+      />
+    </svg>,
+    <svg key="cal" className={iconClass} viewBox="0 0 24 24" aria-hidden>
+      <path
+        fill="currentColor"
+        d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 16H5V10h14v10Zm0-12H5V6h14v2Z"
+      />
+    </svg>,
+    <svg key="clip" className={iconClass} viewBox="0 0 24 24" aria-hidden>
+      <path
+        fill="currentColor"
+        d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"
+      />
+    </svg>
+  ];
+
+  const coachIcon = (
+    <svg className={iconClass} viewBox="0 0 24 24" aria-hidden>
+      <path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h6v-1.5c0-.77.21-1.49.58-2.11A9.93 9.93 0 0 0 12 14zm6.5 1c-1.93 0-3.5 1.57-3.5 3.5V20h7v-1.5c0-1.93-1.57-3.5-3.5-3.5z" />
+    </svg>
+  );
+
+  return (
+    <article
+      className={`athlete-pro-card mx-auto w-full max-w-[30rem] shrink-0 ${isFlipped ? "is-flipped" : ""}`}
+      role="button"
+      tabIndex={0}
+      aria-label={isFlipped ? "Afficher la face principale de la carte athlète" : "Afficher le logo Hicham-Fit"}
+      onClick={() => setIsFlipped((value) => !value)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          setIsFlipped((value) => !value);
+        }
+      }}
+    >
+      <div className="athlete-pro-card__flipper">
+        <div className="athlete-pro-card__face athlete-pro-card__face--front">
+          <div className="athlete-pro-card__carbon" aria-hidden />
+          <div className="athlete-pro-card__metal" aria-hidden />
+
+          {/* EXACT NEON LINES OVERLAY */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none z-0" viewBox="0 0 344 200" preserveAspectRatio="none">
+            <defs>
+              <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="1.5" result="coloredBlur" />
+                <feMerge>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              <filter id="neonGlowStrong" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
+                <feMerge>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            {/* TRUE TRIANGLE carbon panel for the LOGO area (top-left) */}
+            <path d="M 0 0 L 108 0 L 0 88 Z"
+              fill="rgba(0,0,0,0.85)" stroke="#22c55e" strokeWidth="1.4" filter="url(#neonGlowStrong)" />
+
+            {/* Bottom-left carbon panel cut with green stroke */}
+            <path d="M 0 200 L 0 162 L 18 142 L 70 142 L 90 160 L 138 160 L 158 178 L 200 178 L 218 192 L 344 192 L 344 200 Z"
+              fill="rgba(0,0,0,0.55)" stroke="#22c55e" strokeWidth="1.1" filter="url(#neonGlowStrong)" />
+
+            {/* Top-right green tech accents */}
+            <path d="M 255 22 L 312 22 L 322 34 L 344 34" stroke="#22c55e" strokeWidth="1.1" fill="none" filter="url(#neonGlow)" opacity="0.85" />
+            <path d="M 220 184 L 264 184 L 272 192 L 310 192" stroke="#22c55e" strokeWidth="1" fill="none" filter="url(#neonGlow)" opacity="0.85" />
+          </svg>
+
+          <div className="athlete-pro-card__runner" aria-hidden>
+            <img src={athleteCardDecorUrl} alt="" className="athlete-pro-card__runner-img" decoding="async" />
+          </div>
+
+          {/* LEFT: logo + photo hexagon + ENTRAÎNEMENT MENTAL PERFORMANCE */}
+          <div className="athlete-pro-card__left">
+            <img src={hmLogo} alt="Hicham Coaching" className="athlete-pro-card__logo-img" />
+            <div className="athlete-pro-card__hex-wrap">
+              {photoUrl ? (
+                <img src={photoUrl} alt={fullName || "Athlete"} className="athlete-pro-card__hex-photo athlete-pro-card__hex-img" />
+              ) : (
+                <div className="athlete-pro-card__hex-photo font-display text-2xl font-black text-white sm:text-3xl">{initials}</div>
+              )}
+            </div>
+          </div>
+
+          {/* Mental block - moved below the card on the left side */}
+          <div className="athlete-pro-card__mental-block">
+            <svg className="athlete-pro-card__mental-dumbbell" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <rect x="2" y="9" width="2" height="6" rx="0.5" />
+              <rect x="4.5" y="7" width="2.5" height="10" rx="0.6" />
+              <rect x="7.5" y="11" width="9" height="2" rx="0.6" />
+              <rect x="17" y="7" width="2.5" height="10" rx="0.6" />
+              <rect x="20" y="9" width="2" height="6" rx="0.5" />
+            </svg>
+            <span className="athlete-pro-card__mental-divider" aria-hidden />
+            <div className="athlete-pro-card__mental-text">
+              <span>ENTRAÎNEMENT</span>
+              <span>MENTAL</span>
+              <span>PERFORMANCE</span>
+            </div>
+          </div>
+
+          {/* RIGHT: card band + info rows + footer */}
+          <div className="athlete-pro-card__right">
+            <div className="athlete-pro-card__brand flex flex-col w-full">
+              <div className="athlete-pro-card__brand-top">
+                {copy.coaching.toUpperCase()}
+              </div>
+              <div className="min-w-0 w-full">
+                <div className="athlete-pro-card__brand-sub">
+                  <span className="athlete-pro-card__brand-band flex items-baseline">
+                    <span className="text-white">{copy.cardBand.split(' ')[0]}</span>
+                    <span className="text-[#22c55e] ml-1.5" style={{ textShadow: '0 0 12px rgba(34,197,94,0.7)' }}>{copy.cardBand.split(' ').slice(1).join(' ')}</span>
+                    <span className="text-[#22c55e] ml-2 font-black italic tracking-widest text-[0.6rem] opacity-80">///</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex w-full items-start relative z-10 mt-1">
+              <div className="flex-1">
+                <ul className="athlete-pro-card__list w-full">
+                  {copy.labels.map((label, i) => (
+                    <li key={label} className="athlete-pro-card__row">
+                      <span className="athlete-pro-card__icon-hex">{icons[i]}</span>
+                      <div className="min-w-0 flex-1 athlete-pro-card__info-grid">
+                        <span className="athlete-pro-card__label">{label}</span>
+                        <span className="athlete-pro-card__colon">:</span>
+                        <span className="athlete-pro-card__value">{values[i] || "—"}</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Shield removed */}
+
+          {/* Footer: only DÉPASSE TES LIMITES */}
+          <div className="athlete-pro-card__tech-footer">
+            <div className="athlete-pro-card__tagline-right">
+              DÉPASSE&nbsp;TES&nbsp;LIMITES <span className="athlete-pro-card__tagline-slash">///</span>
+            </div>
+          </div>
+        </div>
+        <div className="athlete-pro-card__face athlete-pro-card__face--back" aria-hidden={!isFlipped}>
+          <div className="athlete-pro-card__back-grid" aria-hidden />
+          <div className="athlete-pro-card__back-frame" aria-hidden />
+          <div className="athlete-pro-card__back-logo-ring">
+            <img src={hmLogo} alt="" className="athlete-pro-card__back-logo" />
+          </div>
+          <div className="athlete-pro-card__back-title">
+            <span>HICHAM-FIT</span>
+            <span>APP</span>
+          </div>
+          <p className="athlete-pro-card__back-subtitle">ATHLETE PERFORMANCE SYSTEM</p>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+const COACH_SLIDES = {
+  fr: [
+    {
+      eyebrow: "Coaching personnalisé",
+      title: "Profite d'un accompagnement personnalisé",
+      description: "Un suivi sportif adapté à ton objectif pour progresser efficacement avec le coach Hicham.",
+      cta: "Découvrir",
+      image: "https://images.unsplash.com/photo-1594737625785-a6cbdabd333c?q=80&w=720&auto=format&fit=crop"
+    },
+    {
+      eyebrow: "Programmes signature",
+      title: "Découvre les programmes du coach",
+      description: "Accède à des programmes structurés pour perdre du gras, gagner en force ou améliorer ta condition physique.",
+      cta: "Voir les programmes",
+      image: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=720&auto=format&fit=crop"
+    },
+    {
+      eyebrow: "Boutique & ressources",
+      title: "Boost ta progression",
+      description: "Guides, conseils et ressources pour t'aider à rester motivé et atteindre des résultats durables.",
+      cta: "Voir la boutique",
+      image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=720&auto=format&fit=crop"
+    }
+  ],
+  en: [
+    {
+      eyebrow: "Personalised coaching",
+      title: "Enjoy fully personalised coaching",
+      description: "A training plan tailored to your goal so you can progress efficiently with coach Hicham.",
+      cta: "Discover",
+      image: "https://images.unsplash.com/photo-1594737625785-a6cbdabd333c?q=80&w=720&auto=format&fit=crop"
+    },
+    {
+      eyebrow: "Signature programs",
+      title: "Discover the coach's programs",
+      description: "Access structured plans to lose fat, build strength or improve your physical condition.",
+      cta: "See programs",
+      image: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=720&auto=format&fit=crop"
+    },
+    {
+      eyebrow: "Shop & resources",
+      title: "Boost your progress",
+      description: "Guides, tips and resources to help you stay motivated and reach lasting results.",
+      cta: "Visit the shop",
+      image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=720&auto=format&fit=crop"
+    }
+  ],
+  ar: [
+    {
+      eyebrow: "تدريب شخصي",
+      title: "استفد من مرافقة شخصية",
+      description: "متابعة رياضية مكيّفة مع هدفك للتقدم بفعالية مع المدرب هشام.",
+      cta: "اكتشف",
+      image: "https://images.unsplash.com/photo-1594737625785-a6cbdabd333c?q=80&w=720&auto=format&fit=crop"
+    },
+    {
+      eyebrow: "البرامج المميزة",
+      title: "اكتشف برامج المدرب",
+      description: "احصل على برامج منظمة لخسارة الدهون أو زيادة القوة أو تحسين لياقتك البدنية.",
+      cta: "عرض البرامج",
+      image: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=720&auto=format&fit=crop"
+    },
+    {
+      eyebrow: "المتجر والمصادر",
+      title: "عزّز تقدمك",
+      description: "أدلة ونصائح وموارد تساعدك على البقاء متحفزًا وتحقيق نتائج دائمة.",
+      cta: "زيارة المتجر",
+      image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=720&auto=format&fit=crop"
+    }
+  ]
+};
+
+function DashboardSidebar({
+  language = "fr",
+  isOpen,
+  onToggle,
+  activeKey = "dashboard",
+  onNavigate,
+  onLogout,
+  isLight = false,
+  onToggleTheme,
+  onLanguageChange,
+  currentLanguageOption,
+  languageOptions,
+  isLangMenuOpen,
+  onToggleLangMenu,
+  athleteName = "",
+  athleteSubtitle = "",
+  athleteAvatarUrl = ""
+}) {
+  const labels = {
+    fr: {
+      dashboard: "Tableau de bord",
+      programs: "Mes programmes",
+      shop: "Boutique",
+      exercises: "Exercices",
+      appointments: "Rendez-vous",
+      settings: "Paramètres",
+      logout: "Déconnexion",
+      collapse: "Réduire",
+      expand: "Étendre",
+      brandLine: "RÉVEILLE TON INSTINCT",
+      brandName: "HICHAM-FIT APP"
+    },
+    en: {
+      dashboard: "Dashboard",
+      programs: "My programs",
+      shop: "Shop",
+      exercises: "Exercises",
+      appointments: "Appointments",
+      settings: "Settings",
+      logout: "Logout",
+      collapse: "Collapse",
+      expand: "Expand",
+      brandLine: "AWAKEN YOUR INSTINCT",
+      brandName: "HICHAM-FIT APP"
+    },
+    ar: {
+      dashboard: "لوحة التحكم",
+      programs: "برامجي",
+      shop: "المتجر",
+      exercises: "تمارين",
+      appointments: "المواعيد",
+      settings: "الإعدادات",
+      logout: "تسجيل الخروج",
+      collapse: "طي",
+      expand: "توسيع",
+      brandLine: "أيقظ غريزتك",
+      brandName: "هشام-فيت APP"
+    }
+  };
+  const t = labels[language] || labels.fr;
+
+  const items = [
+    {
+      key: "dashboard",
+      label: t.dashboard,
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="7" height="9" rx="1.5" />
+          <rect x="14" y="3" width="7" height="5" rx="1.5" />
+          <rect x="14" y="12" width="7" height="9" rx="1.5" />
+          <rect x="3" y="16" width="7" height="5" rx="1.5" />
+        </svg>
+      )
+    },
+    {
+      key: "programs",
+      label: t.programs,
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6 4h9a3 3 0 0 1 3 3v13H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />
+          <path d="M6 16h12" />
+          <path d="M9 8h6M9 12h4" />
+        </svg>
+      )
+    },
+    {
+      key: "shop",
+      label: t.shop,
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 6h18l-1.5 11A2 2 0 0 1 17.5 19h-11a2 2 0 0 1-2-1.99L3 6Z" />
+          <path d="M8 6V4a4 4 0 0 1 8 0v2" />
+        </svg>
+      )
+    },
+    {
+      key: "exercises",
+      label: t.exercises,
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6.5 6.5L4 9l2.5 2.5" />
+          <path d="M17.5 17.5 20 15l-2.5-2.5" />
+          <path d="M8 16 16 8" />
+          <path d="M3.5 11.5 6 14" />
+          <path d="M18 10l2.5 2.5" />
+          <path d="M10 18l2.5 2.5" />
+        </svg>
+      )
+    },
+    {
+      key: "appointments",
+      label: t.appointments,
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="5" width="18" height="16" rx="2" />
+          <path d="M16 3v4M8 3v4M3 10h18" />
+          <circle cx="12" cy="15" r="1.5" fill="currentColor" />
+        </svg>
+      )
+    },
+    {
+      key: "settings",
+      label: t.settings,
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" />
+        </svg>
+      )
+    }
+  ];
+
+  return (
+    <aside
+      className={`hf-sidebar ${isOpen ? "is-open" : "is-collapsed"} ${isLight ? "is-light" : "is-dark"}`}
+      data-testid="dashboard-sidebar"
+      aria-label="Navigation principale"
+    >
+      <div className="hf-sidebar__inner">
+        {/* Brand area */}
+        <div className="hf-sidebar__brand">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggle?.();
+            }}
+            className="hf-sidebar__logo"
+            aria-label={isOpen ? t.collapse : t.expand}
+            aria-expanded={isOpen}
+            data-testid="sidebar-toggle"
+          >
+            <img src={hmLogo} alt="" />
+          </button>
+          <span className="hf-sidebar__brand-text">
+            <span className="hf-sidebar__brand-eyebrow">{t.brandLine}</span>
+            <span className="hf-sidebar__brand-title">{t.brandName}</span>
+          </span>
+        </div>
+
+        {/* Athlete identity */}
+        {athleteName ? (
+          <div className="hf-sidebar__athlete" onClick={(e) => e.stopPropagation()}>
+            <span className="hf-sidebar__athlete-avatar" aria-hidden>
+              {athleteAvatarUrl ? (
+                <img src={athleteAvatarUrl} alt="" />
+              ) : (
+                athleteName.split(" ").filter(Boolean).slice(0, 2).map((p) => p[0]).join("").toUpperCase() || "?"
+              )}
+            </span>
+            <span className="hf-sidebar__athlete-info">
+              <span className="hf-sidebar__athlete-name">{athleteName}</span>
+              {athleteSubtitle ? (
+                <span className="hf-sidebar__athlete-sub">{athleteSubtitle}</span>
+              ) : null}
+            </span>
+          </div>
+        ) : null}
+
+        {/* Nav items */}
+        <nav className="hf-sidebar__nav" role="navigation" onClick={(e) => e.stopPropagation()}>
+          {items.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => onNavigate?.(item.key)}
+              className={`hf-sidebar__item ${activeKey === item.key ? "is-active" : ""}`}
+              data-testid={`sidebar-nav-${item.key}`}
+              title={item.label}
+            >
+              <span className="hf-sidebar__item-icon">{item.icon}</span>
+              <span className="hf-sidebar__item-label">{item.label}</span>
+              {activeKey === item.key ? <span className="hf-sidebar__item-bar" aria-hidden /> : null}
+            </button>
+          ))}
+        </nav>
+
+        <button
+          type="button"
+          className="hf-sidebar__spacer-toggle"
+          onClick={onToggle}
+          aria-label={isOpen ? t.collapse : t.expand}
+          title={isOpen ? t.collapse : t.expand}
+        />
+
+        {/* Footer: language + theme + logout */}
+        <div className="hf-sidebar__footer" onClick={(e) => e.stopPropagation()}>
+          <div className="hf-sidebar__footer-tools">
+            <div className="hf-sidebar__lang">
+              <button
+                type="button"
+                onClick={onToggleLangMenu}
+                className="hf-sidebar__icon-btn"
+                aria-haspopup="menu"
+                aria-expanded={isLangMenuOpen}
+                title={currentLanguageOption?.label || "Langue"}
+              >
+                <span className="hf-sidebar__icon-glyph text-base leading-none">{currentLanguageOption?.flag}</span>
+                <span className="hf-sidebar__icon-btn-label">{currentLanguageOption?.name || currentLanguageOption?.label}</span>
+              </button>
+              {isLangMenuOpen ? (
+                <div className="hf-sidebar__lang-menu">
+                  {Object.entries(languageOptions || {}).map(([code, option]) => (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={() => onLanguageChange?.(code)}
+                      className={`hf-sidebar__lang-item ${language === code ? "is-current" : ""}`}
+                    >
+                      <span className="text-base leading-none">{option.flag}</span>
+                      <span className="font-bold">{option.name}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            <button
+              type="button"
+              onClick={onToggleTheme}
+              className="hf-sidebar__icon-btn"
+              title={isLight ? "Mode sombre" : "Mode clair"}
+            >
+              <span className="hf-sidebar__icon-glyph text-base leading-none" aria-hidden>{isLight ? "☀️" : "🌙"}</span>
+              <span className="hf-sidebar__icon-btn-label">{isLight ? "Jour" : "Nuit"}</span>
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={onLogout}
+            className="hf-sidebar__logout"
+            data-testid="sidebar-logout"
+            title={t.logout}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="hf-sidebar__item-icon hf-sidebar__logout-icon">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            <span className="hf-sidebar__item-label">{t.logout}</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+function CoachRecommendationCarousel({ language = "fr", greeting, name }) {
+  const slides = COACH_SLIDES[language] || COACH_SLIDES.fr;
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (paused) return undefined;
+    const timer = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [paused, slides.length]);
+
+  const slide = slides[activeIndex];
+  const sectionTitle =
+    language === "en"
+      ? "Recommended by coach Hicham"
+      : language === "ar"
+        ? "موصى به من المدرب هشام"
+        : "Recommandé par le coach Hicham";
+  const greetingLine = name ? `${greeting}, ${name}` : greeting;
+
+  return (
+    <article
+      className="coach-reco-card relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-3 lg:max-w-none"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      data-testid="coach-recommendation-carousel"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-brand-200">
+            {sectionTitle}
+          </p>
+          {greetingLine ? (
+            <h2 className="mt-0.5 truncate font-display text-sm font-black text-white">
+              {greetingLine}
+            </h2>
+          ) : null}
+        </div>
+        <span className="shrink-0 rounded-full border border-brand-300/45 bg-brand-500/12 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.2em] text-brand-100">
+          {language === "ar" ? "هشام" : "Hicham"}
+        </span>
+      </div>
+
+      <div
+        key={activeIndex}
+        className="coach-reco-slide mt-2 grid min-h-0 flex-1 grid-cols-[1fr_auto] items-stretch gap-2 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/70 via-slate-950/70 to-emerald-950/40 p-2.5"
+        data-testid={`coach-slide-${activeIndex}`}
+      >
+        <div className="flex min-w-0 flex-col justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-[8px] font-bold uppercase tracking-[0.18em] text-brand-300">
+              {slide.eyebrow}
+            </p>
+            <h3 className="mt-0.5 line-clamp-2 font-display text-[13px] font-black leading-tight text-white sm:text-sm">
+              {slide.title}
+            </h3>
+            <p className="mt-1 line-clamp-3 text-[10px] leading-snug text-slate-300">
+              {slide.description}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="self-start rounded-full border border-brand-300/70 bg-gradient-to-r from-brand-500 to-emerald-500 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-950 shadow-[0_8px_22px_-8px_rgba(34,197,94,0.6)] transition hover:brightness-110"
+            data-testid={`coach-slide-cta-${activeIndex}`}
+          >
+            {slide.cta}
+          </button>
+        </div>
+        <div className="relative h-full w-[140px] shrink-0 overflow-hidden rounded-xl border border-brand-300/35 sm:w-[180px] lg:w-[200px]">
+          <img
+            src={slide.image}
+            alt=""
+            className="h-full w-full object-cover"
+            loading="lazy"
+            decoding="async"
+          />
+          <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-slate-950/30" aria-hidden />
+        </div>
+      </div>
+
+      <div className="mt-2 flex items-center justify-center gap-1.5" role="tablist" aria-label={sectionTitle}>
+        {slides.map((_, i) => (
+          <button
+            key={i}
+            type="button"
+            role="tab"
+            aria-selected={i === activeIndex}
+            aria-label={`Slide ${i + 1}`}
+            onClick={() => setActiveIndex(i)}
+            className={`h-1.5 rounded-full transition-all ${i === activeIndex
+                ? "w-5 bg-brand-300 shadow-[0_0_8px_rgba(34,197,94,0.6)]"
+                : "w-1.5 bg-white/25 hover:bg-white/45"
+              }`}
+            data-testid={`coach-slide-dot-${i}`}
+          />
+        ))}
+      </div>
+    </article>
+  );
+}
+
+function SettingsIcon({ name, className = "" }) {
+  const icons = {
+    settings:
+      "M19.4 13.5c.08-.48.1-.98.1-1.5s-.02-1.02-.1-1.5l2.1-1.65-2-3.46-2.48 1a7.7 7.7 0 0 0-2.6-1.5L14 2.25h-4l-.42 2.64a7.7 7.7 0 0 0-2.6 1.5l-2.48-1-2 3.46 2.1 1.65c-.08.48-.1.98-.1 1.5s.02 1.02.1 1.5l-2.1 1.65 2 3.46 2.48-1a7.7 7.7 0 0 0 2.6 1.5L10 21.75h4l.42-2.64a7.7 7.7 0 0 0 2.6-1.5l2.48 1 2-3.46-2.1-1.65ZM12 15.25A3.25 3.25 0 1 1 12 8.75a3.25 3.25 0 0 1 0 6.5Z",
+    shop:
+      "M6.2 7.2 7.4 3.8h9.2l1.2 3.4h2.4v13H3.8v-13h2.4Zm2.9 0h5.8l-.55-1.7h-4.7L9.1 7.2Zm-1.2 3.1a4.1 4.1 0 0 0 8.2 0h1.8a5.9 5.9 0 0 1-11.8 0h1.8Z",
+    profile:
+      "M12 12.4a4.9 4.9 0 1 0-4.9-4.9 4.9 4.9 0 0 0 4.9 4.9Zm-8.4 8.1c.5-3.9 3.8-6.6 8.4-6.6s7.9 2.7 8.4 6.6H3.6Z",
+    contact:
+      "M4.5 5.5h15v13h-15v-13Zm1.7 2.2 5.8 4.1 5.8-4.1H6.2Zm11.6 8.6V9.7l-5.3 3.7a.9.9 0 0 1-1 0L6.2 9.7v6.6h11.6Z",
+    phone:
+      "M6.6 3.2h3.15l1.35 4.45-2.15 1.4a12.3 12.3 0 0 0 5.95 5.95l1.45-2.12 4.45 1.35v3.15c0 1.05-.82 1.92-1.86 1.98C10.9 19.8 4.2 13.1 4.64 5.06A1.98 1.98 0 0 1 6.6 3.2Z",
+    address:
+      "M12 2.8a6.4 6.4 0 0 0-6.4 6.4c0 4.8 6.4 12 6.4 12s6.4-7.2 6.4-12A6.4 6.4 0 0 0 12 2.8Zm0 8.9a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z",
+    athlete:
+      "M12 2.6 14.4 8l5.9.5-4.45 3.9 1.35 5.8L12 15.15 6.8 18.2l1.35-5.8L3.7 8.5 9.6 8 12 2.6Z",
+    security:
+      "M12 2.8 19 6v5.3c0 4.45-2.75 8.4-7 9.9-4.25-1.5-7-5.45-7-9.9V6l7-3.2Zm0 2.2L7 7.3v4c0 3.3 1.9 6.25 5 7.55 3.1-1.3 5-4.25 5-7.55v-4L12 5Zm-2 6.7 1.25 1.25L14.8 9.4l1.25 1.25-4.8 4.8L8.75 13 10 11.7Z",
+    info:
+      "M12 2.25a9.75 9.75 0 1 0 0 19.5 9.75 9.75 0 0 0 0-19.5Zm0 4.6a1.18 1.18 0 1 1 0 2.36 1.18 1.18 0 0 1 0-2.36Zm1.3 10.05h-2.55v-1.55h.48v-3.45h-.48v-1.55h2.1v5h.45v1.55Z",
+    danger:
+      "M12 2 1.8 20.2h20.4L12 2Zm1 13.4h-2V17h2v-1.6Zm0-6.9h-2v5.1h2V8.5Z",
+    save:
+      "M5 3h12l2 2v16H5V3Zm2 2v5h9V5H7Zm2 10v4h6v-4H9Z"
+  };
+
+  return (
+    <svg viewBox="0 0 24 24" className={className || "h-4 w-4"} aria-hidden="true">
+      <path fill="currentColor" d={icons[name] || icons.settings} />
+    </svg>
+  );
+}
+
+function SettingsSectionHeader({ icon, eyebrow, title, action, danger = false }) {
+  return (
+    <div className="settings-card__head">
+      <div className="settings-section-title">
+        <span className={`settings-section-icon ${danger ? "is-danger" : ""}`}>
+          <SettingsIcon name={icon} className="h-4 w-4" />
+        </span>
+        <div>
+          <p className={`settings-card__eyebrow ${danger ? "text-red-200" : ""}`}>{eyebrow}</p>
+          <h2 className="settings-card__title">{title}</h2>
+        </div>
+      </div>
+      {action}
+    </div>
+  );
+}
+
+const shopCategoryOptions = [
+  "Tous",
+  "Programmes sportifs",
+  "Guides nutrition",
+  "Livres / Ebooks",
+  "Packs coaching",
+  "Plans d'entraînement",
+  "Recettes healthy",
+  "Challenges sportifs"
+];
+
+const shopPriceTypeOptions = ["Tous", "Gratuit", "Payant"];
+const shopSearchExamples = ["Perte de gras", "Prise de masse", "Nutrition", "Musculation"];
+
+const shopProducts = [
+  {
+    id: "fat-loss-program",
+    title: "Programme Perte de gras",
+    category: "Programmes sportifs",
+    priceType: "Payant",
+    price: "49 €",
+    badge: "Programme",
+    description: "Plan progressif pour perdre du gras avec séances structurées et suivi des efforts.",
+    longDescription:
+      "Un programme complet de 12 semaines pour perdre du gras durablement : séances structurées, progression contrôlée et suivi des efforts. Chaque semaine combine entraînement en résistance et cardio ciblé pour préserver ta masse musculaire tout en réduisant la masse grasse.",
+    tags: ["Perte de gras", "Musculation", "Sèche"],
+    images: [transfo1, transfo2, transfo3]
+  },
+  {
+    id: "mass-gain-plan",
+    title: "Plan Prise de masse",
+    category: "Plans d'entraînement",
+    priceType: "Payant",
+    price: "39 €",
+    badge: "Plan",
+    description: "Cycle d'entraînement orienté hypertrophie avec progression hebdomadaire.",
+    longDescription:
+      "Cycle d'entraînement orienté hypertrophie avec progression hebdomadaire des charges et du volume. Idéal pour construire du muscle de façon méthodique, avec des repères de récupération et de nutrition pour optimiser la prise de masse.",
+    tags: ["Prise de masse", "Hypertrophie", "Musculation"],
+    images: [coachHero]
+  },
+  {
+    id: "nutrition-guide",
+    title: "Guide nutrition sportive",
+    category: "Guides nutrition",
+    priceType: "Gratuit",
+    price: "Gratuit",
+    badge: "Guide",
+    description: "Bases simples pour mieux organiser tes repas autour de ton objectif.",
+    longDescription:
+      "Les bases simples et concrètes pour organiser tes repas autour de ton objectif : répartition des macronutriments, exemples de journées types et conseils pour rester régulier sans frustration.",
+    tags: ["Nutrition", "Repas", "Objectif"],
+    images: [coachingIlage]
+  },
+  {
+    id: "healthy-recipes",
+    title: "Recettes healthy express",
+    category: "Recettes healthy",
+    priceType: "Gratuit",
+    price: "Gratuit",
+    badge: "Recettes",
+    description: "Idées rapides et équilibrées pour rester régulier sans compliquer la cuisine.",
+    longDescription:
+      "Une sélection de recettes rapides, équilibrées et savoureuses pour rester régulier sans passer des heures en cuisine. Parfait pour les journées chargées.",
+    tags: ["Nutrition", "Recettes healthy", "Repas"],
+    images: []
+  },
+  {
+    id: "coaching-pack",
+    title: "Pack coaching transformation",
+    category: "Packs coaching",
+    priceType: "Payant",
+    price: "99 €",
+    badge: "Coaching",
+    description: "Ressources premium et accompagnement pour une transformation encadrée.",
+    longDescription:
+      "Le pack premium pour une transformation complète et encadrée : programme personnalisé, plan nutritionnel, suivi régulier et ajustements stratégiques. L'accompagnement le plus complet pour atteindre tes objectifs.",
+    tags: ["Coaching", "Perte de gras", "Prise de masse"],
+    images: [coachHero, coachHeroAlt]
+  },
+  {
+    id: "ebook-strength",
+    title: "Ebook Force et technique",
+    category: "Livres / Ebooks",
+    priceType: "Payant",
+    price: "19 €",
+    badge: "Ebook",
+    description: "Repères techniques pour progresser sur les mouvements de base.",
+    longDescription:
+      "Un ebook concentré sur la technique des mouvements de base (squat, développé, soulevé de terre) : repères d'exécution, erreurs fréquentes et stratégies pour progresser en force en toute sécurité.",
+    tags: ["Force", "Musculation", "Technique"],
+    images: [mmImage]
+  },
+  {
+    id: "summer-challenge",
+    title: "Challenge sportif 21 jours",
+    category: "Challenges sportifs",
+    priceType: "Gratuit",
+    price: "Gratuit",
+    badge: "Challenge",
+    description: "Défi court pour relancer ta discipline avec objectifs simples chaque semaine.",
+    longDescription:
+      "Un défi de 21 jours pour relancer ta discipline avec des objectifs simples et progressifs chaque semaine. Idéal pour reprendre une routine et créer de bonnes habitudes.",
+    tags: ["Challenge", "Remise en forme", "Cardio"],
+    images: []
+  },
+  {
+    id: "hiit-burn",
+    title: "Programme HIIT brûle-graisse",
+    category: "Programmes sportifs",
+    priceType: "Payant",
+    price: "29 €",
+    badge: "Programme",
+    description: "Séances HIIT courtes et intenses pour brûler un maximum de calories.",
+    longDescription:
+      "Un programme de 6 semaines basé sur le HIIT : des séances courtes (20 à 30 min) mais très intenses pour brûler un maximum de calories, améliorer ton cardio et accélérer la perte de gras, même avec un emploi du temps chargé.",
+    tags: ["HIIT", "Cardio", "Perte de gras"],
+    images: [transfo2, transfo3]
+  },
+  {
+    id: "powerlifting-plan",
+    title: "Plan Powerlifting force max",
+    category: "Plans d'entraînement",
+    priceType: "Payant",
+    price: "45 €",
+    badge: "Plan",
+    description: "Cycle de force sur les trois mouvements de powerlifting.",
+    longDescription:
+      "Un cycle de force structuré sur le squat, le développé couché et le soulevé de terre, avec progression des charges, gestion de la fatigue et pics de performance. Idéal pour battre tes records en toute sécurité.",
+    tags: ["Force", "Powerlifting", "Musculation"],
+    images: [coachHero]
+  },
+  {
+    id: "nutrition-advanced",
+    title: "Ebook Nutrition avancée",
+    category: "Livres / Ebooks",
+    priceType: "Payant",
+    price: "25 €",
+    badge: "Ebook",
+    description: "Stratégies nutritionnelles avancées pour optimiser ta composition corporelle.",
+    longDescription:
+      "Cet ebook approfondit la nutrition sportive : timing des nutriments, recharges glucidiques, gestion des phases de sèche et de prise de masse, et ajustements selon tes résultats. Pour aller plus loin que les bases.",
+    tags: ["Nutrition", "Sèche", "Performance"],
+    images: [coachingIlage]
+  },
+  {
+    id: "competition-prep",
+    title: "Pack Préparation compétition",
+    category: "Packs coaching",
+    priceType: "Payant",
+    price: "149 €",
+    badge: "Coaching",
+    description: "Accompagnement complet pour préparer une compétition de bodybuilding.",
+    longDescription:
+      "Le pack premium pour préparer une compétition : programmation de la prépa, peak week, nutrition de précision, posing et suivi rapproché. L'accompagnement le plus complet pour monter sur scène dans ta meilleure forme.",
+    tags: ["Compétition", "Bodybuilding", "Coaching"],
+    images: [coachHero, coachHeroAlt, mmImage]
+  },
+  {
+    id: "full-body-4w",
+    title: "Programme Full Body 4 semaines",
+    category: "Programmes sportifs",
+    priceType: "Payant",
+    price: "35 €",
+    badge: "Programme",
+    description: "Programme full body complet pour débutants et intermédiaires.",
+    longDescription:
+      "Un programme full body sur 4 semaines, parfait pour reprendre ou poser des bases solides : 3 séances par semaine couvrant tout le corps, avec progression simple et conseils d'exécution.",
+    tags: ["Full body", "Musculation", "Débutant"],
+    images: []
+  },
+  {
+    id: "shred-8w",
+    title: "Programme Shred 8 semaines",
+    category: "Programmes sportifs",
+    priceType: "Payant",
+    price: "59 €",
+    badge: "Programme",
+    description: "Sèche avancée sur 8 semaines pour révéler la définition musculaire.",
+    longDescription:
+      "Un programme de sèche intensif sur 8 semaines combinant musculation, cardio et stratégie nutritionnelle pour réduire la masse grasse tout en préservant le muscle. Pour un physique défini et dessiné.",
+    tags: ["Sèche", "Définition", "Cardio"],
+    images: [transfo1, transfo3]
+  },
+  {
+    id: "mobility-plan",
+    title: "Plan Mobilité & Souplesse",
+    category: "Plans d'entraînement",
+    priceType: "Payant",
+    price: "22 €",
+    badge: "Plan",
+    description: "Routines de mobilité pour gagner en amplitude et prévenir les blessures.",
+    longDescription:
+      "Un plan de mobilité et de souplesse avec des routines quotidiennes courtes pour améliorer ton amplitude articulaire, réduire les douleurs et prévenir les blessures à l'entraînement.",
+    tags: ["Mobilité", "Souplesse", "Récupération"],
+    images: [coachHeroAlt]
+  },
+  {
+    id: "meal-prep-guide",
+    title: "Guide Meal Prep",
+    category: "Guides nutrition",
+    priceType: "Payant",
+    price: "18 €",
+    badge: "Guide",
+    description: "Organise tes repas de la semaine en une seule session de cuisine.",
+    longDescription:
+      "Le guide complet du meal prep : listes de courses, recettes batch-cooking et organisation pour préparer tous tes repas de la semaine en une seule session, sans stress et en respectant tes macros.",
+    tags: ["Nutrition", "Organisation", "Batch cooking"],
+    images: [coachingIlage, mmImage]
+  },
+  {
+    id: "home-workout",
+    title: "Programme Maison sans matériel",
+    category: "Programmes sportifs",
+    priceType: "Payant",
+    price: "27 €",
+    badge: "Programme",
+    description: "Entraînements efficaces à la maison, zéro équipement requis.",
+    longDescription:
+      "Un programme conçu pour s'entraîner efficacement à la maison sans aucun matériel : exercices au poids du corps, progressions et variantes pour continuer à progresser où que tu sois.",
+    tags: ["Maison", "Poids du corps", "Sans matériel"],
+    images: []
+  },
+  {
+    id: "ebook-recovery",
+    title: "Ebook Récupération & Sommeil",
+    category: "Livres / Ebooks",
+    priceType: "Payant",
+    price: "15 €",
+    badge: "Ebook",
+    description: "Optimise ta récupération et ton sommeil pour mieux progresser.",
+    longDescription:
+      "Cet ebook explique comment optimiser ta récupération : gestion du sommeil, étirements, nutrition post-effort et stratégies pour réduire la fatigue et progresser plus vite.",
+    tags: ["Récupération", "Sommeil", "Bien-être"],
+    images: [coachHero]
+  },
+  {
+    id: "elite-coaching",
+    title: "Coaching Élite 1-à-1",
+    category: "Packs coaching",
+    priceType: "Payant",
+    price: "199 €",
+    badge: "Coaching",
+    description: "Accompagnement individuel premium avec suivi hebdomadaire personnalisé.",
+    longDescription:
+      "Le coaching le plus poussé : programme 100% personnalisé, plan nutritionnel sur mesure, ajustements hebdomadaires et accès direct au coach. Pour atteindre tes objectifs avec un suivi d'élite.",
+    tags: ["Coaching", "Premium", "Suivi 1-à-1"],
+    images: [coachHero, coachHeroAlt, ifbbDiploma]
+  }
+];
+
+// Créneaux horaires définis par le coach Hicham, par jour de la semaine (0 = dimanche … 6 = samedi)
+const coachWeeklyAvailability = {
+  1: ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"],
+  2: ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"],
+  3: ["10:00", "11:00", "15:00", "16:00", "17:00"],
+  4: ["09:00", "10:00", "14:00", "15:00", "16:00"],
+  5: ["09:00", "10:00", "11:00"],
+  6: ["10:00", "11:00"]
+};
+
+function toDateKey(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+// Durée d'un créneau, en minutes. Le coach Hicham peut la changer librement (ex. 30, 45, 90…).
+const coachSlotDurationMin = 60;
+
+function addMinutesToTime(time, minutes) {
+  const [h, m] = time.split(":").map(Number);
+  const total = h * 60 + m + minutes;
+  const hh = String(Math.floor(total / 60) % 24).padStart(2, "0");
+  const mm = String(total % 60).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
+function formatSlotRange(time) {
+  return `${time}-${addMinutesToTime(time, coachSlotDurationMin)}`;
+}
+
+function slotsForDateKey(key) {
+  if (!key) return [];
+  const weekday = new Date(`${key}T00:00:00`).getDay();
+  return coachWeeklyAvailability[weekday] || [];
+}
+
+const coachPrograms = [
+  {
+    id: "free-starter",
+    number: "PRG-001",
+    name: "Programme de démarrage",
+    sentDate: "2026-06-08",
+    remark: "Commence par celui-ci pour poser de bonnes bases.",
+    priceType: "Gratuit"
+  },
+  {
+    id: "free-mobility",
+    number: "PRG-002",
+    name: "Routine mobilité quotidienne",
+    sentDate: "2026-06-11",
+    remark: "À faire chaque matin, 10 minutes suffisent.",
+    priceType: "Gratuit"
+  },
+  {
+    id: "fat-loss-program",
+    number: "PRG-003",
+    name: "Programme Perte de gras",
+    sentDate: "2026-06-14",
+    remark: "Programme premium — accessible après paiement.",
+    priceType: "Payant"
+  },
+  {
+    id: "ebook-strength",
+    number: "PRG-004",
+    name: "Ebook Force et technique",
+    sentDate: "2026-06-16",
+    remark: "Disponible une fois acheté dans la boutique.",
+    priceType: "Payant"
+  },
+  {
+    id: "coaching-pack",
+    number: "PRG-005",
+    name: "Pack coaching transformation",
+    sentDate: "2026-06-18",
+    remark: "Débloqué dès que le pack est réglé.",
+    priceType: "Payant"
+  },
+  {
+    id: "mass-gain-plan",
+    number: "PRG-006",
+    name: "Plan Prise de masse",
+    sentDate: "2026-06-19",
+    remark: "Programme premium — accessible après paiement.",
+    priceType: "Payant"
+  },
+  {
+    id: "hiit-burn",
+    number: "PRG-007",
+    name: "Programme HIIT brûle-graisse",
+    sentDate: "2026-06-20",
+    remark: "Réglez le programme pour le débloquer.",
+    priceType: "Payant"
+  },
+  {
+    id: "nutrition-advanced",
+    number: "PRG-008",
+    name: "Ebook Nutrition avancée",
+    sentDate: "2026-06-21",
+    remark: "Disponible une fois acheté dans la boutique.",
+    priceType: "Payant"
+  },
+  {
+    id: "shred-8w",
+    number: "PRG-009",
+    name: "Programme Shred 8 semaines",
+    sentDate: "2026-06-22",
+    remark: "Programme premium — accessible après paiement.",
+    priceType: "Payant"
+  },
+  {
+    id: "powerlifting-plan",
+    number: "PRG-010",
+    name: "Plan Powerlifting force max",
+    sentDate: "2026-06-23",
+    remark: "Réglez le programme pour le débloquer.",
+    priceType: "Payant"
+  },
+  {
+    id: "competition-prep",
+    number: "PRG-011",
+    name: "Pack Préparation compétition",
+    sentDate: "2026-06-24",
+    remark: "Accompagnement premium, accessible après paiement.",
+    priceType: "Payant"
+  },
+  {
+    id: "elite-coaching",
+    number: "PRG-012",
+    name: "Coaching Élite 1-à-1",
+    sentDate: "2026-06-25",
+    remark: "Débloqué dès que le coaching est réglé.",
+    priceType: "Payant"
+  }
+];
+
+function parseProductPrice(price) {
+  const match = String(price).match(/(\d+(?:[.,]\d+)?)/);
+  return match ? Number(match[1].replace(",", ".")) : null;
+}
+
+function addShopNotification(text) {
+  if (typeof window === "undefined") return;
+  try {
+    const saved = window.localStorage.getItem("hm-shop-notifications");
+    const parsed = saved ? JSON.parse(saved) : [];
+    const list = Array.isArray(parsed) ? parsed : [];
+    const next = [
+      { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, text, date: new Date().toISOString(), read: false },
+      ...list
+    ];
+    window.localStorage.setItem("hm-shop-notifications", JSON.stringify(next));
+    window.dispatchEvent(new Event("hm-notifications-changed"));
+  } catch {
+    /* ignore storage errors */
+  }
+}
+
+function loadImageElement(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+async function generateInvoicePdf({ items, total, customerName, customerEmail, invoiceNumber, dateStr }) {
+  const doc = new jsPDF({ unit: "pt", format: "a4" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const rightX = pageWidth - 40;
+
+  try {
+    const logo = await loadImageElement(hmLogo);
+    doc.setFillColor(15, 23, 42);
+    doc.roundedRect(40, 32, 52, 52, 10, 10, "F");
+    doc.addImage(logo, "PNG", 46, 38, 40, 40);
+  } catch {
+    /* logo optionnel */
+  }
+
+  doc.setTextColor(20);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.text("Hicham Fit App", 102, 56);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.setTextColor(120);
+  doc.text("Coaching sportif & nutrition", 102, 72);
+
+  doc.setTextColor(20);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(22);
+  doc.text("FACTURE", rightX, 56, { align: "right" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.setTextColor(120);
+  doc.text(`N° ${invoiceNumber}`, rightX, 72, { align: "right" });
+  doc.text(`Date : ${dateStr}`, rightX, 86, { align: "right" });
+
+  doc.setTextColor(20);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.text("Facturé à :", 40, 124);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(80);
+  doc.text(customerName || "Client", 40, 140);
+  if (customerEmail) doc.text(customerEmail, 40, 154);
+
+  autoTable(doc, {
+    startY: 178,
+    head: [["Catégorie", "Programme", "Prix unitaire"]],
+    body: items.map((item) => [
+      item.category,
+      item.title,
+      item.priceValue != null ? `${item.priceValue} €` : item.price
+    ]),
+    styles: { fontSize: 10, cellPadding: 8 },
+    headStyles: { fillColor: [20, 184, 111], textColor: 255, fontStyle: "bold" },
+    columnStyles: { 2: { halign: "right" } },
+    theme: "grid"
+  });
+
+  const finalY = (doc.lastAutoTable && doc.lastAutoTable.finalY) || 178;
+  doc.setDrawColor(220);
+  doc.line(40, finalY + 16, rightX, finalY + 16);
+  doc.setTextColor(20);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.text(`Total : ${total} €`, rightX, finalY + 38, { align: "right" });
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(150);
+  doc.text("Merci pour votre confiance — Hicham Fit App", 40, doc.internal.pageSize.getHeight() - 40);
+
+  doc.save(`facture-${invoiceNumber}.pdf`);
+  return doc.output("datauristring");
+}
+
+function CoachInbox() {
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [selectedNotifs, setSelectedNotifs] = useState([]);
+  const [notifFilter, setNotifFilter] = useState("all");
+  const [notifSortDesc, setNotifSortDesc] = useState(true);
+  const [notifFrom, setNotifFrom] = useState("");
+  const [notifTo, setNotifTo] = useState("");
+  const [notifications, setNotifications] = useState(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const saved = window.localStorage.getItem("hm-shop-notifications");
+      const parsed = saved ? JSON.parse(saved) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatText, setChatText] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const chatFileInputRef = useRef(null);
+  const chatImageInputRef = useRef(null);
+  const [editingMessageId, setEditingMessageId] = useState(null);
+  const [editingText, setEditingText] = useState("");
+  const [reactionPickerId, setReactionPickerId] = useState(null);
+  const [coachOnline, setCoachOnline] = useState(false);
+  const [chatMessages, setChatMessages] = useState(() => {
+    const welcome = {
+      id: "coach-welcome",
+      from: "coach",
+      type: "text",
+      text: "Bonjour 👋 Pose-moi ta question, je te réponds dès que possible !",
+      date: new Date().toISOString(),
+      reactions: []
+    };
+    if (typeof window === "undefined") return [welcome];
+    try {
+      const saved = window.localStorage.getItem("hm-coach-chat");
+      const parsed = saved ? JSON.parse(saved) : [];
+      const list = Array.isArray(parsed) ? parsed : [];
+      return list.some((message) => message && message.id === "coach-welcome") ? list : [welcome, ...list];
+    } catch {
+      return [welcome];
+    }
+  });
+
+  useEffect(() => {
+    const computeCoachOnline = () => {
+      const hour = new Date().getHours();
+      setCoachOnline(hour >= 8 && hour < 22);
+    };
+    computeCoachOnline();
+    const interval = setInterval(computeCoachOnline, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const reloadNotifications = () => {
+      try {
+        const saved = window.localStorage.getItem("hm-shop-notifications");
+        const parsed = saved ? JSON.parse(saved) : [];
+        setNotifications(Array.isArray(parsed) ? parsed : []);
+      } catch {
+        /* ignore storage errors */
+      }
+    };
+    window.addEventListener("hm-notifications-changed", reloadNotifications);
+    window.addEventListener("storage", reloadNotifications);
+    return () => {
+      window.removeEventListener("hm-notifications-changed", reloadNotifications);
+      window.removeEventListener("storage", reloadNotifications);
+    };
+  }, []);
+
+  const persistNotifications = (next) => {
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem("hm-shop-notifications", JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+    }
+    return next;
+  };
+  const markAllNotificationsRead = () =>
+    setNotifications((current) => persistNotifications(current.map((item) => ({ ...item, read: true }))));
+  const toggleNotificationRead = (id) =>
+    setNotifications((current) =>
+      persistNotifications(current.map((item) => (item.id === id ? { ...item, read: !item.read } : item)))
+    );
+  const toggleSelectNotif = (id) =>
+    setSelectedNotifs((current) => (current.includes(id) ? current.filter((entry) => entry !== id) : [...current, id]));
+  const deleteSelectedNotifs = () => {
+    setNotifications((current) => persistNotifications(current.filter((item) => !selectedNotifs.includes(item.id))));
+    setSelectedNotifs([]);
+  };
+  const markSelectedNotifsRead = () => {
+    setNotifications((current) =>
+      persistNotifications(current.map((item) => (selectedNotifs.includes(item.id) ? { ...item, read: true } : item)))
+    );
+    setSelectedNotifs([]);
+  };
+  const deleteNotification = (id) => {
+    setNotifications((current) => persistNotifications(current.filter((item) => item.id !== id)));
+    setSelectedNotifs((current) => current.filter((entry) => entry !== id));
+  };
+  const clearNotifications = () => {
+    setNotifications(persistNotifications([]));
+    setSelectedNotifs([]);
+  };
+  const unreadCount = notifications.filter((item) => !item.read).length;
+  const visibleNotifications = notifications
+    .filter((item) => notifFilter === "all" || (notifFilter === "unread" ? !item.read : item.read))
+    .filter((item) => {
+      if (!notifFrom && !notifTo) return true;
+      const time = new Date(item.date).getTime();
+      if (notifFrom && time < new Date(`${notifFrom}T00:00:00`).getTime()) return false;
+      if (notifTo && time > new Date(`${notifTo}T23:59:59`).getTime()) return false;
+      return true;
+    })
+    .slice()
+    .sort((a, b) => {
+      const da = new Date(a.date).getTime();
+      const db = new Date(b.date).getTime();
+      return notifSortDesc ? db - da : da - db;
+    });
+  const allVisibleNotifsSelected =
+    visibleNotifications.length > 0 && visibleNotifications.every((item) => selectedNotifs.includes(item.id));
+  const toggleSelectAllVisibleNotifs = () =>
+    setSelectedNotifs(allVisibleNotifsSelected ? [] : visibleNotifications.map((item) => item.id));
+
+  const persistChat = (next) => {
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem("hm-coach-chat", JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+    }
+    return next;
+  };
+  const pushChatMessage = (message) =>
+    setChatMessages((current) =>
+      persistChat([
+        ...current,
+        { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, date: new Date().toISOString(), from: "user", ...message }
+      ])
+    );
+  const sendChatText = () => {
+    const text = chatText.trim();
+    if (!text) return;
+    pushChatMessage({ type: "text", text });
+    setChatText("");
+  };
+  const handleChatFile = (event) => {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const isImage = file.type.startsWith("image/");
+      pushChatMessage({ type: isImage ? "image" : "file", dataUrl: String(reader.result), fileName: file.name });
+    };
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  };
+  const startChatRecording = async () => {
+    if (typeof navigator === "undefined" || !navigator.mediaDevices || typeof MediaRecorder === "undefined") return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks = [];
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) chunks.push(event.data);
+      };
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
+        const reader = new FileReader();
+        reader.onload = () => pushChatMessage({ type: "voice", dataUrl: String(reader.result) });
+        reader.readAsDataURL(blob);
+        stream.getTracks().forEach((track) => track.stop());
+      };
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setIsRecording(true);
+    } catch {
+      setIsRecording(false);
+    }
+  };
+  const stopChatRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
+    setIsRecording(false);
+  };
+  const deleteChatMessage = (id) => setChatMessages((current) => persistChat(current.filter((m) => m.id !== id)));
+  const startEditMessage = (message) => {
+    setEditingMessageId(message.id);
+    setEditingText(message.text || "");
+  };
+  const cancelEditMessage = () => {
+    setEditingMessageId(null);
+    setEditingText("");
+  };
+  const saveEditMessage = () => {
+    const text = editingText.trim();
+    if (!text) return;
+    setChatMessages((current) =>
+      persistChat(current.map((m) => (m.id === editingMessageId ? { ...m, text, edited: true } : m)))
+    );
+    setEditingMessageId(null);
+    setEditingText("");
+  };
+  const toggleChatReaction = (id, emoji) => {
+    setChatMessages((current) =>
+      persistChat(
+        current.map((m) => {
+          if (m.id !== id) return m;
+          const reactions = Array.isArray(m.reactions) ? m.reactions : [];
+          return { ...m, reactions: reactions.includes(emoji) ? reactions.filter((e) => e !== emoji) : [...reactions, emoji] };
+        })
+      )
+    );
+    setReactionPickerId(null);
+  };
+
+  return (
+    <>
+      <button type="button" onClick={() => setIsNotifOpen(true)} className="settings-hero__action" aria-label="Notifications" title="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+          <path d="M10 21h4" />
+        </svg>
+        {unreadCount > 0 ? (
+          <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-black text-white">
+            {unreadCount}
+          </span>
+        ) : null}
+      </button>
+      <button type="button" onClick={() => setIsChatOpen(true)} className="settings-hero__action" aria-label="Messagerie" title="Messagerie">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z" />
+          <path d="M8 9h8M8 13h5" />
+        </svg>
+      </button>
+
+      {isNotifOpen && typeof document !== "undefined"
+        ? createPortal(
+          <div
+            className="fixed inset-0 z-[95] grid place-items-center p-4"
+            style={{ background: "rgba(2,6,23,0.6)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Notifications"
+            onClick={() => setIsNotifOpen(false)}
+          >
+            <div className="flex max-h-[85vh] w-[min(100%,34rem)] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(2,6,23,0.25)]" onClick={(event) => event.stopPropagation()}>
+              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
+                <div className="flex items-center gap-2">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-brand-500" aria-hidden="true">
+                    <path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+                    <path d="M10 21h4" />
+                  </svg>
+                  <h2 className="font-display text-lg font-black text-slate-900">Notifications</h2>
+                  {unreadCount > 0 ? <span className="rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-black text-white">{unreadCount}</span> : null}
+                </div>
+                <button type="button" onClick={() => setIsNotifOpen(false)} aria-label="Fermer" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-500 transition hover:border-brand-400 hover:text-slate-900">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                </button>
+              </div>
+
+              {notifications.length ? (
+                <div className="shrink-0 border-b border-slate-200 px-5 py-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-1">
+                      {[["all", "Tous"], ["unread", "Non lus"], ["read", "Lus"]].map(([value, label]) => (
+                        <button key={value} type="button" onClick={() => setNotifFilter(value)} className={`rounded-lg px-2.5 py-1.5 text-xs font-black transition ${notifFilter === value ? "bg-brand-400 text-slate-950" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>{label}</button>
+                      ))}
+                    </div>
+                    <button type="button" onClick={markAllNotificationsRead} disabled={unreadCount === 0} className="ml-auto rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-black text-slate-600 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50">Tout lu</button>
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-1">
+                    <button type="button" onClick={() => setNotifSortDesc(true)} className={`rounded-lg px-2.5 py-1.5 text-xs font-black transition ${notifSortDesc ? "bg-brand-400 text-slate-950" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>Plus récents</button>
+                    <button type="button" onClick={() => setNotifSortDesc(false)} className={`rounded-lg px-2.5 py-1.5 text-xs font-black transition ${!notifSortDesc ? "bg-brand-400 text-slate-950" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>Plus anciens</button>
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-bold text-slate-500">Du</span>
+                    <input type="date" value={notifFrom} max={notifTo || undefined} onChange={(event) => setNotifFrom(event.target.value)} className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs font-bold text-slate-700 outline-none focus:border-brand-400" />
+                    <span className="text-xs font-bold text-slate-500">au</span>
+                    <input type="date" value={notifTo} min={notifFrom || undefined} onChange={(event) => setNotifTo(event.target.value)} className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs font-bold text-slate-700 outline-none focus:border-brand-400" />
+                    {notifFrom || notifTo ? (
+                      <button type="button" onClick={() => { setNotifFrom(""); setNotifTo(""); }} className="rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-black text-slate-600 transition hover:bg-slate-200">Effacer dates</button>
+                    ) : null}
+                  </div>
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <button type="button" onClick={toggleSelectAllVisibleNotifs} className="flex items-center gap-1.5 text-xs font-black text-slate-600 transition hover:text-slate-900">
+                      <span className={`flex h-4 w-4 items-center justify-center rounded border-2 ${allVisibleNotifsSelected ? "border-rose-500 bg-rose-500 text-white" : "border-slate-300 text-transparent"}`}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="h-2.5 w-2.5" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+                      </span>
+                      Tout sélectionner
+                    </button>
+                    {selectedNotifs.length ? <span className="text-xs font-bold text-slate-500">{selectedNotifs.length} sélectionnée(s)</span> : null}
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+                {visibleNotifications.length ? (
+                  <ul className="space-y-3">
+                    {visibleNotifications.map((item) => {
+                      const selected = selectedNotifs.includes(item.id);
+                      return (
+                        <li key={item.id} className={`flex items-start gap-3 rounded-2xl border p-3 transition ${selected ? "border-rose-300 bg-rose-50" : item.read ? "border-slate-200 bg-white" : "border-brand-300 bg-brand-50"}`}>
+                          <button type="button" onClick={() => toggleSelectNotif(item.id)} aria-pressed={selected} aria-label="Sélectionner" className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition ${selected ? "border-rose-500 bg-rose-500 text-white" : "border-slate-300 text-transparent hover:border-slate-400"}`}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+                          </button>
+                          <div className="min-w-0 flex-1">
+                            <p className={`text-sm ${item.read ? "font-medium text-slate-600" : "font-bold text-slate-900"}`}>{item.text}</p>
+                            <p className="mt-1 text-xs text-slate-400">{new Date(item.date).toLocaleString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</p>
+                          </div>
+                          <div className="mt-0.5 flex shrink-0 items-center gap-1">
+                            <button type="button" onClick={() => toggleNotificationRead(item.id)} title={item.read ? "Marquer comme non lu" : "Marquer comme lu"} aria-label={item.read ? "Marquer comme non lu" : "Marquer comme lu"} className={`rounded-lg border px-2 py-1 text-[10px] font-black uppercase tracking-wide transition ${item.read ? "border-slate-300 text-slate-500 hover:border-slate-400" : "border-brand-300 bg-brand-50 text-brand-700 hover:bg-brand-100"}`}>
+                              {item.read ? "Lu" : "Non lu"}
+                            </button>
+                            <button type="button" onClick={() => deleteNotification(item.id)} title="Supprimer" aria-label="Supprimer la notification" className="flex h-6 w-6 items-center justify-center rounded-lg border border-slate-200 text-slate-400 transition hover:border-rose-400 hover:text-rose-500">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
+                            </button>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : (
+                  <div className="py-10 text-center">
+                    <p className="font-display text-lg font-black text-slate-900">{notifications.length ? "Aucune notification dans ce filtre" : "Aucune notification"}</p>
+                    <p className="mt-2 text-sm text-slate-500">Vos notifications d'achat apparaîtront ici.</p>
+                  </div>
+                )}
+              </div>
+
+              {notifications.length ? (
+                <div className="flex shrink-0 flex-wrap items-center gap-2 border-t border-slate-200 px-5 py-4">
+                  {selectedNotifs.length ? (
+                    <button type="button" onClick={markSelectedNotifsRead} className="flex-1 rounded-2xl border border-brand-300 bg-brand-50 px-4 py-2.5 text-sm font-black text-brand-700 transition hover:bg-brand-100">Marquer lu ({selectedNotifs.length})</button>
+                  ) : null}
+                  {selectedNotifs.length ? (
+                    <button type="button" onClick={deleteSelectedNotifs} className="flex-1 rounded-2xl border border-rose-300 bg-rose-50 px-4 py-2.5 text-sm font-black text-rose-600 transition hover:bg-rose-100">Supprimer ({selectedNotifs.length})</button>
+                  ) : null}
+                  <button type="button" onClick={clearNotifications} className="flex-1 rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-black text-slate-600 transition hover:border-rose-400 hover:text-rose-600">Tout effacer</button>
+                </div>
+              ) : null}
+            </div>
+          </div>,
+          document.body
+        )
+        : null}
+
+      {isChatOpen && typeof document !== "undefined"
+        ? createPortal(
+          <div
+            className="fixed inset-0 z-[95] grid place-items-center p-4"
+            style={{ background: "rgba(2,6,23,0.6)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Messagerie avec Coach Hicham"
+            onClick={() => { stopChatRecording(); setIsChatOpen(false); }}
+          >
+            <div className="flex h-[80vh] max-h-[640px] w-[min(100%,32rem)] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(2,6,23,0.25)]" onClick={(event) => event.stopPropagation()}>
+              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <img src={coachHero} alt="Coach Hicham" className="h-10 w-10 rounded-full object-cover" />
+                  <div>
+                    <h2 className="font-display text-base font-black text-slate-900">Coach Hicham</h2>
+                    <p className={`flex items-center gap-1.5 text-xs font-bold ${coachOnline ? "text-brand-600" : "text-rose-500"}`}>
+                      <span className={`h-2 w-2 rounded-full ${coachOnline ? "bg-brand-500" : "bg-rose-500"}`} />
+                      {coachOnline ? "En ligne" : "Hors ligne"}
+                    </p>
+                  </div>
+                </div>
+                <button type="button" onClick={() => { stopChatRecording(); setIsChatOpen(false); }} aria-label="Fermer" className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-500 transition hover:border-brand-400 hover:text-slate-900">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                </button>
+              </div>
+
+              <div className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-slate-50 px-4 py-4">
+                {chatMessages.map((message) => {
+                  const isCoach = message.from === "coach";
+                  const isEditing = editingMessageId === message.id;
+                  const reactions = Array.isArray(message.reactions) ? message.reactions : [];
+                  const actionButtons = (
+                    <div className="flex items-center gap-0.5">
+                      <button type="button" onClick={() => toggleChatReaction(message.id, "👍")} title="J'aime" aria-label="J'aime" className={`flex h-6 w-6 items-center justify-center rounded-full text-xs transition hover:bg-slate-200 ${reactions.includes("👍") ? "bg-slate-200" : ""}`}>👍</button>
+                      <button type="button" onClick={() => setReactionPickerId((current) => (current === message.id ? null : message.id))} title="Réagir" aria-label="Réagir" className="flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-200 hover:text-slate-700">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><path d="M9 9h.01M15 9h.01" /></svg>
+                      </button>
+                      {!isCoach && message.type === "text" ? (
+                        <button type="button" onClick={() => startEditMessage(message)} title="Modifier" aria-label="Modifier" className="flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-200 hover:text-slate-700">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                        </button>
+                      ) : null}
+                      {!isCoach ? (
+                        <button type="button" onClick={() => deleteChatMessage(message.id)} title="Supprimer" aria-label="Supprimer" className="flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition hover:bg-rose-100 hover:text-rose-500">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
+                        </button>
+                      ) : null}
+                    </div>
+                  );
+                  const picker = reactionPickerId === message.id ? (
+                    <div className="flex gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 shadow-md">
+                      {["❤️", "😂", "😮", "😢", "🔥"].map((emoji) => (
+                        <button key={emoji} type="button" onClick={() => toggleChatReaction(message.id, emoji)} className="text-base transition hover:scale-125">{emoji}</button>
+                      ))}
+                    </div>
+                  ) : null;
+                  const reactionChips = reactions.length ? (
+                    <div className={`flex flex-wrap gap-1 ${isCoach ? "justify-start pl-9" : "justify-end"}`}>
+                      {reactions.map((emoji) => (
+                        <button key={emoji} type="button" onClick={() => toggleChatReaction(message.id, emoji)} className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-xs shadow-sm">{emoji}</button>
+                      ))}
+                    </div>
+                  ) : null;
+                  const timeLine = (
+                    <p className={`mt-1 flex items-center gap-1 text-[10px] ${isCoach ? "justify-start text-slate-400" : "justify-end text-slate-900/60"}`}>
+                      {message.edited ? <span>(modifié)</span> : null}
+                      {new Date(message.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  );
+                  const bubbleInner = isEditing ? (
+                    <div className="w-56">
+                      <textarea value={editingText} onChange={(event) => setEditingText(event.target.value)} rows={2} className="w-full resize-none rounded-xl border border-brand-300 bg-white px-2 py-1.5 text-sm text-slate-800 outline-none" />
+                      <div className="mt-1 flex justify-end gap-1">
+                        <button type="button" onClick={cancelEditMessage} className="rounded-lg bg-white/70 px-2 py-1 text-xs font-black text-slate-700">Annuler</button>
+                        <button type="button" onClick={saveEditMessage} className="rounded-lg bg-slate-900 px-2 py-1 text-xs font-black text-white">Enregistrer</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {message.type === "text" ? <p className="whitespace-pre-wrap break-words">{message.text}</p> : null}
+                      {message.type === "image" ? <img src={message.dataUrl} alt={message.fileName || "image"} className="max-h-52 rounded-xl" /> : null}
+                      {message.type === "voice" ? <audio controls src={message.dataUrl} className="w-52" /> : null}
+                      {message.type === "file" ? (
+                        <a href={message.dataUrl} download={message.fileName} className="flex items-center gap-2 font-bold underline">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" /></svg>
+                          {message.fileName}
+                        </a>
+                      ) : null}
+                      {timeLine}
+                    </>
+                  );
+                  if (isCoach) {
+                    return (
+                      <div key={message.id} className="flex flex-col items-start gap-1">
+                        <div className="flex max-w-[90%] items-end gap-1.5">
+                          <img src={coachHero} alt="" className="h-7 w-7 shrink-0 rounded-full object-cover" />
+                          <div className="rounded-2xl rounded-bl-sm border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">{bubbleInner}</div>
+                          {actionButtons}
+                        </div>
+                        {picker}
+                        {reactionChips}
+                      </div>
+                    );
+                  }
+                  return (
+                    <div key={message.id} className="flex flex-col items-end gap-1">
+                      <div className="flex max-w-[90%] items-center gap-1.5">
+                        {actionButtons}
+                        <div className="rounded-2xl rounded-br-sm bg-brand-400 px-3 py-2 text-sm text-slate-950">{bubbleInner}</div>
+                      </div>
+                      {picker}
+                      {reactionChips}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="shrink-0 border-t border-slate-200 px-3 py-3">
+                {isRecording ? (
+                  <div className="flex items-center justify-between gap-3 rounded-2xl border border-rose-300 bg-rose-50 px-4 py-3">
+                    <span className="flex items-center gap-2 text-sm font-black text-rose-600"><span className="h-2.5 w-2.5 animate-pulse rounded-full bg-rose-500" /> Enregistrement…</span>
+                    <button type="button" onClick={stopChatRecording} className="rounded-xl bg-rose-500 px-3 py-1.5 text-xs font-black text-white transition hover:bg-rose-600">Stop &amp; envoyer</button>
+                  </div>
+                ) : (
+                  <div className="flex items-end gap-1.5">
+                    <button type="button" onClick={() => chatFileInputRef.current && chatFileInputRef.current.click()} title="Joindre un fichier" aria-label="Joindre un fichier" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-300 text-slate-500 transition hover:border-brand-400 hover:text-slate-900">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" /></svg>
+                    </button>
+                    <button type="button" onClick={() => chatImageInputRef.current && chatImageInputRef.current.click()} title="Joindre une photo" aria-label="Joindre une photo" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-300 text-slate-500 transition hover:border-brand-400 hover:text-slate-900">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21" /></svg>
+                    </button>
+                    <textarea value={chatText} onChange={(event) => setChatText(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); sendChatText(); } }} rows={1} placeholder="Écrire un message..." className="max-h-28 min-h-[2.25rem] flex-1 resize-none rounded-2xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-brand-400" />
+                    <button type="button" onClick={startChatRecording} title="Message vocal" aria-label="Message vocal" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-300 text-slate-500 transition hover:border-brand-400 hover:text-slate-900">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><path d="M12 19v4M8 23h8" /></svg>
+                    </button>
+                    <button type="button" onClick={sendChatText} disabled={!chatText.trim()} aria-label="Envoyer" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-brand-300 bg-brand-400 text-slate-950 transition hover:bg-brand-300 disabled:cursor-not-allowed disabled:opacity-50">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><path d="M22 2 11 13" /><path d="M22 2 15 22l-4-9-9-4 20-7Z" /></svg>
+                    </button>
+                  </div>
+                )}
+                <input ref={chatFileInputRef} type="file" className="hidden" onChange={handleChatFile} />
+                <input ref={chatImageInputRef} type="file" accept="image/*" className="hidden" onChange={handleChatFile} />
+              </div>
+            </div>
+          </div>,
+          document.body
+        )
+        : null}
+    </>
+  );
+}
+
+function AppointmentsPage({ onBack, onGoToShop, customerEmail }) {
+  const [now, setNow] = useState(() => new Date());
+  const todayKey = toDateKey(now);
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(id);
+  }, []);
+
+  const [viewMonth, setViewMonth] = useState(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  });
+  const [selectedDate, setSelectedDate] = useState("");
+  const [pendingSlot, setPendingSlot] = useState(null);
+  const [pendingMode, setPendingMode] = useState("video");
+  const [apptDateFrom, setApptDateFrom] = useState("");
+  const [apptDateTo, setApptDateTo] = useState("");
+  const [apptSortDesc, setApptSortDesc] = useState(true);
+  const [apptStatusFilter, setApptStatusFilter] = useState("all");
+  const [activeCallId, setActiveCallId] = useState(null);
+  const slotsScrollRef = useRef(null);
+  const scrollSlots = (direction) => {
+    if (slotsScrollRef.current) {
+      slotsScrollRef.current.scrollBy({ left: direction * 220, behavior: "smooth" });
+    }
+  };
+  const [appointments, setAppointments] = useState(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const saved = window.localStorage.getItem("hm-appointments");
+      const parsed = saved ? JSON.parse(saved) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const persistAppointments = (next) => {
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem("hm-appointments", JSON.stringify(next));
+      } catch {
+        /* ignore storage errors */
+      }
+    }
+    return next;
+  };
+
+  const longDateLabel = (key) =>
+    new Date(`${key}T00:00:00`).toLocaleDateString("fr-FR", { weekday: "long", day: "2-digit", month: "long" });
+  const dayBeforeLabel = (key) => {
+    const d = new Date(`${key}T00:00:00`);
+    d.setDate(d.getDate() - 1);
+    return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "long" });
+  };
+  const modeLabel = (mode) => (mode === "vocal" ? "appel vocal" : "appel vidéo");
+  // E-mail SIMULÉ via une notification (📧). Un vrai envoi nécessite un backend/service mail.
+  const sendEmail = (subject, detail) =>
+    addShopNotification(`📧 ${subject}${customerEmail ? ` (${customerEmail})` : ""} — ${detail}`);
+
+  const apptStart = (appt) => new Date(`${appt.date}T${appt.time}:00`).getTime();
+  const apptEnd = (appt) => apptStart(appt) + coachSlotDurationMin * 60000;
+  const getApptStatus = (appt) => {
+    if (appt.cancelled) return "cancelled";
+    if (appt.joined) return "joined";
+    if (now.getTime() > apptStart(appt) + 10 * 60000) return "expired";
+    if (appt.date > todayKey) return "upcoming";
+    return "confirmed";
+  };
+  const canJoin = (appt) => {
+    if (appt.cancelled || appt.joined) return false;
+    const start = apptStart(appt);
+    return now.getTime() >= start - 10 * 60000 && now.getTime() <= start + 10 * 60000;
+  };
+
+  const isSlotBooked = (key, time) =>
+    appointments.some((item) => !item.cancelled && item.date === key && item.time === time);
+  // On ne peut réserver QUE pour un jour strictement futur : le jour courant (et le passé) n'est pas
+  // réservable. Dès qu'une journée commence, ses créneaux disparaissent et deviennent indisponibles.
+  // On retire aussi les créneaux déjà réservés (donc masqués aux autres).
+  const availableSlotsForDate = (key) =>
+    key > todayKey ? slotsForDateKey(key).filter((time) => !isSlotBooked(key, time)) : [];
+  const isDateAvailable = (key) => key > todayKey && availableSlotsForDate(key).length > 0;
+
+  // Un rendez-vous bloque une nouvelle réservation TANT QUE son créneau n'est pas terminé ET qu'il
+  // n'est pas annulé (manuel ou auto). Dès que l'heure de fin passe (ex. 16:00 pour un créneau
+  // 15:00-16:00), ou qu'il est annulé / annulé automatiquement, l'utilisateur peut de nouveau réserver.
+  const activeAppointments = appointments.filter(
+    (item) => !item.cancelled && now.getTime() < apptEnd(item)
+  );
+  const hasActiveAppointment = activeAppointments.length > 0;
+
+  const nextApptNumber = () => {
+    const max = appointments.reduce((acc, item) => {
+      const n = parseInt(String(item.number || "").replace(/\D/g, ""), 10);
+      return Number.isFinite(n) && n > acc ? n : acc;
+    }, 0);
+    return `RDV-${String(max + 1).padStart(3, "0")}`;
+  };
+
+  const requestBooking = (key, time) => {
+    if (hasActiveAppointment || isSlotBooked(key, time)) return;
+    setPendingMode("video");
+    setPendingSlot({ date: key, time });
+  };
+  const confirmBooking = () => {
+    if (!pendingSlot || hasActiveAppointment || isSlotBooked(pendingSlot.date, pendingSlot.time)) {
+      setPendingSlot(null);
+      return;
+    }
+    const appt = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      number: nextApptNumber(),
+      date: pendingSlot.date,
+      time: pendingSlot.time,
+      mode: pendingMode,
+      createdAt: new Date().toISOString(),
+      cancelled: false,
+      joined: false,
+      reminderSent: false
+    };
+    setAppointments(persistAppointments([...appointments, appt]));
+    sendEmail(
+      "Confirmation de rendez-vous",
+      `Le ${longDateLabel(appt.date)} à ${formatSlotRange(appt.time)} en ${modeLabel(appt.mode)} avec Coach Hicham. Vous pouvez annuler jusqu'au ${dayBeforeLabel(appt.date)} 23:59, sans quoi le rendez-vous sera confirmé.`
+    );
+    setPendingSlot(null);
+  };
+
+  const cancelAppointment = (id, auto = false) => {
+    const target = appointments.find((item) => item.id === id && !item.cancelled);
+    if (!target) return;
+    // Annulation manuelle : on retire la ligne du tableau.
+    // Annulation automatique (absence) : on la conserve avec le statut « Annulé ».
+    const next = auto
+      ? appointments.map((item) => (item.id === id ? { ...item, cancelled: true, autoCancelled: true } : item))
+      : appointments.filter((item) => item.id !== id);
+    setAppointments(persistAppointments(next));
+    if (activeCallId === id) setActiveCallId(null);
+    if (auto) {
+      sendEmail(
+        "Rendez-vous annulé automatiquement",
+        `Vous n'avez pas rejoint le ${longDateLabel(target.date)} à ${formatSlotRange(target.time)}. Le rendez-vous a été annulé.`
+      );
+    } else {
+      sendEmail("Annulation de rendez-vous", `Le ${longDateLabel(target.date)} à ${formatSlotRange(target.time)} a bien été annulé.`);
+    }
+  };
+
+  const joinAppointment = (id) => {
+    setAppointments((current) => persistAppointments(current.map((item) => (item.id === id ? { ...item, joined: true } : item))));
+    setActiveCallId(id);
+  };
+
+  useEffect(() => {
+    const nowMs = now.getTime();
+    let changed = false;
+    const emails = [];
+    const next = appointments.map((item) => {
+      let updated = item;
+      if (!updated.cancelled && !updated.joined && nowMs > apptStart(updated) + 10 * 60000) {
+        updated = { ...updated, cancelled: true, autoCancelled: true };
+        changed = true;
+        emails.push(["Rendez-vous annulé automatiquement", `Vous n'avez pas rejoint le ${longDateLabel(item.date)} à ${formatSlotRange(item.time)}. Le rendez-vous a été annulé.`]);
+      }
+      if (!updated.cancelled && !updated.reminderSent && updated.date === todayKey) {
+        updated = { ...updated, reminderSent: true };
+        changed = true;
+        emails.push(["Rappel de rendez-vous", `Vous avez un rendez-vous aujourd'hui à ${formatSlotRange(item.time)} en ${modeLabel(item.mode)} avec Coach Hicham.`]);
+      }
+      return updated;
+    });
+    if (changed) {
+      setAppointments(persistAppointments(next));
+      emails.forEach(([subject, detail]) => sendEmail(subject, detail));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [now]);
+
+  const year = viewMonth.getFullYear();
+  const month = viewMonth.getMonth();
+  const startWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const cells = [];
+  for (let i = 0; i < startWeekday; i += 1) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d += 1) cells.push(new Date(year, month, d));
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  const monthLabel = viewMonth.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+  const canGoPrev = year > now.getFullYear() || (year === now.getFullYear() && month > now.getMonth());
+
+  const selectedSlots = availableSlotsForDate(selectedDate);
+  const selectedLabel = selectedDate
+    ? new Date(`${selectedDate}T00:00:00`).toLocaleDateString("fr-FR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })
+    : "";
+
+  const tableAppointments = appointments
+    .slice()
+    .filter((item) => {
+      // item.date et les bornes sont au format YYYY-MM-DD → comparaison de chaînes valide.
+      if (apptDateFrom && item.date < apptDateFrom) return false;
+      if (apptDateTo && item.date > apptDateTo) return false;
+      return true;
+    })
+    .filter((item) => {
+      if (apptStatusFilter === "all") return true;
+      const status = getApptStatus(item);
+      if (apptStatusFilter === "cancelled") return status === "cancelled" || status === "expired";
+      return status === apptStatusFilter;
+    })
+    .sort((a, b) => {
+      const cmp = a.date === b.date ? a.time.localeCompare(b.time) : a.date.localeCompare(b.date);
+      return apptSortDesc ? -cmp : cmp;
+    });
+  const activeCall = activeCallId ? appointments.find((item) => item.id === activeCallId) : null;
+
+  const statusBadge = {
+    upcoming: { label: "À venir", cls: "bg-emerald-100 text-emerald-700" },
+    confirmed: { label: "Confirmé", cls: "bg-sky-100 text-sky-700" },
+    joined: { label: "En cours", cls: "bg-brand-100 text-brand-700" },
+    cancelled: { label: "Annulé", cls: "bg-rose-100 text-rose-700" },
+    expired: { label: "Annulé", cls: "bg-rose-100 text-rose-700" }
+  };
+
+  const cartCount = (() => {
+    if (typeof window === "undefined") return 0;
+    try {
+      const saved = window.localStorage.getItem("hm-shop-cart");
+      const parsed = saved ? JSON.parse(saved) : [];
+      return Array.isArray(parsed) ? parsed.length : 0;
+    } catch {
+      return 0;
+    }
+  })();
+
+  return (
+    <section className="settings-page flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="settings-hero shrink-0">
+        <div className="settings-hero__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <path d="M16 2v4M8 2v4M3 10h18" />
+          </svg>
+        </div>
+        <div className="min-w-0 flex-1">
+          <h1 className="settings-hero__title">Rendez-vous</h1>
+          <p className="settings-hero__subtitle">Choisissez un créneau pour discuter en vocal ou en vidéo avec le coach Hicham.</p>
+        </div>
+        <div className="settings-hero__actions" aria-label="Actions rapides">
+          {onBack ? (
+            <button type="button" onClick={onBack} className="settings-hero__back" aria-label="Revenir en arrière" title="Revenir en arrière">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M15 18 9 12l6-6" />
+                <path d="M9 12h11" />
+              </svg>
+              <span>Retour</span>
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={onGoToShop}
+            className="settings-hero__action"
+            aria-label="Panier"
+            title="Voir le panier (boutique)"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="9" cy="21" r="1" />
+              <circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+            </svg>
+            {cartCount > 0 ? (
+              <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-brand-500 px-1 text-[10px] font-black text-white">
+                {cartCount}
+              </span>
+            ) : null}
+          </button>
+          <CoachInbox />
+        </div>
+      </div>
+
+      <div className="settings-scroll mt-2 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
+        <div className="grid gap-2 lg:grid-cols-2">
+          <div className="settings-card">
+            <div className="flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => canGoPrev && setViewMonth(new Date(year, month - 1, 1))}
+                disabled={!canGoPrev}
+                aria-label="Mois précédent"
+                className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-600/65 bg-slate-950/35 text-slate-200 transition hover:border-brand-300/70 hover:text-brand-100 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><path d="M15 18 9 12l6-6" /></svg>
+              </button>
+              <span className="font-display text-base font-black capitalize text-white">{monthLabel}</span>
+              <button
+                type="button"
+                onClick={() => setViewMonth(new Date(year, month + 1, 1))}
+                aria-label="Mois suivant"
+                className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-600/65 bg-slate-950/35 text-slate-200 transition hover:border-brand-300/70 hover:text-brand-100"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+              </button>
+            </div>
+
+            <div className="mt-3 grid grid-cols-7 gap-1 text-center text-[10px] font-black uppercase tracking-wide text-slate-400">
+              {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((label) => (
+                <span key={label}>{label}</span>
+              ))}
+            </div>
+            <div className="mt-1 grid grid-cols-7 gap-1">
+              {cells.map((date, idx) => {
+                if (!date) return <span key={`empty-${idx}`} />;
+                const key = toDateKey(date);
+                const available = isDateAvailable(key);
+                const isSelected = key === selectedDate;
+                const isToday = key === todayKey;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    disabled={!available}
+                    onClick={() => setSelectedDate(key)}
+                    title={available ? "Voir les créneaux" : "Indisponible"}
+                    className={`relative flex h-9 items-center justify-center rounded-lg text-sm font-bold transition ${
+                      isSelected
+                        ? "bg-emerald-600 text-white ring-2 ring-emerald-300"
+                        : available
+                          ? "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-300 hover:bg-emerald-200"
+                          : "cursor-not-allowed text-slate-400"
+                    } ${isToday && !isSelected ? "ring-2 ring-emerald-500/60" : ""}`}
+                  >
+                    {date.getDate()}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] font-bold text-slate-300">
+              <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-emerald-100 ring-1 ring-emerald-300" /> Disponible</span>
+              <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-emerald-600" /> Sélectionné</span>
+            </div>
+          </div>
+
+          <div className="settings-card flex flex-col">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-brand-200">Créneaux du coach</p>
+            <h2 className="font-display text-base font-black capitalize text-white">
+              {selectedDate ? selectedLabel : "Horaires disponibles"}
+            </h2>
+            {hasActiveAppointment ? (
+              <div className="mt-3 rounded-2xl border border-amber-300 bg-amber-100 px-4 py-3 text-sm font-bold text-amber-800">
+                Vous avez déjà un rendez-vous réservé. Annulez-le dans le tableau ci-dessous pour en réserver un autre.
+              </div>
+            ) : null}
+            {selectedDate ? (
+              selectedSlots.length ? (
+                <>
+                <div className="mt-3 flex items-center gap-1">
+                  {selectedSlots.length > 3 ? (
+                    <button
+                      type="button"
+                      onClick={() => scrollSlots(-1)}
+                      aria-label="Créneaux précédents"
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-600/65 bg-slate-950/35 text-slate-200 transition hover:border-brand-300/70 hover:text-brand-100"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><path d="M15 18 9 12l6-6" /></svg>
+                    </button>
+                  ) : null}
+                  <div ref={slotsScrollRef} className="flex flex-1 gap-2 overflow-x-auto scroll-smooth pb-1" style={{ scrollbarWidth: "none" }}>
+                    {selectedSlots.map((time) => (
+                      <div key={time} className="w-36 shrink-0 rounded-2xl border border-brand-400/45 bg-brand-500/10 p-3 text-center">
+                        <p className="flex items-center justify-center gap-1.5 font-display text-sm font-black text-white">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0 text-brand-200" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+                          {formatSlotRange(time)}
+                        </p>
+                        <button
+                          type="button"
+                          disabled={hasActiveAppointment}
+                          onClick={() => requestBooking(selectedDate, time)}
+                          className={`mt-2 w-full rounded-xl px-2 py-1.5 text-xs font-black transition ${
+                            hasActiveAppointment
+                              ? "cursor-not-allowed border border-slate-300 bg-slate-200 text-slate-500"
+                              : "border-2 border-brand-300 bg-brand-400 text-slate-950 hover:bg-brand-300"
+                          }`}
+                        >
+                          Réserver
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  {selectedSlots.length > 3 ? (
+                    <button
+                      type="button"
+                      onClick={() => scrollSlots(1)}
+                      aria-label="Créneaux suivants"
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-600/65 bg-slate-950/35 text-slate-200 transition hover:border-brand-300/70 hover:text-brand-100"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+                    </button>
+                  ) : null}
+                </div>
+                <p className="mt-3 rounded-2xl border border-sky-200 bg-sky-100 px-4 py-3 text-xs font-bold text-sky-800">
+                  ℹ️ Vous pouvez rejoindre le salon jusqu'à 10 minutes avant l'heure de votre rendez-vous. Sans connexion dans les 10 minutes qui suivent l'heure prévue, le rendez-vous sera annulé automatiquement.
+                </p>
+                </>
+              ) : (
+                <p className="mt-4 text-sm text-slate-300">Aucun créneau disponible pour cette date.</p>
+              )
+            ) : (
+              <div className="mt-6 text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-brand-400/40 bg-brand-500/10 text-brand-200">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-7 w-7" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
+                </div>
+                <p className="mt-3 font-display text-base font-black text-white">Sélectionnez une date</p>
+                <p className="mt-1 text-sm text-slate-300">Cliquez sur une date en vert dans le calendrier pour afficher les horaires proposés par le coach.</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="settings-card">
+          <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-brand-200">Mes rendez-vous</p>
+          <h2 className="font-display text-base font-black text-white">Rendez-vous réservés</h2>
+          <>
+              <div className="mt-3 flex flex-wrap items-end gap-3">
+                <label className="text-xs font-semibold text-slate-300">
+                  <span>Date début</span>
+                  <input
+                    type="date"
+                    value={apptDateFrom}
+                    max={apptDateTo || undefined}
+                    onChange={(event) => setApptDateFrom(event.target.value)}
+                    className="mt-1 block rounded-xl border border-slate-600/65 bg-slate-950/45 px-3 py-2 text-sm font-bold text-white outline-none focus:border-brand-300"
+                  />
+                </label>
+                <label className="text-xs font-semibold text-slate-300">
+                  <span>Date fin</span>
+                  <input
+                    type="date"
+                    value={apptDateTo}
+                    min={apptDateFrom || undefined}
+                    onChange={(event) => setApptDateTo(event.target.value)}
+                    className="mt-1 block rounded-xl border border-slate-600/65 bg-slate-950/45 px-3 py-2 text-sm font-bold text-white outline-none focus:border-brand-300"
+                  />
+                </label>
+                <div className="text-xs font-semibold text-slate-300">
+                  <span>Trier par date</span>
+                  <div className="mt-1 flex gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setApptSortDesc(true)}
+                      className={`rounded-xl px-3 py-2 text-xs font-black transition ${apptSortDesc ? "border-2 border-brand-300 bg-brand-400 text-slate-950" : "border border-slate-600/65 bg-slate-950/35 text-slate-200 hover:border-brand-300/70 hover:text-brand-100"}`}
+                    >
+                      Plus récent
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setApptSortDesc(false)}
+                      className={`rounded-xl px-3 py-2 text-xs font-black transition ${!apptSortDesc ? "border-2 border-brand-300 bg-brand-400 text-slate-950" : "border border-slate-600/65 bg-slate-950/35 text-slate-200 hover:border-brand-300/70 hover:text-brand-100"}`}
+                    >
+                      Plus ancien
+                    </button>
+                  </div>
+                </div>
+                {apptDateFrom || apptDateTo ? (
+                  <button
+                    type="button"
+                    onClick={() => { setApptDateFrom(""); setApptDateTo(""); }}
+                    className="rounded-xl border border-slate-600/65 bg-slate-950/35 px-3 py-2 text-xs font-black text-slate-200 transition hover:border-brand-300/70 hover:text-brand-100"
+                  >
+                    Effacer les dates
+                  </button>
+                ) : null}
+              </div>
+              <div className="mt-3 text-xs font-semibold text-slate-300">
+                <span>Statut</span>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {[["all", "Tous"], ["upcoming", "À venir"], ["confirmed", "Confirmé"], ["cancelled", "Annulé auto"]].map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setApptStatusFilter(value)}
+                      className={`rounded-xl px-3 py-2 text-xs font-black transition ${apptStatusFilter === value ? "border-2 border-brand-300 bg-brand-400 text-slate-950" : "border border-slate-600/65 bg-slate-950/35 text-slate-200 hover:border-brand-300/70 hover:text-brand-100"}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+          </>
+          {tableAppointments.length ? (
+            <div className="appt-scroll mt-3 max-h-[268px] overflow-auto">
+              <table className="w-full min-w-[640px] border-collapse text-left">
+                <thead>
+                  <tr className="text-[10px] font-black uppercase tracking-wide text-slate-400">
+                    <th className="sticky top-0 z-10 border-b-2 border-slate-600/50 bg-slate-950 px-3 py-2">N°</th>
+                    <th className="sticky top-0 z-10 border-b-2 border-slate-600/50 bg-slate-950 px-3 py-2">Date</th>
+                    <th className="sticky top-0 z-10 border-b-2 border-slate-600/50 bg-slate-950 px-3 py-2">Heure</th>
+                    <th className="sticky top-0 z-10 border-b-2 border-slate-600/50 bg-slate-950 px-3 py-2">Type</th>
+                    <th className="sticky top-0 z-10 border-b-2 border-slate-600/50 bg-slate-950 px-3 py-2">Statut</th>
+                    <th className="sticky top-0 z-10 border-b-2 border-slate-600/50 bg-slate-950 px-3 py-2 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tableAppointments.map((item) => {
+                    const status = getApptStatus(item);
+                    const badge = statusBadge[status] || statusBadge.cancelled;
+                    const joinable = canJoin(item);
+                    const cancellable = status === "upcoming";
+                    return (
+                      <tr key={item.id} className="h-14 border-t border-slate-600/40">
+                        <td className="px-3 py-3 text-sm font-black text-white">{item.number}</td>
+                        <td className="px-3 py-3 text-sm font-bold capitalize text-white">{longDateLabel(item.date)}</td>
+                        <td className="px-3 py-3 text-sm font-semibold text-brand-100">{formatSlotRange(item.time)}</td>
+                        <td className="px-3 py-3 text-sm text-slate-300">{item.mode === "vocal" ? "Vocal" : "Vidéo"}</td>
+                        <td className="px-3 py-3">
+                          <span className={`inline-block rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-wide ${badge.cls}`}>{badge.label}</span>
+                        </td>
+                        <td className="px-3 py-3 text-right">
+                          {joinable ? (
+                            <button
+                              type="button"
+                              onClick={() => joinAppointment(item.id)}
+                              className="rounded-xl border-2 border-brand-300 bg-brand-400 px-3 py-2 text-xs font-black text-slate-950 transition hover:bg-brand-300"
+                            >
+                              Rejoindre
+                            </button>
+                          ) : cancellable ? (
+                            <button
+                              type="button"
+                              onClick={() => cancelAppointment(item.id)}
+                              className="rounded-xl border border-rose-300 bg-rose-100 px-3 py-2 text-xs font-black text-rose-700 transition hover:bg-rose-200"
+                            >
+                              Annuler
+                            </button>
+                          ) : (
+                            <span className="text-xs font-bold text-slate-500">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="mt-3 text-sm text-slate-300">
+              {appointments.length
+                ? "Aucun rendez-vous ne correspond à ces filtres."
+                : "Aucun rendez-vous réservé. Choisissez un créneau vert pour réserver."}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {pendingSlot && typeof document !== "undefined"
+        ? createPortal(
+          <div
+            className="fixed inset-0 z-[95] grid place-items-center p-4"
+            style={{ background: "rgba(2,6,23,0.6)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Confirmer le rendez-vous"
+            onClick={() => setPendingSlot(null)}
+          >
+            <div className="w-[min(100%,30rem)] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(2,6,23,0.25)]" onClick={(event) => event.stopPropagation()}>
+              <div className="flex items-center gap-3 border-b border-slate-200 px-5 py-4">
+                <img src={coachHero} alt="Coach Hicham" className="h-11 w-11 rounded-full object-cover" />
+                <div>
+                  <h2 className="font-display text-lg font-black text-slate-900">Confirmer le rendez-vous</h2>
+                  <p className="text-xs font-bold text-slate-500">avec Coach Hicham</p>
+                </div>
+              </div>
+              <div className="px-5 py-4">
+                <p className="text-sm text-slate-600">
+                  Votre créneau est réservé pour le <span className="font-black capitalize text-slate-900">{longDateLabel(pendingSlot.date)}</span> à{" "}
+                  <span className="font-black text-slate-900">{formatSlotRange(pendingSlot.time)}</span>, en ligne via un appel{" "}
+                  <span className="font-black text-slate-900">{pendingMode === "vocal" ? "vocal" : "vidéo"}</span> selon votre choix.
+                </p>
+                <div className="mt-4">
+                  <p className="text-xs font-black uppercase tracking-wide text-slate-400">Type d'appel</p>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPendingMode("video")}
+                      className={`flex items-center justify-center gap-1.5 rounded-2xl border-2 px-3 py-2.5 text-sm font-black transition ${pendingMode === "video" ? "border-brand-400 bg-brand-50 text-brand-700" : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"}`}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><path d="m23 7-7 5 7 5V7Z" /><rect x="1" y="5" width="15" height="14" rx="2" /></svg>
+                      Vidéo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPendingMode("vocal")}
+                      className={`flex items-center justify-center gap-1.5 rounded-2xl border-2 px-3 py-2.5 text-sm font-black transition ${pendingMode === "vocal" ? "border-brand-400 bg-brand-50 text-brand-700" : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"}`}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z" /></svg>
+                      Vocal
+                    </button>
+                  </div>
+                </div>
+                <p className="mt-4 rounded-2xl bg-amber-100 px-3 py-2 text-xs font-bold text-amber-800">
+                  Vous pourrez annuler jusqu'au {dayBeforeLabel(pendingSlot.date)} à 23:59. Passé ce délai, le rendez-vous est confirmé.
+                </p>
+              </div>
+              <div className="flex gap-2 border-t border-slate-200 px-5 py-4">
+                <button type="button" onClick={() => setPendingSlot(null)} className="flex-1 rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-black text-slate-600 transition hover:border-slate-400">
+                  Annuler
+                </button>
+                <button type="button" onClick={confirmBooking} className="flex-1 rounded-2xl border-2 border-brand-300 bg-brand-400 px-4 py-2.5 text-sm font-black text-slate-950 transition hover:bg-brand-300">
+                  Confirmer
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )
+        : null}
+
+      {activeCall && typeof document !== "undefined"
+        ? createPortal(
+          <div
+            className="fixed inset-0 z-[96] grid place-items-center p-4"
+            style={{ background: "rgba(2,6,23,0.88)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Salon de discussion avec Coach Hicham"
+          >
+            <div className="flex h-[80vh] max-h-[620px] w-[min(100%,40rem)] flex-col overflow-hidden rounded-3xl border border-slate-700 bg-slate-900 shadow-[0_24px_70px_rgba(0,0,0,0.55)]">
+              <div className="flex items-center justify-between gap-3 border-b border-slate-700 px-5 py-3">
+                <div className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-rose-500" />
+                  <h2 className="font-display text-base font-black text-white">
+                    Salon — {activeCall.mode === "vocal" ? "Appel vocal" : "Appel vidéo"} avec Coach Hicham
+                  </h2>
+                </div>
+                <button type="button" onClick={() => setActiveCallId(null)} aria-label="Quitter le salon" className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-600 text-slate-300 transition hover:border-rose-400 hover:text-rose-300">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                </button>
+              </div>
+              <div className="flex min-h-0 flex-1 items-center justify-center bg-slate-950">
+                <div className="text-center">
+                  <img src={coachHero} alt="Coach Hicham" className="mx-auto h-28 w-28 rounded-full object-cover ring-4 ring-brand-400/40" />
+                  <p className="mt-4 font-display text-xl font-black text-white">Coach Hicham</p>
+                  <p className="mt-1 text-sm text-slate-400">
+                    {activeCall.mode === "vocal" ? "Appel vocal en cours…" : "Appel vidéo en cours…"} ({formatSlotRange(activeCall.time)})
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center justify-center border-t border-slate-700 bg-slate-900 px-5 py-4">
+                <button type="button" onClick={() => setActiveCallId(null)} className="rounded-2xl bg-rose-500 px-6 py-3 text-sm font-black text-white transition hover:bg-rose-600">
+                  Quitter le salon
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )
+        : null}
+    </section>
+  );
+}
+
+function MyProgramsPage({ onBack, onGoToShop, refreshSession, onInvoiceSent }) {
+  const [search, setSearch] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [sortDesc, setSortDesc] = useState(true);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [purchased, setPurchased] = useState(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const saved = window.localStorage.getItem("hm-shop-purchased");
+      const parsed = saved ? JSON.parse(saved) : [];
+      return Array.isArray(parsed) ? parsed.filter((id) => typeof id === "string") : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Retour depuis Stripe (paiement lancé depuis « Mes programmes ») : vérification serveur,
+  // déblocage, filtre « Acheté » appliqué + toast facture.
+  const programsCheckoutRef = useRef(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || programsCheckoutRef.current) return;
+    const params = new URLSearchParams(window.location.search);
+    const checkout = params.get("checkout");
+    const sessionId = params.get("session_id");
+    if (!checkout) return;
+    programsCheckoutRef.current = true;
+    const cleanUrl = () => {
+      try {
+        const u = new URL(window.location.href);
+        u.searchParams.delete("checkout");
+        u.searchParams.delete("session_id");
+        window.history.replaceState({}, "", u.toString());
+      } catch {
+        /* ignore */
+      }
+    };
+    if (checkout === "cancel") {
+      cleanUrl();
+      return;
+    }
+    if (checkout === "success" && sessionId) {
+      const token = (typeof window !== "undefined" ? window.sessionStorage.getItem("hm-access-token") : "") || "";
+      if (!token) {
+        cleanUrl();
+        return;
+      }
+      callSupabaseFunctionWithAuth("verify-checkout-session", { sessionId }, token)
+        .then((result) => {
+          const ids = Array.isArray(result?.productIds) ? result.productIds : [];
+          if (result?.paid && ids.length) {
+            setPurchased((current) => {
+              const next = Array.from(new Set([...current, ...ids]));
+              try {
+                window.localStorage.setItem("hm-shop-purchased", JSON.stringify(next));
+              } catch {
+                /* ignore */
+              }
+              return next;
+            });
+            setStatusFilter("Acheté");
+            addShopNotification("Paiement confirmé ✓ Programme(s) débloqué(s) dans Mes programmes.");
+            if (result.invoiceSent && typeof onInvoiceSent === "function") onInvoiceSent();
+          }
+        })
+        .catch((error) => console.error("verify-checkout-session (programs) error", error))
+        .finally(cleanUrl);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const payProgram = async (id) => {
+    if (purchased.includes(id)) return;
+    const program = coachPrograms.find((entry) => entry.id === id);
+    // Programme gratuit : débloqué sans paiement.
+    if (program && program.priceType === "Gratuit") {
+      const next = Array.from(new Set([...purchased, id]));
+      setPurchased(next);
+      if (typeof window !== "undefined") {
+        try {
+          window.localStorage.setItem("hm-shop-purchased", JSON.stringify(next));
+        } catch {
+          /* ignore storage errors */
+        }
+      }
+      addShopNotification(`« ${program.name} » est débloqué dans Mes programmes.`);
+      return;
+    }
+    // Programme payant : paiement RÉEL via Stripe. Au retour, le déblocage est vérifié côté serveur
+    // (sur la page Boutique) puis appliqué à tout l'app.
+    let token = "";
+    try {
+      if (typeof refreshSession === "function") {
+        const fresh = await refreshSession();
+        token = fresh?.accessToken || "";
+      }
+    } catch {
+      /* fallback ci-dessous */
+    }
+    if (!token) {
+      token = typeof window !== "undefined" ? window.sessionStorage.getItem("hm-access-token") || "" : "";
+    }
+    if (!token) {
+      addShopNotification("Session expirée — reconnecte-toi pour procéder au paiement.");
+      return;
+    }
+    try {
+      const result = await callSupabaseFunctionWithAuth("create-checkout-session", { items: [id], returnTo: "programs" }, token);
+      if (result?.url) {
+        window.location.href = result.url;
+      } else {
+        addShopNotification("Impossible de démarrer le paiement. Réessaie dans un instant.");
+      }
+    } catch (error) {
+      console.error("create-checkout-session error", error);
+      addShopNotification(`Impossible de démarrer le paiement : ${error?.message || error?.code || "erreur inconnue"}`);
+    }
+  };
+
+  const normalizedSearch = search.trim().toLowerCase();
+  const filteredPrograms = coachPrograms
+    .filter(
+      (program) =>
+        !normalizedSearch ||
+        program.name.toLowerCase().includes(normalizedSearch) ||
+        program.number.toLowerCase().includes(normalizedSearch)
+    )
+    .filter((program) => {
+      if (!dateFrom && !dateTo) return true;
+      const time = new Date(program.sentDate).getTime();
+      if (dateFrom && time < new Date(`${dateFrom}T00:00:00`).getTime()) return false;
+      if (dateTo && time > new Date(`${dateTo}T23:59:59`).getTime()) return false;
+      return true;
+    })
+    .filter((program) => {
+      if (statusFilter === "all") return true;
+      const isPurchased = purchased.includes(program.id);
+      if (statusFilter === "Gratuit") return program.priceType === "Gratuit";
+      if (statusFilter === "Payant") return program.priceType === "Payant" && !isPurchased;
+      if (statusFilter === "Acheté") return program.priceType === "Payant" && isPurchased;
+      return true;
+    })
+    .slice()
+    .sort((a, b) => {
+      const da = new Date(a.sentDate).getTime();
+      const db = new Date(b.sentDate).getTime();
+      return sortDesc ? db - da : da - db;
+    });
+
+  const formatSentDate = (value) =>
+    new Date(value).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
+
+  const cartCount = (() => {
+    if (typeof window === "undefined") return 0;
+    try {
+      const saved = window.localStorage.getItem("hm-shop-cart");
+      const parsed = saved ? JSON.parse(saved) : [];
+      return Array.isArray(parsed) ? parsed.length : 0;
+    } catch {
+      return 0;
+    }
+  })();
+
+  return (
+    <section className="settings-page flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="settings-hero shrink-0">
+        <div className="settings-hero__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8" aria-hidden="true">
+            <path d="M6 4h9a3 3 0 0 1 3 3v13H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />
+            <path d="M6 16h12M9 8h6M9 12h4" />
+          </svg>
+        </div>
+        <div className="min-w-0 flex-1">
+          <h1 className="settings-hero__title">Mes programmes</h1>
+          <p className="settings-hero__subtitle">Retrouvez ici tous les programmes envoyés par votre coach Hicham.</p>
+        </div>
+        <div className="settings-hero__actions" aria-label="Actions rapides">
+          {onBack ? (
+            <button
+              type="button"
+              onClick={onBack}
+              className="settings-hero__back"
+              aria-label="Revenir en arrière"
+              title="Revenir en arrière"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M15 18 9 12l6-6" />
+                <path d="M9 12h11" />
+              </svg>
+              <span>Retour</span>
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={onGoToShop}
+            className="settings-hero__action"
+            aria-label="Panier"
+            title="Voir le panier (boutique)"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="9" cy="21" r="1" />
+              <circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+            </svg>
+            {cartCount > 0 ? (
+              <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-brand-500 px-1 text-[10px] font-black text-white">
+                {cartCount}
+              </span>
+            ) : null}
+          </button>
+          <CoachInbox />
+        </div>
+      </div>
+
+      <div className="settings-scroll mt-2 flex min-h-0 flex-1 flex-col overflow-y-auto pr-1">
+        <div className="settings-card">
+          <SettingsSectionHeader
+            icon="shop"
+            eyebrow="Programmes"
+            title="Recherche & filtres"
+            action={<span className="settings-chip">{filteredPrograms.length} programme{filteredPrograms.length > 1 ? "s" : ""}</span>}
+          />
+
+          <label className="mt-4 block text-xs font-semibold text-slate-300">
+            <span>Rechercher un programme</span>
+            <div className="relative mt-2">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-brand-300" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.2-3.2" />
+              </svg>
+              <input
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Rechercher un programme..."
+                className="mt-0 w-full rounded-2xl border border-brand-300/45 bg-slate-950/45 px-4 py-3 pl-12 text-sm font-bold text-white outline-none transition placeholder:text-slate-500 focus:border-brand-300 focus:bg-slate-950/70 focus:ring-4 focus:ring-brand-300/10"
+              />
+            </div>
+          </label>
+
+          <div className="mt-3 flex flex-wrap items-end gap-3">
+            <label className="text-xs font-semibold text-slate-300">
+              <span>Date début</span>
+              <input
+                type="date"
+                value={dateFrom}
+                max={dateTo || undefined}
+                onChange={(event) => setDateFrom(event.target.value)}
+                className="mt-1 block rounded-xl border border-slate-600/65 bg-slate-950/45 px-3 py-2 text-sm font-bold text-white outline-none focus:border-brand-300"
+              />
+            </label>
+            <label className="text-xs font-semibold text-slate-300">
+              <span>Date fin</span>
+              <input
+                type="date"
+                value={dateTo}
+                min={dateFrom || undefined}
+                onChange={(event) => setDateTo(event.target.value)}
+                className="mt-1 block rounded-xl border border-slate-600/65 bg-slate-950/45 px-3 py-2 text-sm font-bold text-white outline-none focus:border-brand-300"
+              />
+            </label>
+            <div className="text-xs font-semibold text-slate-300">
+              <span>Trier par date</span>
+              <div className="mt-1 flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => setSortDesc(true)}
+                  className={`rounded-xl px-3 py-2 text-xs font-black transition ${sortDesc
+                      ? "border-2 border-brand-300 bg-brand-400 text-slate-950"
+                      : "border border-slate-600/65 bg-slate-950/35 text-slate-200 hover:border-brand-300/70 hover:text-brand-100"
+                    }`}
+                >
+                  Plus récent
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSortDesc(false)}
+                  className={`rounded-xl px-3 py-2 text-xs font-black transition ${!sortDesc
+                      ? "border-2 border-brand-300 bg-brand-400 text-slate-950"
+                      : "border border-slate-600/65 bg-slate-950/35 text-slate-200 hover:border-brand-300/70 hover:text-brand-100"
+                    }`}
+                >
+                  Plus ancien
+                </button>
+              </div>
+            </div>
+            {dateFrom || dateTo ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setDateFrom("");
+                  setDateTo("");
+                }}
+                className="rounded-xl border border-slate-600/65 bg-slate-950/35 px-3 py-2 text-xs font-black text-slate-200 transition hover:border-brand-300/70 hover:text-brand-100"
+              >
+                Effacer les dates
+              </button>
+            ) : null}
+          </div>
+
+          <div className="mt-3 text-xs font-semibold text-slate-300">
+            <span>Type</span>
+            <div className="mt-1 flex flex-wrap gap-1">
+              {[["all", "Tous"], ["Gratuit", "Gratuit"], ["Payant", "Payant"], ["Acheté", "Acheté"]].map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setStatusFilter(value)}
+                  className={`rounded-xl px-3 py-2 text-xs font-black transition ${statusFilter === value
+                      ? "border-2 border-brand-300 bg-brand-400 text-slate-950"
+                      : "border border-slate-600/65 bg-slate-950/35 text-slate-200 hover:border-brand-300/70 hover:text-brand-100"
+                    }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="settings-card mt-2 flex flex-1 flex-col">
+          <SettingsSectionHeader icon="shop" eyebrow="Liste" title="Programmes reçus" />
+          {coachPrograms.length === 0 ? (
+            <div className="mt-4 rounded-2xl border border-dashed border-slate-600/60 bg-slate-950/35 px-4 py-10 text-center">
+              <p className="font-display text-lg font-black text-white">Aucun programme disponible pour le moment.</p>
+              <p className="mt-2 text-sm text-slate-400">Votre coach Hicham vous enverra un programme prochainement.</p>
+            </div>
+          ) : filteredPrograms.length === 0 ? (
+            <div className="mt-4 rounded-2xl border border-slate-700/70 bg-slate-950/35 px-4 py-10 text-center">
+              <p className="font-display text-lg font-black text-white">Aucun programme ne correspond</p>
+              <p className="mt-2 text-sm text-slate-400">Essaie une autre recherche ou modifie les dates.</p>
+            </div>
+          ) : (
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full min-w-[680px] border-collapse text-left text-sm">
+                <thead>
+                  <tr className="border-b border-slate-700/70 text-[11px] font-black uppercase tracking-[0.1em] text-slate-400">
+                    <th className="px-3 py-2">N°</th>
+                    <th className="px-3 py-2">Nom du programme</th>
+                    <th className="px-3 py-2">Date d'envoi</th>
+                    <th className="px-3 py-2">Remarque du coach</th>
+                    <th className="px-3 py-2 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredPrograms.map((program) => {
+                    const unlocked = program.priceType === "Gratuit" || purchased.includes(program.id);
+                    const actionClass = unlocked
+                      ? "border border-brand-300/55 bg-brand-400/12 text-brand-100 transition hover:bg-brand-400 hover:text-slate-950"
+                      : "cursor-not-allowed border border-slate-700/60 bg-slate-950/30 text-slate-500 opacity-60";
+                    return (
+                      <tr key={program.id} className="border-b border-slate-800/70 align-top">
+                        <td className="px-3 py-3 font-black text-white">{program.number}</td>
+                        <td className="px-3 py-3">
+                          <div className="font-black text-white">{program.name}</div>
+                          <span
+                            className={`mt-1 inline-block rounded-lg px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.1em] ${program.priceType === "Gratuit"
+                                ? "border border-brand-300/45 bg-brand-400/15 text-brand-100"
+                                : unlocked
+                                  ? "border border-sky-400/50 bg-sky-500/15 text-sky-300"
+                                  : "border border-orange-400 bg-orange-500/15 text-orange-400"
+                              }`}
+                          >
+                            {program.priceType === "Gratuit" ? "Gratuit" : unlocked ? "Acheté" : "Payant"}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3 text-slate-300">{formatSentDate(program.sentDate)}</td>
+                        <td className="px-3 py-3 text-slate-300">{program.remark}</td>
+                        <td className="px-3 py-3">
+                          <div className="flex justify-end gap-1.5">
+                            {unlocked ? (
+                              <>
+                                <button
+                                  type="button"
+                                  title="Consulter"
+                                  className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-black ${actionClass}`}
+                                >
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                  </svg>
+                                  Consulter
+                                </button>
+                                <button
+                                  type="button"
+                                  title="Télécharger"
+                                  className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-black ${actionClass}`}
+                                >
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                    <path d="M7 10l5 5 5-5" />
+                                    <path d="M12 15V3" />
+                                  </svg>
+                                  Télécharger
+                                </button>
+                              </>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => payProgram(program.id)}
+                                title="Payer ce programme"
+                                className="flex items-center gap-1.5 rounded-xl border-2 border-brand-300 bg-brand-400 px-3 py-2 text-xs font-black text-slate-950 transition hover:bg-brand-300"
+                              >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                                  <rect x="2" y="5" width="20" height="14" rx="2" />
+                                  <path d="M2 10h20" />
+                                </svg>
+                                Payer
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ShopPage({
+  searchValue,
+  onSearchChange,
+  category,
+  onCategoryChange,
+  priceType,
+  onPriceTypeChange,
+  onBack,
+  customerName,
+  customerEmail,
+  accessToken,
+  refreshSession,
+  onInvoiceSent,
+}) {
+  const normalizedSearch = searchValue.trim().toLowerCase();
+  const filteredProducts = shopProducts.filter((product) => {
+    const matchesCategory = category === "Tous" || product.category === category;
+    const matchesPrice = priceType === "Tous" || product.priceType === priceType;
+    const haystack = [product.title, product.category, product.priceType, product.description, ...product.tags]
+      .join(" ")
+      .toLowerCase();
+
+    return matchesCategory && matchesPrice && (!normalizedSearch || haystack.includes(normalizedSearch));
+  });
+
+  const [favorites, setFavorites] = useState(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const saved = window.localStorage.getItem("hm-shop-favorites");
+      const parsed = saved ? JSON.parse(saved) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const toggleFavorite = (productId) => {
+    setFavorites((current) => {
+      const next = current.includes(productId)
+        ? current.filter((id) => id !== productId)
+        : [...current, productId];
+      if (typeof window !== "undefined") {
+        try {
+          window.localStorage.setItem("hm-shop-favorites", JSON.stringify(next));
+        } catch {
+          /* ignore storage errors */
+        }
+      }
+      return next;
+    });
+  };
+
+  const [view, setView] = useState("all");
+  const [favPurchasedOnly, setFavPurchasedOnly] = useState(false);
+  const [purchased, setPurchased] = useState(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const saved = window.localStorage.getItem("hm-shop-purchased");
+      const parsed = saved ? JSON.parse(saved) : [];
+      return Array.isArray(parsed) ? parsed.filter((id) => typeof id === "string") : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const persistPurchased = (next) => {
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem("hm-shop-purchased", JSON.stringify(next));
+      } catch {
+        /* ignore storage errors */
+      }
+    }
+    return next;
+  };
+
+  const displayedProducts =
+    view === "favorites"
+      ? filteredProducts.filter(
+          (product) =>
+            favorites.includes(product.id) && (!favPurchasedOnly || purchased.includes(product.id))
+        )
+      : view === "purchased"
+        ? filteredProducts.filter((product) => purchased.includes(product.id))
+        : filteredProducts.filter((product) => !purchased.includes(product.id));
+
+  const pageSize = 3;
+  const [page, setPage] = useState(0);
+  const totalPages = Math.max(1, Math.ceil(displayedProducts.length / pageSize));
+  const safePage = Math.min(page, totalPages - 1);
+  const pagedProducts = displayedProducts.slice(safePage * pageSize, safePage * pageSize + pageSize);
+
+  useEffect(() => {
+    setPage(0);
+  }, [category, priceType, normalizedSearch, view, favPurchasedOnly]);
+
+  const priceCountBase = (
+    view === "favorites"
+      ? shopProducts.filter((product) => favorites.includes(product.id))
+      : view === "purchased"
+        ? shopProducts.filter((product) => purchased.includes(product.id))
+        : shopProducts.filter((product) => !purchased.includes(product.id))
+  ).filter((product) => {
+    const matchesCategory = category === "Tous" || product.category === category;
+    const haystack = [product.title, product.category, product.priceType, product.description, ...product.tags]
+      .join(" ")
+      .toLowerCase();
+    return matchesCategory && (!normalizedSearch || haystack.includes(normalizedSearch));
+  });
+
+  const [cart, setCart] = useState(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const saved = window.localStorage.getItem("hm-shop-cart");
+      const parsed = saved ? JSON.parse(saved) : [];
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map((entry) => (typeof entry === "string" ? entry : entry?.id)).filter(Boolean);
+    } catch {
+      return [];
+    }
+  });
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [checkoutMessage, setCheckoutMessage] = useState("");
+
+  const persistCart = (next) => {
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem("hm-shop-cart", JSON.stringify(next));
+      } catch {
+        /* ignore storage errors */
+      }
+    }
+    return next;
+  };
+
+  const addToCart = (productId) => {
+    setCheckoutMessage("");
+    setCart((current) => (current.includes(productId) ? current : persistCart([...current, productId])));
+  };
+
+  const removeFromCart = (productId) => {
+    setCart((current) => persistCart(current.filter((id) => id !== productId)));
+  };
+
+  const cartItems = cart
+    .map((id) => {
+      const product = shopProducts.find((entry) => entry.id === id);
+      return product ? { ...product, priceValue: parseProductPrice(product.price) } : null;
+    })
+    .filter(Boolean);
+  const cartCount = cartItems.length;
+  const cartTotal = cartItems.reduce((sum, item) => sum + (item.priceValue || 0), 0);
+  const hasQuoteItems = cartItems.some((item) => item.priceValue == null);
+
+  const [notifications, setNotifications] = useState(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const saved = window.localStorage.getItem("hm-shop-notifications");
+      const parsed = saved ? JSON.parse(saved) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [selectedNotifs, setSelectedNotifs] = useState([]);
+  const [notifFilter, setNotifFilter] = useState("all");
+  const [notifSortDesc, setNotifSortDesc] = useState(true);
+  const [notifFrom, setNotifFrom] = useState("");
+  const [notifTo, setNotifTo] = useState("");
+
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatText, setChatText] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
+  const [chatMessages, setChatMessages] = useState(() => {
+    const welcome = {
+      id: "coach-welcome",
+      from: "coach",
+      type: "text",
+      text: "Bonjour 👋 Pose-moi ta question, je te réponds dès que possible !",
+      date: new Date().toISOString(),
+      reactions: []
+    };
+    if (typeof window === "undefined") return [welcome];
+    try {
+      const saved = window.localStorage.getItem("hm-coach-chat");
+      const parsed = saved ? JSON.parse(saved) : [];
+      const list = Array.isArray(parsed) ? parsed : [];
+      return list.some((message) => message && message.id === "coach-welcome") ? list : [welcome, ...list];
+    } catch {
+      return [welcome];
+    }
+  });
+  const mediaRecorderRef = useRef(null);
+  const chatFileInputRef = useRef(null);
+  const chatImageInputRef = useRef(null);
+  const [editingMessageId, setEditingMessageId] = useState(null);
+  const [editingText, setEditingText] = useState("");
+  const [reactionPickerId, setReactionPickerId] = useState(null);
+  const [coachOnline, setCoachOnline] = useState(false);
+
+  useEffect(() => {
+    const computeCoachOnline = () => {
+      const hour = new Date().getHours();
+      setCoachOnline(hour >= 8 && hour < 22);
+    };
+    computeCoachOnline();
+    const interval = setInterval(computeCoachOnline, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const reloadNotifications = () => {
+      try {
+        const saved = window.localStorage.getItem("hm-shop-notifications");
+        const parsed = saved ? JSON.parse(saved) : [];
+        setNotifications(Array.isArray(parsed) ? parsed : []);
+      } catch {
+        /* ignore storage errors */
+      }
+    };
+    window.addEventListener("hm-notifications-changed", reloadNotifications);
+    window.addEventListener("storage", reloadNotifications);
+    return () => {
+      window.removeEventListener("hm-notifications-changed", reloadNotifications);
+      window.removeEventListener("storage", reloadNotifications);
+    };
+  }, []);
+
+  const persistNotifications = (next) => {
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem("hm-shop-notifications", JSON.stringify(next));
+      } catch {
+        /* ignore storage errors */
+      }
+    }
+    return next;
+  };
+
+  const addNotification = (text) => {
+    setNotifications((current) =>
+      persistNotifications([
+        { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, text, date: new Date().toISOString(), read: false },
+        ...current
+      ])
+    );
+  };
+
+  const openNotifications = () => {
+    setIsNotifOpen(true);
+  };
+
+  const clearNotifications = () => {
+    setNotifications(persistNotifications([]));
+    setSelectedNotifs([]);
+  };
+
+  const markAllNotificationsRead = () => {
+    setNotifications((current) => persistNotifications(current.map((item) => ({ ...item, read: true }))));
+  };
+
+  const toggleNotificationRead = (id) => {
+    setNotifications((current) =>
+      persistNotifications(current.map((item) => (item.id === id ? { ...item, read: !item.read } : item)))
+    );
+  };
+
+  const toggleSelectNotif = (id) => {
+    setSelectedNotifs((current) =>
+      current.includes(id) ? current.filter((entry) => entry !== id) : [...current, id]
+    );
+  };
+
+  const deleteSelectedNotifs = () => {
+    setNotifications((current) => persistNotifications(current.filter((item) => !selectedNotifs.includes(item.id))));
+    setSelectedNotifs([]);
+  };
+
+  const markSelectedNotifsRead = () => {
+    setNotifications((current) =>
+      persistNotifications(current.map((item) => (selectedNotifs.includes(item.id) ? { ...item, read: true } : item)))
+    );
+    setSelectedNotifs([]);
+  };
+
+  const deleteNotification = (id) => {
+    setNotifications((current) => persistNotifications(current.filter((item) => item.id !== id)));
+    setSelectedNotifs((current) => current.filter((entry) => entry !== id));
+  };
+
+  const unreadCount = notifications.filter((item) => !item.read).length;
+
+  const visibleNotifications = notifications
+    .filter((item) => notifFilter === "all" || (notifFilter === "unread" ? !item.read : item.read))
+    .filter((item) => {
+      if (!notifFrom && !notifTo) return true;
+      const time = new Date(item.date).getTime();
+      if (notifFrom && time < new Date(`${notifFrom}T00:00:00`).getTime()) return false;
+      if (notifTo && time > new Date(`${notifTo}T23:59:59`).getTime()) return false;
+      return true;
+    })
+    .slice()
+    .sort((a, b) => {
+      const da = new Date(a.date).getTime();
+      const db = new Date(b.date).getTime();
+      return notifSortDesc ? db - da : da - db;
+    });
+
+  const allVisibleNotifsSelected =
+    visibleNotifications.length > 0 && visibleNotifications.every((item) => selectedNotifs.includes(item.id));
+
+  const toggleSelectAllVisibleNotifs = () => {
+    if (allVisibleNotifsSelected) {
+      setSelectedNotifs([]);
+    } else {
+      setSelectedNotifs(visibleNotifications.map((item) => item.id));
+    }
+  };
+
+  const persistChat = (next) => {
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem("hm-coach-chat", JSON.stringify(next));
+      } catch {
+        /* ignore storage errors (quota) */
+      }
+    }
+    return next;
+  };
+
+  const pushChatMessage = (message) => {
+    setChatMessages((current) =>
+      persistChat([
+        ...current,
+        { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, date: new Date().toISOString(), from: "user", ...message }
+      ])
+    );
+  };
+
+  const sendChatText = () => {
+    const text = chatText.trim();
+    if (!text) return;
+    pushChatMessage({ type: "text", text });
+    setChatText("");
+  };
+
+  const handleChatFile = (event) => {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const isImage = file.type.startsWith("image/");
+      pushChatMessage({ type: isImage ? "image" : "file", dataUrl: String(reader.result), fileName: file.name });
+    };
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  };
+
+  const startChatRecording = async () => {
+    if (typeof navigator === "undefined" || !navigator.mediaDevices || typeof MediaRecorder === "undefined") return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks = [];
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) chunks.push(event.data);
+      };
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
+        const reader = new FileReader();
+        reader.onload = () => pushChatMessage({ type: "voice", dataUrl: String(reader.result) });
+        reader.readAsDataURL(blob);
+        stream.getTracks().forEach((track) => track.stop());
+      };
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setIsRecording(true);
+    } catch {
+      setIsRecording(false);
+    }
+  };
+
+  const stopChatRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
+    setIsRecording(false);
+  };
+
+  const deleteChatMessage = (id) => {
+    setChatMessages((current) => persistChat(current.filter((message) => message.id !== id)));
+  };
+
+  const startEditMessage = (message) => {
+    setEditingMessageId(message.id);
+    setEditingText(message.text || "");
+  };
+
+  const cancelEditMessage = () => {
+    setEditingMessageId(null);
+    setEditingText("");
+  };
+
+  const saveEditMessage = () => {
+    const text = editingText.trim();
+    if (!text) return;
+    setChatMessages((current) =>
+      persistChat(current.map((message) => (message.id === editingMessageId ? { ...message, text, edited: true } : message)))
+    );
+    setEditingMessageId(null);
+    setEditingText("");
+  };
+
+  const toggleChatReaction = (id, emoji) => {
+    setChatMessages((current) =>
+      persistChat(
+        current.map((message) => {
+          if (message.id !== id) return message;
+          const reactions = Array.isArray(message.reactions) ? message.reactions : [];
+          return {
+            ...message,
+            reactions: reactions.includes(emoji) ? reactions.filter((entry) => entry !== emoji) : [...reactions, emoji]
+          };
+        })
+      )
+    );
+    setReactionPickerId(null);
+  };
+
+  // Retour depuis Stripe : on vérifie le paiement CÔTÉ SERVEUR avant de débloquer quoi que ce soit.
+  const checkoutHandledRef = useRef(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || checkoutHandledRef.current) return;
+    const params = new URLSearchParams(window.location.search);
+    const checkout = params.get("checkout");
+    const sessionId = params.get("session_id");
+    if (!checkout) return;
+    checkoutHandledRef.current = true;
+
+    const cleanCheckoutUrl = () => {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("checkout");
+        url.searchParams.delete("session_id");
+        window.history.replaceState({}, "", url.toString());
+      } catch {
+        /* ignore */
+      }
+    };
+
+    if (checkout === "cancel") {
+      setCheckoutMessage("Paiement annulé. Ton panier a été conservé.");
+      setIsCartOpen(true);
+      cleanCheckoutUrl();
+      return;
+    }
+
+    if (checkout === "success" && sessionId) {
+      const token =
+        accessToken ||
+        (typeof window !== "undefined" ? window.sessionStorage.getItem("hm-access-token") : "") ||
+        "";
+      if (!token) {
+        setCheckoutMessage("Paiement effectué, mais session expirée : reconnecte-toi pour débloquer tes achats.");
+        cleanCheckoutUrl();
+        return;
+      }
+      setCheckoutMessage("Vérification du paiement…");
+      callSupabaseFunctionWithAuth("verify-checkout-session", { sessionId }, token)
+        .then((result) => {
+          const ids = Array.isArray(result?.productIds) ? result.productIds : [];
+          if (result?.paid && ids.length) {
+            setPurchased((current) => persistPurchased(Array.from(new Set([...current, ...ids]))));
+            setCart(persistCart([]));
+            setView("purchased");
+            const titles = ids
+              .map((id) => shopProducts.find((product) => product.id === id)?.title)
+              .filter(Boolean)
+              .join(", ");
+            const invoiceNote = result.invoiceSent
+              ? " La facture Hicham Fit App a été envoyée à ton adresse email."
+              : "";
+            addNotification(
+              ids.length > 1
+                ? `Paiement confirmé : ${ids.length} programmes débloqués (${titles}). Retrouvez-les dans « Mes programmes ».${invoiceNote}`
+                : `Paiement confirmé : « ${titles} » débloqué. Retrouvez-le dans « Mes programmes ».${invoiceNote}`
+            );
+            setCheckoutMessage("Paiement confirmé ✓ Tes programmes sont débloqués dans « Mes programmes »." + (invoiceNote ? ` ${invoiceNote.trim()}` : ""));
+            if (result.invoiceSent && typeof onInvoiceSent === "function") {
+              onInvoiceSent();
+            }
+          } else {
+            setCheckoutMessage("Le paiement n'a pas été confirmé. Si tu as été débité, contacte le support.");
+          }
+        })
+        .catch((error) => {
+          console.error("verify-checkout-session error", error);
+          setCheckoutMessage(`Vérification du paiement échouée : ${error?.message || error?.code || "erreur inconnue"}`);
+        })
+        .finally(() => {
+          cleanCheckoutUrl();
+        });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleCheckout = async () => {
+    if (!cartItems.length) return;
+    // Produits gratuits : débloqués sans paiement. Produits payants : paiement réel via Stripe.
+    const freeIds = cartItems
+      .filter((item) => item.priceValue == null || item.priceValue <= 0)
+      .map((item) => item.id);
+    const paidIds = cartItems
+      .filter((item) => item.priceValue != null && item.priceValue > 0)
+      .map((item) => item.id);
+
+    if (freeIds.length) {
+      setPurchased((current) => persistPurchased(Array.from(new Set([...current, ...freeIds]))));
+    }
+
+    if (!paidIds.length) {
+      setCart(persistCart([]));
+      setCheckoutMessage("Produits gratuits débloqués. Retrouvez-les dans « Mes programmes ».");
+      return;
+    }
+
+    // Jeton FRAIS : on rafraîchit la session juste avant de payer (évite « Session requise » si le
+    // jeton stocké est vide/expiré).
+    let sessionToken = "";
+    try {
+      if (typeof refreshSession === "function") {
+        const fresh = await refreshSession();
+        sessionToken = fresh?.accessToken || "";
+      }
+    } catch {
+      /* on tente le fallback ci-dessous */
+    }
+    if (!sessionToken) {
+      sessionToken =
+        accessToken ||
+        (typeof window !== "undefined" ? window.sessionStorage.getItem("hm-access-token") : "") ||
+        "";
+    }
+    if (!sessionToken) {
+      setCheckoutMessage("Session expirée — reconnecte-toi pour procéder au paiement.");
+      return;
+    }
+
+    setCheckoutMessage("Redirection vers le paiement sécurisé Stripe…");
+    try {
+      const result = await callSupabaseFunctionWithAuth(
+        "create-checkout-session",
+        { items: paidIds },
+        sessionToken
+      );
+      if (result?.url) {
+        window.location.href = result.url;
+      } else {
+        setCheckoutMessage("Impossible de démarrer le paiement. Réessaie dans un instant.");
+      }
+    } catch (error) {
+      console.error("create-checkout-session error", error);
+      const reason = error?.message || error?.code || "erreur inconnue";
+      setCheckoutMessage(`Impossible de démarrer le paiement : ${reason}`);
+    }
+  };
+
+  const [detailProduct, setDetailProduct] = useState(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+
+  const openDetail = (product) => {
+    setActiveImageIndex(0);
+    setDetailProduct(product);
+  };
+  const closeDetail = () => setDetailProduct(null);
+
+  const detailImages = detailProduct && Array.isArray(detailProduct.images) ? detailProduct.images : [];
+  const detailImageIndex = detailImages.length ? Math.min(activeImageIndex, detailImages.length - 1) : 0;
+  const detailActiveImage = detailImages.length ? detailImages[detailImageIndex] : null;
+  const detailCanAccess = detailProduct
+    ? detailProduct.priceType === "Gratuit" || purchased.includes(detailProduct.id)
+    : false;
+  const detailInCart = detailProduct ? cart.includes(detailProduct.id) : false;
+
+  return (
+    <section className="settings-page flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="settings-hero shrink-0">
+        <div className="settings-hero__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8" aria-hidden="true">
+            <path d="M3 6h18l-1.5 11A2 2 0 0 1 17.5 19h-11a2 2 0 0 1-2-1.99L3 6Z" />
+            <path d="M8 6V4a4 4 0 0 1 8 0v2" />
+          </svg>
+        </div>
+        <div className="min-w-0 flex-1">
+          <h1 className="settings-hero__title">Boutique Hicham</h1>
+          <p className="settings-hero__subtitle">
+            Découvrez les programmes, guides et ressources proposés par coach hicham pour améliorer votre progression sportive.
+          </p>
+        </div>
+        <div className="settings-hero__actions" aria-label="Actions rapides">
+          {onBack ? (
+            <button
+              type="button"
+              onClick={onBack}
+              className="settings-hero__back"
+              aria-label="Revenir en arrière"
+              title="Revenir en arrière"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M15 18 9 12l6-6" />
+                <path d="M9 12h11" />
+              </svg>
+              <span>Retour</span>
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => setIsCartOpen(true)}
+            className="settings-hero__action"
+            aria-label="Panier"
+            title="Panier"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="9" cy="21" r="1" />
+              <circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.6 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6" />
+            </svg>
+            {cartCount > 0 ? (
+              <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-brand-400 px-1 text-[10px] font-black text-slate-950">
+                {cartCount}
+              </span>
+            ) : null}
+          </button>
+          <button type="button" onClick={openNotifications} className="settings-hero__action" aria-label="Notifications" title="Notifications">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+              <path d="M10 21h4" />
+            </svg>
+            {unreadCount > 0 ? (
+              <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-black text-white">
+                {unreadCount}
+              </span>
+            ) : null}
+          </button>
+          <button type="button" onClick={() => setIsChatOpen(true)} className="settings-hero__action" aria-label="Messagerie" title="Messagerie">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z" />
+              <path d="M8 9h8M8 13h5" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div className="settings-scroll mt-2 flex min-h-0 flex-1 flex-col overflow-y-auto pr-1">
+        <div className="settings-card">
+          <SettingsSectionHeader
+            icon="shop"
+            eyebrow="Boutique"
+            title="Recherche produit"
+            action={<span className="settings-chip">Catalogue</span>}
+          />
+
+          <label className="mt-4 block text-xs font-semibold text-slate-300">
+            <span>Rechercher un produit</span>
+            <div className="relative mt-2">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-brand-300"
+                aria-hidden="true"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.2-3.2" />
+              </svg>
+              <input
+                type="search"
+                value={searchValue}
+                onChange={(event) => onSearchChange(event.target.value)}
+                placeholder="Rechercher un programme, un livre ou un guide..."
+                className="mt-0 w-full rounded-2xl border border-brand-300/45 bg-slate-950/45 px-4 py-3 pl-12 text-sm font-bold text-white outline-none transition placeholder:text-slate-500 focus:border-brand-300 focus:bg-slate-950/70 focus:ring-4 focus:ring-brand-300/10"
+              />
+            </div>
+          </label>
+
+        </div>
+
+        <div className="mt-2 grid gap-2 xl:min-h-0 xl:flex-1 xl:auto-rows-fr xl:grid-cols-[minmax(0,1fr)_22rem]">
+          <div className="flex flex-col">
+            <article className="settings-card flex flex-1 flex-col">
+              <SettingsSectionHeader
+                icon="shop"
+                eyebrow="Produits"
+                title={view === "favorites" ? "Mes favoris" : view === "purchased" ? "Mes achats" : "Catalogue"}
+                action={<span className="settings-chip">{displayedProducts.length} résultat{displayedProducts.length > 1 ? "s" : ""}</span>}
+              />
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setView("all")}
+                  aria-pressed={view === "all"}
+                  className={`flex items-center gap-2 rounded-2xl px-3.5 py-2 text-xs font-black transition ${view === "all"
+                      ? "border-2 border-brand-300 text-brand-300"
+                      : "border border-slate-600/65 bg-slate-950/35 text-slate-200 hover:border-brand-300/70 hover:text-brand-100"
+                    }`}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true">
+                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                    <rect x="14" y="14" width="7" height="7" rx="1" />
+                  </svg>
+                  Tous les produits
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setView("favorites")}
+                  aria-pressed={view === "favorites"}
+                  className={`flex items-center gap-2 rounded-2xl px-3.5 py-2 text-xs font-black transition ${view === "favorites"
+                      ? "border-2 border-rose-500 text-rose-500"
+                      : "border border-slate-600/65 bg-slate-950/35 text-slate-200 hover:border-rose-400/60 hover:text-rose-200"
+                    }`}
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5" aria-hidden="true">
+                    <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z" />
+                  </svg>
+                  Mes favoris
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setView("purchased")}
+                  aria-pressed={view === "purchased"}
+                  className={`flex items-center gap-2 rounded-2xl px-3.5 py-2 text-xs font-black transition ${view === "purchased"
+                      ? "border-2 border-sky-400 text-sky-400"
+                      : "border border-slate-600/65 bg-slate-950/35 text-slate-200 hover:border-sky-400/60 hover:text-sky-200"
+                    }`}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true">
+                    <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+                    <path d="m3.3 7 8.7 5 8.7-5" />
+                    <path d="M12 22V12" />
+                  </svg>
+                  Mes achats
+                </button>
+              </div>
+              {displayedProducts.length ? (
+                <>
+                <div className="mt-4 grid auto-rows-fr gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {pagedProducts.map((product) => {
+                    const isFavorite = favorites.includes(product.id);
+                    const inCart = cart.includes(product.id);
+                    const isPurchased = purchased.includes(product.id);
+                    return (
+                    <article
+                      key={product.id}
+                      className="flex h-full min-h-[220px] flex-col rounded-2xl border border-slate-700/70 bg-slate-950/38 p-4 shadow-[0_20px_50px_rgba(2,6,23,0.18)] transition hover:border-brand-300/55 hover:bg-slate-950/52"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="rounded-xl border border-brand-300/35 bg-brand-400/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-brand-100">
+                          {product.badge}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          {view === "purchased" ? null : isPurchased ? (
+                            <span className="rounded-xl border border-sky-400/50 bg-sky-500/15 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-sky-300">
+                              Acheté
+                            </span>
+                          ) : (
+                            <span
+                              className={`rounded-xl px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${product.priceType === "Gratuit"
+                                  ? "border border-brand-300/45 bg-brand-400/15 text-brand-100"
+                                  : "border border-orange-400 bg-orange-500/15 text-orange-400"
+                                }`}
+                            >
+                              {product.priceType}
+                            </span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => toggleFavorite(product.id)}
+                            aria-pressed={isFavorite}
+                            aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+                            title={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border transition ${isFavorite
+                                ? "border-rose-400/70 bg-rose-500/15 text-rose-400"
+                                : "border-slate-600/65 bg-slate-950/35 text-slate-400 hover:border-rose-400/60 hover:text-rose-300"
+                              }`}
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill={isFavorite ? "currentColor" : "none"}
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="h-4 w-4"
+                              aria-hidden="true"
+                            >
+                              <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                      <h3 className="mt-4 font-display text-lg font-black leading-tight text-white">{product.title}</h3>
+                      <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-300">{product.description}</p>
+                      <div className="mt-4 flex flex-wrap gap-1.5">
+                        {product.tags.slice(0, 3).map((tag) => (
+                          <span
+                            key={tag}
+                            className="rounded-lg border border-slate-700/70 bg-slate-900/45 px-2 py-1 text-[10px] font-bold text-slate-300"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/10 pt-3">
+                        {product.priceType === "Gratuit" || isPurchased ? (
+                          <span />
+                        ) : (
+                          <span className="text-sm font-black text-white">{product.price}</span>
+                        )}
+                        <div className="flex items-center gap-2">
+                          {product.priceType === "Payant" && !isPurchased ? (
+                            <button
+                              type="button"
+                              onClick={() => addToCart(product.id)}
+                              disabled={inCart}
+                              aria-label={inCart ? "Déjà dans le panier" : "Ajouter au panier"}
+                              title={inCart ? "Déjà dans le panier" : "Ajouter au panier"}
+                              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition ${inCart
+                                  ? "cursor-default border-brand-300/40 bg-brand-400/15 text-brand-200"
+                                  : "border-brand-300/55 bg-brand-400/12 text-brand-100 hover:bg-brand-400 hover:text-slate-950"
+                                }`}
+                            >
+                              {inCart ? (
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                                  <path d="M20 6 9 17l-5-5" />
+                                </svg>
+                              ) : (
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                                  <circle cx="9" cy="21" r="1" />
+                                  <circle cx="20" cy="21" r="1" />
+                                  <path d="M1 1h4l2.6 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6" />
+                                </svg>
+                              )}
+                            </button>
+                          ) : null}
+                          <button
+                            type="button"
+                            onClick={() => openDetail(product)}
+                            className="rounded-xl border border-brand-300/55 bg-brand-400/12 px-3 py-2 text-xs font-black text-brand-100 transition hover:bg-brand-400 hover:text-slate-950"
+                          >
+                            Voir le détail
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                    );
+                  })}
+                </div>
+                {totalPages > 1 ? (
+                  <div className="mt-auto flex items-center justify-center gap-2 pt-5">
+                    {Array.from({ length: totalPages }).map((_, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => setPage(index)}
+                        aria-label={`Page ${index + 1}`}
+                        aria-current={index === safePage}
+                        className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-black transition ${index === safePage
+                            ? "border-2 border-brand-300 bg-brand-400 text-slate-950 shadow-[0_8px_18px_rgba(34,197,94,0.28)]"
+                            : "border border-slate-600/65 bg-slate-950/35 text-slate-200 hover:border-brand-300/70 hover:text-brand-100"
+                          }`}
+                      >
+                        {index + 1}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+                </>
+              ) : (
+                <div className="mt-4 rounded-2xl border border-slate-700/70 bg-slate-950/35 px-4 py-8 text-center">
+                  {view === "favorites" && favorites.length === 0 ? (
+                    <>
+                      <p className="font-display text-lg font-black text-white">Aucun favori pour l'instant</p>
+                      <p className="mt-2 text-sm text-slate-400">Clique sur le cœur d'un programme pour l'ajouter à tes favoris.</p>
+                    </>
+                  ) : view === "favorites" ? (
+                    <>
+                      <p className="font-display text-lg font-black text-white">Aucun favori ne correspond</p>
+                      <p className="mt-2 text-sm text-slate-400">Essaie une autre recherche ou change les filtres.</p>
+                    </>
+                  ) : view === "purchased" && purchased.length === 0 ? (
+                    <>
+                      <p className="font-display text-lg font-black text-white">Aucun programme acheté</p>
+                      <p className="mt-2 text-sm text-slate-400">Vos programmes achetés apparaîtront ici après le paiement.</p>
+                    </>
+                  ) : view === "purchased" ? (
+                    <>
+                      <p className="font-display text-lg font-black text-white">Aucun achat ne correspond</p>
+                      <p className="mt-2 text-sm text-slate-400">Essaie une autre recherche ou change les filtres.</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-display text-lg font-black text-white">Aucun produit trouvé</p>
+                      <p className="mt-2 text-sm text-slate-400">Essaie une autre recherche ou change les filtres.</p>
+                    </>
+                  )}
+                </div>
+              )}
+            </article>
+          </div>
+
+          <aside className="flex flex-col gap-2">
+            {view === "purchased" ? null : (
+            <article className="settings-card">
+              <SettingsSectionHeader
+                icon="security"
+                eyebrow="Filtre"
+                title="Type / prix"
+                action={<span className="settings-chip">{priceType}</span>}
+              />
+              <div className="mt-4 grid gap-2">
+                {shopPriceTypeOptions.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => {
+                      onPriceTypeChange(option);
+                      setFavPurchasedOnly(false);
+                    }}
+                    className={`flex items-center justify-between rounded-2xl px-3.5 py-3 text-left text-sm font-black transition ${priceType === option && !favPurchasedOnly
+                        ? "border-2 border-brand-300 bg-brand-400 text-slate-950 shadow-[0_12px_26px_rgba(34,197,94,0.28)] outline outline-2 outline-brand-100/90 ring-4 ring-brand-300/25"
+                        : "border border-slate-600/65 bg-slate-950/35 text-slate-200 hover:border-brand-300/70 hover:text-brand-100"
+                      }`}
+                  >
+                    <span>{option}</span>
+                    <span className="text-xs opacity-75">
+                      {priceCountBase.filter((product) => option === "Tous" || product.priceType === option).length}
+                    </span>
+                  </button>
+                ))}
+                {view === "favorites" ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = !favPurchasedOnly;
+                      setFavPurchasedOnly(next);
+                      if (next) onPriceTypeChange("Tous");
+                    }}
+                    className={`flex items-center justify-between rounded-2xl px-3.5 py-3 text-left text-sm font-black transition ${favPurchasedOnly
+                        ? "border-2 border-brand-300 bg-brand-400 text-slate-950 shadow-[0_12px_26px_rgba(34,197,94,0.28)] outline outline-2 outline-brand-100/90 ring-4 ring-brand-300/25"
+                        : "border border-slate-600/65 bg-slate-950/35 text-slate-200 hover:border-brand-300/70 hover:text-brand-100"
+                      }`}
+                  >
+                    <span>Achetés</span>
+                    <span className="text-xs opacity-75">{favorites.filter((id) => purchased.includes(id)).length}</span>
+                  </button>
+                ) : null}
+              </div>
+            </article>
+            )}
+
+            <article className="settings-card flex-1">
+              <SettingsSectionHeader
+                icon="shop"
+                eyebrow="Filtre"
+                title="Catégorie"
+                action={<span className="settings-chip">{category}</span>}
+              />
+              <div className="mt-4 flex flex-wrap gap-2">
+                {shopCategoryOptions.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => onCategoryChange(option)}
+                    className={`rounded-2xl px-3.5 py-2 text-xs font-black transition ${category === option
+                        ? "border-2 border-brand-300 bg-brand-400 text-slate-950 shadow-[0_12px_26px_rgba(34,197,94,0.28)] outline outline-2 outline-brand-100/90 ring-4 ring-brand-300/25"
+                        : "border border-slate-600/65 bg-slate-950/35 text-slate-200 hover:border-brand-300/70 hover:text-brand-100"
+                      }`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </article>
+          </aside>
+        </div>
+      </div>
+
+      {isCartOpen && typeof document !== "undefined"
+        ? createPortal(
+          <div
+            className="fixed inset-0 z-[90] grid place-items-center p-4"
+            style={{ background: "rgba(2,6,23,0.6)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Panier"
+            onClick={() => setIsCartOpen(false)}
+          >
+            <div
+              className="flex max-h-[85vh] w-[min(100%,32rem)] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(2,6,23,0.25)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
+                <div className="flex items-center gap-2">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-brand-500" aria-hidden="true">
+                    <circle cx="9" cy="21" r="1" />
+                    <circle cx="20" cy="21" r="1" />
+                    <path d="M1 1h4l2.6 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6" />
+                  </svg>
+                  <h2 className="font-display text-lg font-black text-slate-900">Mon panier</h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsCartOpen(false)}
+                  aria-label="Fermer le panier"
+                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-500 transition hover:border-brand-400 hover:text-slate-900"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+                {checkoutMessage ? (
+                  <div className="mb-4 rounded-2xl border border-brand-300 bg-brand-50 px-4 py-3 text-sm font-bold text-brand-700">
+                    {checkoutMessage}
+                  </div>
+                ) : null}
+                {cartItems.length ? (
+                  <ul className="space-y-3">
+                    {cartItems.map((item) => (
+                      <li key={item.id} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-black text-slate-900">{item.title}</p>
+                          <p className="text-xs text-slate-500">{item.badge}</p>
+                        </div>
+                        <span className="shrink-0 text-sm font-black text-slate-900">
+                          {item.priceValue != null ? `${item.priceValue} €` : "Sur demande"}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeFromCart(item.id)}
+                          aria-label="Retirer du panier"
+                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-400 transition hover:border-rose-400 hover:text-rose-500"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true">
+                            <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                          </svg>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="py-10 text-center">
+                    <p className="font-display text-lg font-black text-slate-900">Votre panier est vide</p>
+                    <p className="mt-2 text-sm text-slate-500">Ajoutez des programmes payants pour les régler en une seule fois.</p>
+                  </div>
+                )}
+              </div>
+
+              {cartItems.length ? (
+                <div className="shrink-0 border-t border-slate-200 px-5 py-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-slate-500">Total</span>
+                    <span className="font-display text-2xl font-black text-slate-900">{cartTotal} €</span>
+                  </div>
+                  {hasQuoteItems ? (
+                    <p className="mt-1 text-xs text-orange-600">
+                      Certains articles « Sur demande » seront facturés séparément.
+                    </p>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={handleCheckout}
+                    className="mt-3 w-full rounded-2xl border-2 border-brand-300 bg-brand-400 px-4 py-3 text-sm font-black text-slate-950 transition hover:bg-brand-300"
+                  >
+                    Payer {cartTotal} €
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </div>,
+          document.body
+        )
+        : null}
+
+      {detailProduct && typeof document !== "undefined"
+        ? createPortal(
+          <div
+            className="fixed inset-0 z-[95] grid place-items-center p-4"
+            style={{ background: "rgba(2,6,23,0.6)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
+            role="dialog"
+            aria-modal="true"
+            aria-label={detailProduct.title}
+            onClick={closeDetail}
+          >
+            <div
+              className="flex max-h-[88vh] w-[min(100%,40rem)] flex-col overflow-hidden rounded-3xl border border-brand-300/35 bg-slate-950/95 shadow-[0_24px_70px_rgba(0,0,0,0.55)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="flex shrink-0 items-start justify-between gap-3 border-b border-white/10 px-5 py-4">
+                <div className="min-w-0">
+                  <span className="inline-block rounded-xl border border-brand-300/35 bg-brand-400/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-brand-100">
+                    {detailProduct.badge}
+                  </span>
+                  <h2 className="mt-2 font-display text-xl font-black leading-tight text-white">{detailProduct.title}</h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeDetail}
+                  aria-label="Fermer"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-600/65 bg-slate-950/40 text-slate-300 transition hover:border-brand-300/70 hover:text-white"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+                {detailImages.length ? (
+                  <div>
+                    <div className="overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-950/40">
+                      <img src={detailActiveImage} alt={detailProduct.title} className="mx-auto max-h-72 w-full object-contain" />
+                    </div>
+                    {detailImages.length > 1 ? (
+                      <div className="mt-3 flex flex-wrap justify-center gap-2">
+                        {detailImages.map((image, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => setActiveImageIndex(index)}
+                            aria-label={`Photo ${index + 1}`}
+                            aria-current={index === detailImageIndex}
+                            className={`h-16 w-16 overflow-hidden rounded-xl border-2 transition ${index === detailImageIndex
+                                ? "border-brand-300"
+                                : "border-slate-700/70 opacity-70 hover:opacity-100"
+                              }`}
+                          >
+                            <img src={image} alt="" className="h-full w-full object-cover" />
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-slate-600/60 bg-slate-950/40 px-4 py-8 text-center">
+                    <p className="text-sm font-bold text-slate-300">Aucune photo ajoutée pour ce programme.</p>
+                    <p className="mt-1 text-xs text-slate-500">Le coach pourra ajouter une ou plusieurs photos ici.</p>
+                  </div>
+                )}
+
+                <p className="mt-4 text-sm leading-relaxed text-slate-300">
+                  {detailProduct.longDescription || detailProduct.description}
+                </p>
+
+                {detailProduct.tags?.length ? (
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {detailProduct.tags.map((tag) => (
+                      <span key={tag} className="rounded-lg border border-slate-700/70 bg-slate-900/45 px-2 py-1 text-[10px] font-bold text-slate-300">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="shrink-0 border-t border-white/10 px-5 py-4">
+                {detailProduct.priceType === "Gratuit" || purchased.includes(detailProduct.id) ? null : (
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="text-sm font-bold text-slate-300">Prix</span>
+                    <span className="font-display text-xl font-black text-white">{detailProduct.price}</span>
+                  </div>
+                )}
+                {detailCanAccess ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      className="flex items-center justify-center gap-1.5 rounded-2xl border border-brand-300/55 bg-brand-400/12 px-4 py-2.5 text-sm font-black text-brand-100 transition hover:bg-brand-400 hover:text-slate-950"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                      Consulter
+                    </button>
+                    <button
+                      type="button"
+                      className="flex items-center justify-center gap-1.5 rounded-2xl border-2 border-brand-300 bg-brand-400 px-4 py-2.5 text-sm font-black text-slate-950 transition hover:bg-brand-300"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <path d="M7 10l5 5 5-5" />
+                        <path d="M12 15V3" />
+                      </svg>
+                      Télécharger
+                    </button>
+                  </div>
+                ) : detailInCart ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="w-full cursor-default rounded-2xl border border-brand-300/40 bg-brand-400/15 px-4 py-3 text-sm font-black text-brand-200"
+                  >
+                    Déjà dans le panier
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => addToCart(detailProduct.id)}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-brand-300 bg-brand-400 px-4 py-3 text-sm font-black text-slate-950 transition hover:bg-brand-300"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                      <circle cx="9" cy="21" r="1" />
+                      <circle cx="20" cy="21" r="1" />
+                      <path d="M1 1h4l2.6 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6" />
+                    </svg>
+                    Ajouter au panier
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>,
+          document.body
+        )
+        : null}
+
+      {isNotifOpen && typeof document !== "undefined"
+        ? createPortal(
+          <div
+            className="fixed inset-0 z-[95] grid place-items-center p-4"
+            style={{ background: "rgba(2,6,23,0.6)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Notifications"
+            onClick={() => setIsNotifOpen(false)}
+          >
+            <div
+              className="flex max-h-[85vh] w-[min(100%,34rem)] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(2,6,23,0.25)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
+                <div className="flex items-center gap-2">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-brand-500" aria-hidden="true">
+                    <path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+                    <path d="M10 21h4" />
+                  </svg>
+                  <h2 className="font-display text-lg font-black text-slate-900">Notifications</h2>
+                  {unreadCount > 0 ? (
+                    <span className="rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-black text-white">{unreadCount}</span>
+                  ) : null}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsNotifOpen(false)}
+                  aria-label="Fermer"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-500 transition hover:border-brand-400 hover:text-slate-900"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {notifications.length ? (
+                <div className="shrink-0 border-b border-slate-200 px-5 py-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-1">
+                      {[["all", "Tous"], ["unread", "Non lus"], ["read", "Lus"]].map(([value, label]) => (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => setNotifFilter(value)}
+                          className={`rounded-lg px-2.5 py-1.5 text-xs font-black transition ${notifFilter === value
+                              ? "bg-brand-400 text-slate-950"
+                              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                            }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={markAllNotificationsRead}
+                      disabled={unreadCount === 0}
+                      className="ml-auto rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-black text-slate-600 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Tout lu
+                    </button>
+                  </div>
+
+                  <div className="mt-2 flex flex-wrap items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setNotifSortDesc(true)}
+                      className={`rounded-lg px-2.5 py-1.5 text-xs font-black transition ${notifSortDesc
+                          ? "bg-brand-400 text-slate-950"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                        }`}
+                    >
+                      Plus récents
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNotifSortDesc(false)}
+                      className={`rounded-lg px-2.5 py-1.5 text-xs font-black transition ${!notifSortDesc
+                          ? "bg-brand-400 text-slate-950"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                        }`}
+                    >
+                      Plus anciens
+                    </button>
+                  </div>
+
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-bold text-slate-500">Du</span>
+                    <input
+                      type="date"
+                      value={notifFrom}
+                      max={notifTo || undefined}
+                      onChange={(event) => setNotifFrom(event.target.value)}
+                      className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs font-bold text-slate-700 outline-none focus:border-brand-400"
+                    />
+                    <span className="text-xs font-bold text-slate-500">au</span>
+                    <input
+                      type="date"
+                      value={notifTo}
+                      min={notifFrom || undefined}
+                      onChange={(event) => setNotifTo(event.target.value)}
+                      className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs font-bold text-slate-700 outline-none focus:border-brand-400"
+                    />
+                    {notifFrom || notifTo ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNotifFrom("");
+                          setNotifTo("");
+                        }}
+                        className="rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-black text-slate-600 transition hover:bg-slate-200"
+                      >
+                        Effacer dates
+                      </button>
+                    ) : null}
+                  </div>
+
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={toggleSelectAllVisibleNotifs}
+                      className="flex items-center gap-1.5 text-xs font-black text-slate-600 transition hover:text-slate-900"
+                    >
+                      <span className={`flex h-4 w-4 items-center justify-center rounded border-2 ${allVisibleNotifsSelected ? "border-rose-500 bg-rose-500 text-white" : "border-slate-300 text-transparent"}`}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="h-2.5 w-2.5" aria-hidden="true">
+                          <path d="M20 6 9 17l-5-5" />
+                        </svg>
+                      </span>
+                      Tout sélectionner
+                    </button>
+                    {selectedNotifs.length ? (
+                      <span className="text-xs font-bold text-slate-500">{selectedNotifs.length} sélectionnée(s)</span>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+                {visibleNotifications.length ? (
+                  <ul className="space-y-3">
+                    {visibleNotifications.map((item) => {
+                      const selected = selectedNotifs.includes(item.id);
+                      return (
+                        <li
+                          key={item.id}
+                          className={`flex items-start gap-3 rounded-2xl border p-3 transition ${selected
+                              ? "border-rose-300 bg-rose-50"
+                              : item.read
+                                ? "border-slate-200 bg-white"
+                                : "border-brand-300 bg-brand-50"
+                            }`}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => toggleSelectNotif(item.id)}
+                            aria-pressed={selected}
+                            aria-label="Sélectionner"
+                            className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition ${selected
+                                ? "border-rose-500 bg-rose-500 text-white"
+                                : "border-slate-300 text-transparent hover:border-slate-400"
+                              }`}
+                          >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3" aria-hidden="true">
+                              <path d="M20 6 9 17l-5-5" />
+                            </svg>
+                          </button>
+                          <div className="min-w-0 flex-1">
+                            <p className={`text-sm ${item.read ? "font-medium text-slate-600" : "font-bold text-slate-900"}`}>{item.text}</p>
+                            <p className="mt-1 text-xs text-slate-400">
+                              {new Date(item.date).toLocaleString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                          </div>
+                          <div className="mt-0.5 flex shrink-0 items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => toggleNotificationRead(item.id)}
+                              title={item.read ? "Marquer comme non lu" : "Marquer comme lu"}
+                              aria-label={item.read ? "Marquer comme non lu" : "Marquer comme lu"}
+                              className={`rounded-lg border px-2 py-1 text-[10px] font-black uppercase tracking-wide transition ${item.read ? "border-slate-300 text-slate-500 hover:border-slate-400" : "border-brand-300 bg-brand-50 text-brand-700 hover:bg-brand-100"}`}
+                            >
+                              {item.read ? "Lu" : "Non lu"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => deleteNotification(item.id)}
+                              title="Supprimer"
+                              aria-label="Supprimer la notification"
+                              className="flex h-6 w-6 items-center justify-center rounded-lg border border-slate-200 text-slate-400 transition hover:border-rose-400 hover:text-rose-500"
+                            >
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true">
+                                <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                              </svg>
+                            </button>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : (
+                  <div className="py-10 text-center">
+                    <p className="font-display text-lg font-black text-slate-900">
+                      {notifications.length ? "Aucune notification dans ce filtre" : "Aucune notification"}
+                    </p>
+                    <p className="mt-2 text-sm text-slate-500">Vos notifications d'achat apparaîtront ici.</p>
+                  </div>
+                )}
+              </div>
+
+              {notifications.length ? (
+                <div className="flex shrink-0 flex-wrap items-center gap-2 border-t border-slate-200 px-5 py-4">
+                  {selectedNotifs.length ? (
+                    <button
+                      type="button"
+                      onClick={markSelectedNotifsRead}
+                      className="flex-1 rounded-2xl border border-brand-300 bg-brand-50 px-4 py-2.5 text-sm font-black text-brand-700 transition hover:bg-brand-100"
+                    >
+                      Marquer lu ({selectedNotifs.length})
+                    </button>
+                  ) : null}
+                  {selectedNotifs.length ? (
+                    <button
+                      type="button"
+                      onClick={deleteSelectedNotifs}
+                      className="flex-1 rounded-2xl border border-rose-300 bg-rose-50 px-4 py-2.5 text-sm font-black text-rose-600 transition hover:bg-rose-100"
+                    >
+                      Supprimer ({selectedNotifs.length})
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={clearNotifications}
+                    className="flex-1 rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-black text-slate-600 transition hover:border-rose-400 hover:text-rose-600"
+                  >
+                    Tout effacer
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </div>,
+          document.body
+        )
+        : null}
+
+      {isChatOpen && typeof document !== "undefined"
+        ? createPortal(
+          <div
+            className="fixed inset-0 z-[95] grid place-items-center p-4"
+            style={{ background: "rgba(2,6,23,0.6)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Messagerie avec Coach Hicham"
+            onClick={() => {
+              stopChatRecording();
+              setIsChatOpen(false);
+            }}
+          >
+            <div
+              className="flex h-[80vh] max-h-[640px] w-[min(100%,32rem)] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(2,6,23,0.25)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <img src={coachHero} alt="Coach Hicham" className="h-10 w-10 rounded-full object-cover" />
+                  <div>
+                    <h2 className="font-display text-base font-black text-slate-900">Coach Hicham</h2>
+                    <p className={`flex items-center gap-1.5 text-xs font-bold ${coachOnline ? "text-brand-600" : "text-rose-500"}`}>
+                      <span className={`h-2 w-2 rounded-full ${coachOnline ? "bg-brand-500" : "bg-rose-500"}`} />
+                      {coachOnline ? "En ligne" : "Hors ligne"}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    stopChatRecording();
+                    setIsChatOpen(false);
+                  }}
+                  aria-label="Fermer"
+                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-500 transition hover:border-brand-400 hover:text-slate-900"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-slate-50 px-4 py-4">
+                {chatMessages.map((message) => {
+                  const isCoach = message.from === "coach";
+                  const isEditing = editingMessageId === message.id;
+                  const reactions = Array.isArray(message.reactions) ? message.reactions : [];
+
+                  const actionButtons = (
+                    <div className="flex items-center gap-0.5">
+                      <button
+                        type="button"
+                        onClick={() => toggleChatReaction(message.id, "👍")}
+                        title="J'aime"
+                        aria-label="J'aime"
+                        className={`flex h-6 w-6 items-center justify-center rounded-full text-xs transition hover:bg-slate-200 ${reactions.includes("👍") ? "bg-slate-200" : ""}`}
+                      >
+                        👍
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setReactionPickerId((current) => (current === message.id ? null : message.id))}
+                        title="Réagir"
+                        aria-label="Réagir"
+                        className="flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true">
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                          <path d="M9 9h.01M15 9h.01" />
+                        </svg>
+                      </button>
+                      {!isCoach && message.type === "text" ? (
+                        <button
+                          type="button"
+                          onClick={() => startEditMessage(message)}
+                          title="Modifier"
+                          aria-label="Modifier"
+                          className="flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true">
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                          </svg>
+                        </button>
+                      ) : null}
+                      {!isCoach ? (
+                        <button
+                          type="button"
+                          onClick={() => deleteChatMessage(message.id)}
+                          title="Supprimer"
+                          aria-label="Supprimer"
+                          className="flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition hover:bg-rose-100 hover:text-rose-500"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true">
+                            <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                          </svg>
+                        </button>
+                      ) : null}
+                    </div>
+                  );
+
+                  const picker =
+                    reactionPickerId === message.id ? (
+                      <div className="flex gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 shadow-md">
+                        {["❤️", "😂", "😮", "😢", "🔥"].map((emoji) => (
+                          <button key={emoji} type="button" onClick={() => toggleChatReaction(message.id, emoji)} className="text-base transition hover:scale-125">
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null;
+
+                  const reactionChips = reactions.length ? (
+                    <div className={`flex flex-wrap gap-1 ${isCoach ? "justify-start pl-9" : "justify-end"}`}>
+                      {reactions.map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => toggleChatReaction(message.id, emoji)}
+                          className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-xs shadow-sm"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null;
+
+                  const timeLine = (
+                    <p className={`mt-1 flex items-center gap-1 text-[10px] ${isCoach ? "justify-start text-slate-400" : "justify-end text-slate-900/60"}`}>
+                      {message.edited ? <span>(modifié)</span> : null}
+                      {new Date(message.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  );
+
+                  const bubbleInner = isEditing ? (
+                    <div className="w-56">
+                      <textarea
+                        value={editingText}
+                        onChange={(event) => setEditingText(event.target.value)}
+                        rows={2}
+                        className="w-full resize-none rounded-xl border border-brand-300 bg-white px-2 py-1.5 text-sm text-slate-800 outline-none"
+                      />
+                      <div className="mt-1 flex justify-end gap-1">
+                        <button type="button" onClick={cancelEditMessage} className="rounded-lg bg-white/70 px-2 py-1 text-xs font-black text-slate-700">
+                          Annuler
+                        </button>
+                        <button type="button" onClick={saveEditMessage} className="rounded-lg bg-slate-900 px-2 py-1 text-xs font-black text-white">
+                          Enregistrer
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {message.type === "text" ? <p className="whitespace-pre-wrap break-words">{message.text}</p> : null}
+                      {message.type === "image" ? <img src={message.dataUrl} alt={message.fileName || "image"} className="max-h-52 rounded-xl" /> : null}
+                      {message.type === "voice" ? <audio controls src={message.dataUrl} className="w-52" /> : null}
+                      {message.type === "file" ? (
+                        <a href={message.dataUrl} download={message.fileName} className="flex items-center gap-2 font-bold underline">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                          </svg>
+                          {message.fileName}
+                        </a>
+                      ) : null}
+                      {timeLine}
+                    </>
+                  );
+
+                  if (isCoach) {
+                    return (
+                      <div key={message.id} className="flex flex-col items-start gap-1">
+                        <div className="flex max-w-[90%] items-end gap-1.5">
+                          <img src={coachHero} alt="" className="h-7 w-7 shrink-0 rounded-full object-cover" />
+                          <div className="rounded-2xl rounded-bl-sm border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
+                            {bubbleInner}
+                          </div>
+                          {actionButtons}
+                        </div>
+                        {picker}
+                        {reactionChips}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div key={message.id} className="flex flex-col items-end gap-1">
+                      <div className="flex max-w-[90%] items-center gap-1.5">
+                        {actionButtons}
+                        <div className="rounded-2xl rounded-br-sm bg-brand-400 px-3 py-2 text-sm text-slate-950">
+                          {bubbleInner}
+                        </div>
+                      </div>
+                      {picker}
+                      {reactionChips}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="shrink-0 border-t border-slate-200 px-3 py-3">
+                {isRecording ? (
+                  <div className="flex items-center justify-between gap-3 rounded-2xl border border-rose-300 bg-rose-50 px-4 py-3">
+                    <span className="flex items-center gap-2 text-sm font-black text-rose-600">
+                      <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-rose-500" /> Enregistrement…
+                    </span>
+                    <button
+                      type="button"
+                      onClick={stopChatRecording}
+                      className="rounded-xl bg-rose-500 px-3 py-1.5 text-xs font-black text-white transition hover:bg-rose-600"
+                    >
+                      Stop &amp; envoyer
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-end gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => chatFileInputRef.current && chatFileInputRef.current.click()}
+                      title="Joindre un fichier"
+                      aria-label="Joindre un fichier"
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-300 text-slate-500 transition hover:border-brand-400 hover:text-slate-900"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => chatImageInputRef.current && chatImageInputRef.current.click()}
+                      title="Joindre une photo"
+                      aria-label="Joindre une photo"
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-300 text-slate-500 transition hover:border-brand-400 hover:text-slate-900"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <circle cx="9" cy="9" r="2" />
+                        <path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21" />
+                      </svg>
+                    </button>
+                    <textarea
+                      value={chatText}
+                      onChange={(event) => setChatText(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" && !event.shiftKey) {
+                          event.preventDefault();
+                          sendChatText();
+                        }
+                      }}
+                      rows={1}
+                      placeholder="Écrire un message..."
+                      className="max-h-28 min-h-[2.25rem] flex-1 resize-none rounded-2xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-brand-400"
+                    />
+                    <button
+                      type="button"
+                      onClick={startChatRecording}
+                      title="Message vocal"
+                      aria-label="Message vocal"
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-300 text-slate-500 transition hover:border-brand-400 hover:text-slate-900"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z" />
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                        <path d="M12 19v4M8 23h8" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={sendChatText}
+                      disabled={!chatText.trim()}
+                      aria-label="Envoyer"
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-brand-300 bg-brand-400 text-slate-950 transition hover:bg-brand-300 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                        <path d="M22 2 11 13" />
+                        <path d="M22 2 15 22l-4-9-9-4 20-7Z" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+                <input ref={chatFileInputRef} type="file" className="hidden" onChange={handleChatFile} />
+                <input ref={chatImageInputRef} type="file" accept="image/*" className="hidden" onChange={handleChatFile} />
+              </div>
+            </div>
+          </div>,
+          document.body
+        )
+        : null}
+    </section>
+  );
+}
+
+function SelectWithOtherField({
+  label,
+  value,
+  customValue,
+  options,
+  otherValue = "Autre",
+  customPlaceholder = "Précise",
+  onChange,
+  onCustomChange,
+  selectClass
+}) {
+  const isOther = value === otherValue;
+
+  return (
+    <label className="block text-xs font-semibold text-slate-300">
+      <span>{label}</span>
+      {isOther ? (
+        <div className="profile-other-combo">
+          <select value={value} onChange={(event) => onChange(event.target.value)} className="profile-other-combo__select">
+            <option value="">{label}</option>
+            {options.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+          <input
+            type="text"
+            value={customValue}
+            onChange={(event) => onCustomChange(event.target.value)}
+            className="profile-other-combo__input"
+            placeholder={customPlaceholder}
+          />
+        </div>
+      ) : (
+        <select value={value} onChange={(event) => onChange(event.target.value)} className={selectClass}>
+          <option value="">{label}</option>
+          {options.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      )}
+    </label>
+  );
+}
+
+function StatusLabelWithInfo({ label, help }) {
+  const helpItems = Object.entries(help || {}).filter(([key, value]) => key !== "title" && value);
+  const title = help?.title || "Information";
+
+  return (
+    <span className="profile-status-label">
+      <span className="profile-status-help" tabIndex={0} aria-label={title}>
+        <SettingsIcon name="info" className="h-3.5 w-3.5" />
+        <span className="profile-status-tooltip" role="tooltip">
+          <strong>{title}</strong>
+          {helpItems.map(([key, value]) => (
+            <span key={key}>{value}</span>
+          ))}
+        </span>
+      </span>
+      <span>{label}</span>
+    </span>
+  );
+}
+
+function SportGoalField({
+  profileText,
+  sportProfileForm,
+  setSportProfileForm,
+  authInputClass,
+  authSelectClass,
+  getSportGoalLabel,
+  className = ""
+}) {
+  const isOtherGoal = sportProfileForm.sportGoal === "other";
+
+  return (
+    <div className={`grid gap-2 ${className}`}>
+      <label className="block text-xs font-semibold text-slate-300">
+        <span>{profileText.sportGoal}</span>
+        {isOtherGoal ? (
+          <div className="profile-other-combo">
+            <select
+              value={sportProfileForm.sportGoal}
+              onChange={(event) =>
+                setSportProfileForm((prev) => ({
+                  ...prev,
+                  sportGoal: event.target.value,
+                  sportGoalCustom: event.target.value === "other" ? prev.sportGoalCustom : ""
+                }))
+              }
+              className="profile-other-combo__select"
+            >
+              <option value="">{profileText.sportGoal}</option>
+              {sportGoalValues.map((value) => (
+                <option key={value} value={value}>
+                  {getSportGoalLabel(value)}
+                </option>
+              ))}
+            </select>
+            <input
+              type="text"
+              value={sportProfileForm.sportGoalCustom}
+              onChange={(event) => setSportProfileForm((prev) => ({ ...prev, sportGoalCustom: event.target.value }))}
+              className="profile-other-combo__input"
+              placeholder={profileText.sportGoalCustom || "Précise ton objectif"}
+            />
+          </div>
+        ) : (
+          <select
+            value={sportProfileForm.sportGoal}
+            onChange={(event) =>
+              setSportProfileForm((prev) => ({
+                ...prev,
+                sportGoal: event.target.value,
+                sportGoalCustom: event.target.value === "other" ? prev.sportGoalCustom : ""
+              }))
+            }
+            className={authSelectClass}
+          >
+            <option value="">{profileText.sportGoal}</option>
+            {sportGoalValues.map((value) => (
+              <option key={value} value={value}>
+                {getSportGoalLabel(value)}
+              </option>
+            ))}
+          </select>
+        )}
+      </label>
+    </div>
+  );
+}
+
+function DietarySupplementsEditor({
+  profileText,
+  sportProfileForm,
+  setSportProfileForm,
+  updateSupplementEntry,
+  addSupplementEntry,
+  removeSupplementEntry,
+  authInputClass,
+  authSelectClass,
+  preventInvalidNumberKey,
+  sanitizePositiveNumberInput
+}) {
+  return (
+    <div className="space-y-4">
+      <label className="flex items-center gap-3 rounded-2xl border border-slate-600/45 bg-slate-950/30 p-3 text-xs font-bold text-slate-200">
+        <input
+          type="checkbox"
+          checked={sportProfileForm.hasNoSupplement}
+          onChange={(event) =>
+            setSportProfileForm((prev) => ({
+              ...prev,
+              hasNoSupplement: event.target.checked,
+              supplements: event.target.checked ? [{ ...emptySupplementEntry }] : prev.supplements
+            }))
+          }
+          className="h-4 w-4 accent-emerald-400"
+        />
+        <span>{profileText.noSupplement || "Aucun complément alimentaire"}</span>
+      </label>
+
+      {!sportProfileForm.hasNoSupplement ? (
+        <div className="space-y-3">
+          {sportProfileForm.supplements.map((supplement, index) => (
+            <div key={`settings-supplement-entry-${index}`} className="rounded-2xl border border-slate-600/45 bg-slate-950/25 p-3">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-brand-200">
+                  {profileText.supplementNumber || "Complément"} {index + 1}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => removeSupplementEntry(index)}
+                  className="rounded-lg border border-slate-600/70 px-2.5 py-1 text-[11px] font-bold text-slate-200 transition hover:border-red-300 hover:text-red-200"
+                >
+                  {profileText.removeSupplement || profileText.removeSport}
+                </button>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <SelectWithOtherField
+                  label={profileText.supplementName || "Nom du complément"}
+                  value={supplement.name}
+                  customValue={supplement.customName}
+                  options={supplementNameOptions}
+                  customPlaceholder={profileText.supplementCustomValue || "Précise"}
+                  selectClass={authSelectClass}
+                  onChange={(value) =>
+                    updateSupplementEntry(index, {
+                      name: value,
+                      customName: value === "Autre" ? supplement.customName : ""
+                    })
+                  }
+                  onCustomChange={(value) => updateSupplementEntry(index, { customName: value })}
+                />
+                <label className="block text-xs font-semibold text-slate-300">
+                  <span>{profileText.supplementDose || "Dose / Quantité"}</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={supplement.dose}
+                    onKeyDown={preventInvalidNumberKey}
+                    onChange={(event) =>
+                      updateSupplementEntry(index, {
+                        dose: sanitizePositiveNumberInput(event.target.value, { maxDecimals: 2 })
+                      })
+                    }
+                    className={authInputClass}
+                    inputMode="decimal"
+                  />
+                </label>
+                <SelectWithOtherField
+                  label={profileText.supplementUnit || "Unité"}
+                  value={supplement.unit}
+                  customValue={supplement.customUnit}
+                  options={supplementUnitOptions}
+                  otherValue="autre"
+                  customPlaceholder={profileText.supplementCustomValue || "Précise"}
+                  selectClass={authSelectClass}
+                  onChange={(value) =>
+                    updateSupplementEntry(index, {
+                      unit: value,
+                      customUnit: value === "autre" ? supplement.customUnit : ""
+                    })
+                  }
+                  onCustomChange={(value) => updateSupplementEntry(index, { customUnit: value })}
+                />
+                <SelectWithOtherField
+                  label={profileText.supplementFrequency || "Fréquence"}
+                  value={supplement.frequency}
+                  customValue={supplement.customFrequency}
+                  options={supplementFrequencyOptions}
+                  customPlaceholder={profileText.supplementCustomValue || "Précise"}
+                  selectClass={authSelectClass}
+                  onChange={(value) =>
+                    updateSupplementEntry(index, {
+                      frequency: value,
+                      customFrequency: value === "Autre" ? supplement.customFrequency : ""
+                    })
+                  }
+                  onCustomChange={(value) => updateSupplementEntry(index, { customFrequency: value })}
+                />
+                <SelectWithOtherField
+                  label={profileText.supplementTiming || "Moment de prise"}
+                  value={supplement.timing}
+                  customValue={supplement.customTiming}
+                  options={supplementTimingOptions}
+                  customPlaceholder={profileText.supplementCustomValue || "Précise"}
+                  selectClass={authSelectClass}
+                  onChange={(value) =>
+                    updateSupplementEntry(index, {
+                      timing: value,
+                      customTiming: value === "Autre" ? supplement.customTiming : ""
+                    })
+                  }
+                  onCustomChange={(value) => updateSupplementEntry(index, { customTiming: value })}
+                />
+                <SelectWithOtherField
+                  label={profileText.supplementCategory || "Catégorie"}
+                  value={supplement.category}
+                  customValue={supplement.customCategory}
+                  options={supplementCategoryOptions}
+                  customPlaceholder={profileText.supplementCustomValue || "Précise"}
+                  selectClass={authSelectClass}
+                  onChange={(value) =>
+                    updateSupplementEntry(index, {
+                      category: value,
+                      customCategory: value === "Autre" ? supplement.customCategory : ""
+                    })
+                  }
+                  onCustomChange={(value) => updateSupplementEntry(index, { customCategory: value })}
+                />
+                <label className="block text-xs font-semibold text-slate-300">
+                  <span>
+                    {profileText.supplementStartDate || "Date de début"} ({profileText.optional})
+                  </span>
+                  <input
+                    type="date"
+                    value={supplement.startDate}
+                    onChange={(event) => updateSupplementEntry(index, { startDate: event.target.value })}
+                    className={authInputClass}
+                  />
+                </label>
+                <label className="block text-xs font-semibold text-slate-300">
+                  <StatusLabelWithInfo
+                    label={profileText.supplementStatus || "Statut"}
+                    help={profileText.supplementStatusHelp}
+                  />
+                  <select
+                    value={supplement.status}
+                    onChange={(event) => updateSupplementEntry(index, { status: event.target.value })}
+                    className={authSelectClass}
+                  >
+                    {supplementStatusValues.map((status) => (
+                      <option key={status.value} value={status.value}>
+                        {status.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-xs font-semibold text-slate-300 sm:col-span-2">
+                  <span>{profileText.supplementRemark || "Remarque"} ({profileText.optional})</span>
+                  <textarea
+                    value={supplement.remark}
+                    onChange={(event) => updateSupplementEntry(index, { remark: event.target.value })}
+                    placeholder={profileText.supplementRemarkPlaceholder || "Exemple : à prendre avec de l’eau, après le repas ..."}
+                    className={`${authInputClass} min-h-[86px] resize-y`}
+                  />
+                </label>
+              </div>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={addSupplementEntry}
+            className="rounded-xl border border-brand-300/70 bg-brand-500/10 px-4 py-2 text-xs font-bold text-brand-200 transition hover:border-brand-200 hover:bg-brand-500/15"
+          >
+            {profileText.addSupplement || "Ajouter un complément"}
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function HealthInformationEditor({
+  profileText,
+  sportProfileForm,
+  setSportProfileForm,
+  updateInjuryEntry,
+  addInjuryEntry,
+  removeInjuryEntry,
+  updateMedicalEntry,
+  addMedicalEntry,
+  removeMedicalEntry,
+  authInputClass,
+  authSelectClass
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-slate-600/45 bg-slate-950/25 p-3">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h3 className="text-xs font-black uppercase tracking-[0.14em] text-brand-200">
+            {profileText.injuries}
+          </h3>
+          {!sportProfileForm.hasNoInjury ? (
+            <button
+              type="button"
+              onClick={addInjuryEntry}
+              className="rounded-lg border border-brand-300/60 px-2.5 py-1 text-[11px] font-bold text-brand-200 transition hover:border-brand-200"
+            >
+              {profileText.addInjury || "Ajouter une blessure"}
+            </button>
+          ) : null}
+        </div>
+        <label className="mb-3 flex items-center gap-3 rounded-xl border border-slate-700/55 bg-slate-950/30 p-3 text-xs font-bold text-slate-200">
+          <input
+            type="checkbox"
+            checked={sportProfileForm.hasNoInjury}
+            onChange={(event) =>
+              setSportProfileForm((prev) => ({
+                ...prev,
+                hasNoInjury: event.target.checked,
+                injuryEntries: event.target.checked ? [{ ...emptyInjuryEntry }] : prev.injuryEntries
+              }))
+            }
+            className="h-4 w-4 accent-emerald-400"
+          />
+          <span>{profileText.noInjury || "Aucune blessure"}</span>
+        </label>
+        {!sportProfileForm.hasNoInjury ? (
+          <div className="space-y-3">
+            {sportProfileForm.injuryEntries.map((injury, index) => (
+              <div key={`settings-injury-entry-${index}`} className="rounded-xl border border-slate-700/55 bg-slate-950/30 p-3">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-300">
+                    {profileText.injuryNumber || "Blessure"} {index + 1}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => removeInjuryEntry(index)}
+                    className="rounded-lg border border-slate-600/70 px-2.5 py-1 text-[11px] font-bold text-slate-200 transition hover:border-red-300 hover:text-red-200"
+                  >
+                    {profileText.removeInjury || profileText.removeSport}
+                  </button>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <SelectWithOtherField
+                    label={profileText.injuryZone || "Zone concernée"}
+                    value={injury.zone}
+                    customValue={injury.customZone}
+                    options={injuryZoneOptions}
+                    customPlaceholder={profileText.supplementCustomValue || "Précise"}
+                    selectClass={authSelectClass}
+                    onChange={(value) =>
+                      updateInjuryEntry(index, {
+                        zone: value,
+                        customZone: value === "Autre" ? injury.customZone : ""
+                      })
+                    }
+                    onCustomChange={(value) => updateInjuryEntry(index, { customZone: value })}
+                  />
+                  <label className="block text-xs font-semibold text-slate-300">
+                    <span>{profileText.injuryStartDate || "Date de début"} ({profileText.optional})</span>
+                    <input
+                      type="date"
+                      value={injury.startDate}
+                      onChange={(event) => updateInjuryEntry(index, { startDate: event.target.value })}
+                      className={authInputClass}
+                    />
+                  </label>
+                  <label className="block text-xs font-semibold text-slate-300">
+                    <StatusLabelWithInfo
+                      label={profileText.injuryStatus || "Statut"}
+                      help={profileText.injuryStatusHelp}
+                    />
+                    <select
+                      value={injury.status}
+                      onChange={(event) => updateInjuryEntry(index, { status: event.target.value })}
+                      className={authSelectClass}
+                    >
+                      {healthStatusValues.map((status) => (
+                        <option key={status.value} value={status.value}>
+                          {status.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="block text-xs font-semibold text-slate-300 sm:col-span-2">
+                    <span>{profileText.injuryRemark || "Remarque"} ({profileText.optional})</span>
+                    <textarea
+                      value={injury.remark}
+                      onChange={(event) => updateInjuryEntry(index, { remark: event.target.value })}
+                      placeholder={profileText.injuryRemarkPlaceholder || "Exemple : douleur légère après l’entraînement"}
+                      className={`${authInputClass} min-h-[78px] resize-y`}
+                    />
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      <div className="rounded-2xl border border-slate-600/45 bg-slate-950/25 p-3">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h3 className="text-xs font-black uppercase tracking-[0.14em] text-brand-200">
+            {profileText.medicalTitle || "Informations médicales"}
+          </h3>
+          {!sportProfileForm.hasNoMedicalInformation ? (
+            <button
+              type="button"
+              onClick={addMedicalEntry}
+              className="rounded-lg border border-brand-300/60 px-2.5 py-1 text-[11px] font-bold text-brand-200 transition hover:border-brand-200"
+            >
+              {profileText.addMedical || "Ajouter"}
+            </button>
+          ) : null}
+        </div>
+        <label className="mb-3 flex items-center gap-3 rounded-xl border border-slate-700/55 bg-slate-950/30 p-3 text-xs font-bold text-slate-200">
+          <input
+            type="checkbox"
+            checked={sportProfileForm.hasNoMedicalInformation}
+            onChange={(event) =>
+              setSportProfileForm((prev) => ({
+                ...prev,
+                hasNoMedicalInformation: event.target.checked,
+                medicalEntries: event.target.checked ? [{ ...emptyMedicalEntry }] : prev.medicalEntries
+              }))
+            }
+            className="h-4 w-4 accent-emerald-400"
+          />
+          <span>{profileText.noMedicalInformation || "Aucune information médicale"}</span>
+        </label>
+        {!sportProfileForm.hasNoMedicalInformation ? (
+          <div className="space-y-3">
+            {sportProfileForm.medicalEntries.map((medical, index) => (
+              <div key={`settings-medical-entry-${index}`} className="rounded-xl border border-slate-700/55 bg-slate-950/30 p-3">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-300">
+                    {profileText.medicalNumber || "Problème médical"} {index + 1}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => removeMedicalEntry(index)}
+                    className="rounded-lg border border-slate-600/70 px-2.5 py-1 text-[11px] font-bold text-slate-200 transition hover:border-red-300 hover:text-red-200"
+                  >
+                    {profileText.removeMedical || profileText.removeSport}
+                  </button>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <SelectWithOtherField
+                    label={profileText.medicalProblemName || "Nom du problème médical"}
+                    value={medical.name}
+                    customValue={medical.customName}
+                    options={medicalProblemOptions}
+                    customPlaceholder={profileText.supplementCustomValue || "Précise"}
+                    selectClass={authSelectClass}
+                    onChange={(value) =>
+                      updateMedicalEntry(index, {
+                        name: value,
+                        customName: value === "Autre" ? medical.customName : ""
+                      })
+                    }
+                    onCustomChange={(value) => updateMedicalEntry(index, { customName: value })}
+                  />
+                  <label className="block text-xs font-semibold text-slate-300 sm:col-span-2">
+                    <span>{profileText.medicalDescription || "Description"}</span>
+                    <textarea
+                      value={medical.description}
+                      onChange={(event) => updateMedicalEntry(index, { description: event.target.value })}
+                      className={`${authInputClass} min-h-[78px] resize-y`}
+                    />
+                  </label>
+                  <label className="block text-xs font-semibold text-slate-300">
+                    <span>{profileText.medicalStartDate || "Date de début"} ({profileText.optional})</span>
+                    <input
+                      type="date"
+                      value={medical.startDate}
+                      onChange={(event) => updateMedicalEntry(index, { startDate: event.target.value })}
+                      className={authInputClass}
+                    />
+                  </label>
+                  <label className="block text-xs font-semibold text-slate-300">
+                    <StatusLabelWithInfo
+                      label={profileText.medicalStatus || "Statut"}
+                      help={profileText.medicalStatusHelp}
+                    />
+                    <select
+                      value={medical.status}
+                      onChange={(event) => updateMedicalEntry(index, { status: event.target.value })}
+                      className={authSelectClass}
+                    >
+                      {healthStatusValues.map((status) => (
+                        <option key={status.value} value={status.value}>
+                          {status.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="block text-xs font-semibold text-slate-300 sm:col-span-2">
+                    <span>{profileText.medicalRemark || "Remarque"} ({profileText.optional})</span>
+                    <textarea
+                      value={medical.remark}
+                      onChange={(event) => updateMedicalEntry(index, { remark: event.target.value })}
+                      placeholder={profileText.medicalRemarkPlaceholder || "Exemple : je ressens parfois une gêne pendant l’effort physique"}
+                      className={`${authInputClass} min-h-[78px] resize-y`}
+                    />
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function SettingsPage({
+  currentUser,
+  athleteSex,
+  settingsForm,
+  setSettingsForm,
+  settingsFeedback,
+  setSettingsFeedback,
+  isSettingsSaving,
+  onSubmit,
+  onBack,
+  onGoToShop,
+  onDeleteAccount,
+  onAvatarFileChange,
+  countryOptions,
+  sportProfileForm,
+  setSportProfileForm,
+  updateSportEntry,
+  addSportEntry,
+  removeSportEntry,
+  updateSupplementEntry,
+  addSupplementEntry,
+  removeSupplementEntry,
+  updateInjuryEntry,
+  addInjuryEntry,
+  removeInjuryEntry,
+  updateMedicalEntry,
+  addMedicalEntry,
+  removeMedicalEntry,
+  profileText,
+  getSportLevelLabel,
+  getSportGoalLabel,
+  authInputClass,
+  authSelectClass,
+  preventInvalidNumberKey,
+  sanitizePositiveNumberInput,
+  settingsPasswordChecks
+}) {
+  const phoneDialCode = settingsForm.country ? getCountryDialCode(settingsForm.country) : settingsForm.phoneCountryCode || "+";
+  const phoneDialCountryName =
+    countryOptions.find((country) => country.code === settingsForm.country)?.name || "Pays";
+  const avatarInitials = getInitials(`${settingsForm.firstName} ${settingsForm.lastName}`.trim() || currentUser?.fullName || "");
+  const avatarOptions = getAthleteAvatarOptions(athleteSex || currentUser?.sex);
+  const avatarSexLabel = getAthleteSexLabel(athleteSex || currentUser?.sex);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const cartCount = (() => {
+    if (typeof window === "undefined") return 0;
+    try {
+      const saved = window.localStorage.getItem("hm-shop-cart");
+      const parsed = saved ? JSON.parse(saved) : [];
+      return Array.isArray(parsed) ? parsed.length : 0;
+    } catch {
+      return 0;
+    }
+  })();
+
+  return (
+    <section className="settings-page flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="settings-hero shrink-0">
+        <div className="settings-hero__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" />
+          </svg>
+        </div>
+        <div className="min-w-0 flex-1">
+          <h1 className="settings-hero__title">Paramètres</h1>
+          <p className="settings-hero__subtitle">
+            Gère ton identité, ton profil sportif, tes coordonnées et ta sécurité.
+          </p>
+        </div>
+        <div className="settings-hero__actions" aria-label="Actions rapides">
+          <button
+            type="button"
+            onClick={onBack}
+            className="settings-hero__back"
+            aria-label="Revenir en arrière"
+            title="Revenir en arrière"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M15 18 9 12l6-6" />
+              <path d="M9 12h11" />
+            </svg>
+            <span>Retour</span>
+          </button>
+          <button
+            type="button"
+            onClick={onGoToShop}
+            className="settings-hero__action"
+            aria-label="Panier"
+            title="Voir le panier (boutique)"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="9" cy="21" r="1" />
+              <circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+            </svg>
+            {cartCount > 0 ? (
+              <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-brand-500 px-1 text-[10px] font-black text-white">
+                {cartCount}
+              </span>
+            ) : null}
+          </button>
+          <CoachInbox />
+        </div>
+      </div>
+
+      <form
+        onSubmit={onSubmit}
+        onClick={(event) => {
+          const actionButton = event.target.closest?.("[data-settings-action]");
+          if (actionButton) {
+            event.currentTarget.dataset.submitAction = actionButton.dataset.settingsAction || "";
+          }
+        }}
+        className="settings-scroll mt-2 min-h-0 flex-1 overflow-y-auto pr-1"
+      >
+        <div className="grid gap-2 xl:grid-cols-[minmax(0,1fr)_22rem]">
+          <div className="space-y-2">
+            <article className="settings-card">
+              <SettingsSectionHeader
+                icon="profile"
+                eyebrow="Profil"
+                title="Informations personnelles"
+                action={<span className="settings-chip is-required">Obligatoire</span>}
+              />
+
+              <div className="mt-4 grid gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="settings-avatar-preview">
+                    {settingsForm.avatarUrl ? (
+                      <img src={settingsForm.avatarUrl} alt="" />
+                    ) : (
+                      <span>{avatarInitials || "HF"}</span>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-400">Photo de profil</span>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="block text-xs font-semibold text-slate-300">
+                    <span>Prénom</span>
+                    <input
+                      type="text"
+                      value={settingsForm.firstName}
+                      onChange={(event) => setSettingsForm((prev) => ({ ...prev, firstName: event.target.value }))}
+                      className={authInputClass}
+                    />
+                  </label>
+                  <label className="block text-xs font-semibold text-slate-300">
+                    <span>Nom</span>
+                    <input
+                      type="text"
+                      value={settingsForm.lastName}
+                      onChange={(event) => setSettingsForm((prev) => ({ ...prev, lastName: event.target.value }))}
+                      className={authInputClass}
+                    />
+                  </label>
+                  <div className="block text-xs font-semibold text-slate-300 sm:col-span-2">
+                    <span>Photo de profil</span>
+                    <p className="settings-avatar-note">
+                      Choisissez votre photo de profil personnelle ou sélectionnez un avatar sportif qui vous représente.
+                    </p>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                      <label className="settings-avatar-upload">
+                        <input type="file" accept="image/*" onChange={onAvatarFileChange} />
+                        {settingsForm.avatarUrl ? "Modifier la photo" : "Ajouter une photo"}
+                      </label>
+                      {settingsForm.avatarUrl ? (
+                        <button
+                          type="button"
+                          onClick={() => setSettingsForm((prev) => ({ ...prev, avatarUrl: "" }))}
+                          className="settings-avatar-remove"
+                        >
+                          Retirer
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="settings-avatar-gallery sm:col-span-2">
+                    <div className="settings-avatar-gallery__header">
+                      <span>Choisir un avatar</span>
+                      <strong>{avatarSexLabel}</strong>
+                    </div>
+                    <div className="settings-avatar-grid">
+                      {avatarOptions.map((avatarSrc, index) => (
+                        <button
+                          key={avatarSrc}
+                          type="button"
+                          onClick={() => {
+                            setSettingsForm((prev) => ({ ...prev, avatarUrl: avatarSrc }));
+                            setSettingsFeedback?.({
+                              type: "success",
+                              text: "Avatar sélectionné. Clique sur Enregistrer le profil pour le garder."
+                            });
+                          }}
+                          className={`settings-avatar-choice${settingsForm.avatarUrl === avatarSrc ? " is-selected" : ""}`}
+                          aria-label={`Choisir avatar ${index + 1}`}
+                        >
+                          <img src={avatarSrc} alt="" loading="lazy" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <label className="block text-xs font-semibold text-slate-300 sm:col-span-2">
+                    <span>Pays de résidence</span>
+                    <select
+                      value={settingsForm.country}
+                      onChange={(event) => {
+                        const nextCountry = event.target.value;
+                        setSettingsForm((prev) => ({
+                          ...prev,
+                          country: nextCountry,
+                          phoneCountryCode: getCountryDialCode(nextCountry),
+                          phoneVerifiedAt: ""
+                        }));
+                      }}
+                      className={authSelectClass}
+                    >
+                      <option value="">Pays de résidence</option>
+                      {countryOptions.map((country) => (
+                        <option key={country.code} value={country.code}>
+                          {country.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              </div>
+              <button
+                type="submit"
+                data-settings-action="profile"
+                disabled={isSettingsSaving}
+                className="settings-card-save-button mt-4 w-full"
+              >
+                Enregistrer le profil
+              </button>
+            </article>
+
+            <article className="settings-card">
+              <SettingsSectionHeader
+                icon="address"
+                eyebrow="Coordonnées"
+                title="Téléphone et adresse"
+                action={<span className="settings-chip is-optional">Optionnel</span>}
+              />
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="settings-subsection-heading sm:col-span-2">
+                  <span className="settings-subsection-heading__icon">
+                    <SettingsIcon name="phone" className="h-3.5 w-3.5" />
+                  </span>
+                  <span>Téléphone</span>
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-300">
+                    <span>Numéro de téléphone</span>
+                    <div className="mt-1.5 flex overflow-hidden rounded-xl border border-slate-600/60 bg-slate-950/35">
+                      <span className="settings-phone-code" aria-label={`Indicatif pays ${phoneDialCountryName}`}>
+                        <strong>{phoneDialCode}</strong>
+                        <span>{phoneDialCountryName}</span>
+                      </span>
+                      <input
+                        type="tel"
+                        value={settingsForm.phoneNumber}
+                        onChange={(event) =>
+                          setSettingsForm((prev) => ({ ...prev, phoneNumber: event.target.value, phoneVerifiedAt: "" }))
+                        }
+                        className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-white outline-none"
+                        inputMode="tel"
+                        placeholder="6 00 00 00 00"
+                      />
+                    </div>
+                  </label>
+                </div>
+
+                <div className="settings-subsection-heading mt-2 sm:col-span-2">
+                  <span className="settings-subsection-heading__icon">
+                    <SettingsIcon name="address" className="h-3.5 w-3.5" />
+                  </span>
+                  <span>Adresse</span>
+                </div>
+                <label className="block text-xs font-semibold text-slate-300 sm:col-span-2">
+                  <span>Adresse</span>
+                  <input
+                    type="text"
+                    value={settingsForm.addressLine1}
+                    onChange={(event) => setSettingsForm((prev) => ({ ...prev, addressLine1: event.target.value }))}
+                    className={authInputClass}
+                  />
+                </label>
+                <label className="block text-xs font-semibold text-slate-300 sm:col-span-2">
+                  <span>Complément d’adresse</span>
+                  <input
+                    type="text"
+                    value={settingsForm.addressLine2}
+                    onChange={(event) => setSettingsForm((prev) => ({ ...prev, addressLine2: event.target.value }))}
+                    className={authInputClass}
+                  />
+                </label>
+                <label className="block text-xs font-semibold text-slate-300">
+                  <span>Code postal</span>
+                  <input
+                    type="text"
+                    value={settingsForm.postalCode}
+                    onChange={(event) => setSettingsForm((prev) => ({ ...prev, postalCode: event.target.value }))}
+                    className={authInputClass}
+                  />
+                </label>
+                <label className="block text-xs font-semibold text-slate-300">
+                  <span>Ville</span>
+                  <input
+                    type="text"
+                    value={settingsForm.city}
+                    onChange={(event) => setSettingsForm((prev) => ({ ...prev, city: event.target.value }))}
+                    className={authInputClass}
+                  />
+                </label>
+                <label className="block text-xs font-semibold text-slate-300 sm:col-span-2">
+                  <span>Région / Province / Wilaya</span>
+                  <input
+                    type="text"
+                    value={settingsForm.region}
+                    onChange={(event) => setSettingsForm((prev) => ({ ...prev, region: event.target.value }))}
+                    className={authInputClass}
+                  />
+                </label>
+              </div>
+              <button
+                type="submit"
+                data-settings-action="contact"
+                disabled={isSettingsSaving}
+                className="settings-card-save-button mt-4 w-full"
+              >
+                Enregistrer les coordonnées
+              </button>
+            </article>
+
+            <article className="settings-card">
+              <SettingsSectionHeader
+                icon="athlete"
+                eyebrow="Athlète"
+                title="Profil sportif"
+                action={<span className="settings-chip is-required">{profileText.required}</span>}
+              />
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <label className="block text-xs font-semibold text-slate-300">
+                  <span>{profileText.heightCm}</span>
+                  <input
+                    type="number"
+                    min="80"
+                    max="260"
+                    value={sportProfileForm.heightCm}
+                    onKeyDown={preventInvalidNumberKey}
+                    onChange={(event) =>
+                      setSportProfileForm((prev) => ({
+                        ...prev,
+                        heightCm: sanitizePositiveNumberInput(event.target.value, { integer: true })
+                      }))
+                    }
+                    className={authInputClass}
+                    inputMode="numeric"
+                  />
+                </label>
+                <label className="block text-xs font-semibold text-slate-300">
+                  <span>{profileText.currentWeightKg}</span>
+                  <input
+                    type="number"
+                    min="25"
+                    max="350"
+                    step="0.1"
+                    value={sportProfileForm.currentWeightKg}
+                    onKeyDown={preventInvalidNumberKey}
+                    onChange={(event) =>
+                      setSportProfileForm((prev) => ({
+                        ...prev,
+                        currentWeightKg: sanitizePositiveNumberInput(event.target.value)
+                      }))
+                    }
+                    className={authInputClass}
+                    inputMode="decimal"
+                  />
+                </label>
+              </div>
+
+              <label className="mt-3 flex items-center gap-3 rounded-2xl border border-slate-600/45 bg-slate-950/30 p-3 text-xs font-bold text-slate-200">
+                <input
+                  type="checkbox"
+                  checked={sportProfileForm.hasNoSport}
+                  onChange={(event) =>
+                    setSportProfileForm((prev) => ({
+                      ...prev,
+                      hasNoSport: event.target.checked,
+                      sports: event.target.checked ? [{ ...emptySportEntry }] : prev.sports
+                    }))
+                  }
+                  className="h-4 w-4 accent-emerald-400"
+                />
+                <span>{profileText.noSport}</span>
+              </label>
+
+              {!sportProfileForm.hasNoSport ? (
+                <div className="mt-3 space-y-3">
+                  {sportProfileForm.sports.map((sport, index) => (
+                    <div key={`settings-sport-${index}`} className="rounded-2xl border border-slate-600/45 bg-slate-950/25 p-3">
+                      <div className="mb-3 flex items-center justify-between gap-3">
+                        <p className="text-xs font-black uppercase tracking-[0.14em] text-brand-200">
+                          {profileText.sportNumber} {index + 1}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => removeSportEntry(index)}
+                          className="rounded-lg border border-slate-600/70 px-2.5 py-1 text-[11px] font-bold text-slate-200 transition hover:border-red-300 hover:text-red-200"
+                        >
+                          {profileText.removeSport}
+                        </button>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        <label className="block text-xs font-semibold text-slate-300">
+                          <span>{profileText.sportPracticed}</span>
+                          <input
+                            type="text"
+                            value={sport.sportPracticed}
+                            onChange={(event) => updateSportEntry(index, { sportPracticed: event.target.value })}
+                            className={authInputClass}
+                          />
+                        </label>
+                        <label className="block text-xs font-semibold text-slate-300">
+                          <span>{profileText.sessionsPerWeek}</span>
+                          <input
+                            type="number"
+                            min="0"
+                            max="21"
+                            value={sport.sessionsPerWeek}
+                            onKeyDown={preventInvalidNumberKey}
+                            onChange={(event) =>
+                              updateSportEntry(index, {
+                                sessionsPerWeek: sanitizePositiveNumberInput(event.target.value, { integer: true })
+                              })
+                            }
+                            className={authInputClass}
+                            inputMode="numeric"
+                          />
+                        </label>
+                        <label className="block text-xs font-semibold text-slate-300">
+                          <span>{profileText.sportLevel}</span>
+                          <select
+                            value={sport.sportLevel}
+                            onChange={(event) => updateSportEntry(index, { sportLevel: event.target.value })}
+                            className={authSelectClass}
+                          >
+                            <option value="">{profileText.sportLevel}</option>
+                            {sportLevelValues.map((value) => (
+                              <option key={value} value={value}>
+                                {getSportLevelLabel(value)}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addSportEntry}
+                    className="rounded-xl border border-brand-300/70 bg-brand-500/10 px-4 py-2 text-xs font-bold text-brand-200 transition hover:border-brand-200 hover:bg-brand-500/15"
+                  >
+                    {profileText.addSport}
+                  </button>
+                </div>
+              ) : null}
+
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <SportGoalField
+                  profileText={profileText}
+                  sportProfileForm={sportProfileForm}
+                  setSportProfileForm={setSportProfileForm}
+                  authInputClass={authInputClass}
+                  authSelectClass={authSelectClass}
+                  getSportGoalLabel={getSportGoalLabel}
+                  className="sm:col-span-2"
+                />
+                <label className="block text-xs font-semibold text-slate-300 sm:col-span-2">
+                  <span>Remarques importantes</span>
+                  <textarea
+                    value={sportProfileForm.remarks}
+                    onChange={(event) => setSportProfileForm((prev) => ({ ...prev, remarks: event.target.value }))}
+                    className={`${authInputClass} min-h-[92px] resize-y`}
+                  />
+                </label>
+              </div>
+              <button
+                type="submit"
+                data-settings-action="sport-profile"
+                disabled={isSettingsSaving}
+                className="settings-card-save-button mt-4 w-full"
+              >
+                Enregistrer le profil sportif
+              </button>
+            </article>
+
+            <article className="settings-card">
+              <SettingsSectionHeader
+                icon="athlete"
+                eyebrow="Nutrition"
+                title={profileText.supplementsTitle || "Compléments alimentaires"}
+                action={<span className="settings-chip is-required">{profileText.required}</span>}
+              />
+              <div className="mt-4">
+                <DietarySupplementsEditor
+                  profileText={profileText}
+                  sportProfileForm={sportProfileForm}
+                  setSportProfileForm={setSportProfileForm}
+                  updateSupplementEntry={updateSupplementEntry}
+                  addSupplementEntry={addSupplementEntry}
+                  removeSupplementEntry={removeSupplementEntry}
+                  authInputClass={authInputClass}
+                  authSelectClass={authSelectClass}
+                  preventInvalidNumberKey={preventInvalidNumberKey}
+                  sanitizePositiveNumberInput={sanitizePositiveNumberInput}
+                />
+              </div>
+              <button
+                type="submit"
+                data-settings-action="nutrition"
+                disabled={isSettingsSaving}
+                className="settings-card-save-button mt-4 w-full"
+              >
+                Enregistrer la nutrition
+              </button>
+            </article>
+
+            <article className="settings-card">
+              <SettingsSectionHeader
+                icon="info"
+                eyebrow="Santé"
+                title={profileText.healthTitle || "Blessures et informations médicales"}
+                action={<span className="settings-chip is-required">{profileText.required}</span>}
+              />
+              <div className="mt-4">
+                <HealthInformationEditor
+                  profileText={profileText}
+                  sportProfileForm={sportProfileForm}
+                  setSportProfileForm={setSportProfileForm}
+                  updateInjuryEntry={updateInjuryEntry}
+                  addInjuryEntry={addInjuryEntry}
+                  removeInjuryEntry={removeInjuryEntry}
+                  updateMedicalEntry={updateMedicalEntry}
+                  addMedicalEntry={addMedicalEntry}
+                  removeMedicalEntry={removeMedicalEntry}
+                  authInputClass={authInputClass}
+                  authSelectClass={authSelectClass}
+                />
+              </div>
+              <button
+                type="submit"
+                data-settings-action="health"
+                disabled={isSettingsSaving}
+                className="settings-card-save-button mt-4 w-full"
+              >
+                Enregistrer la santé
+              </button>
+            </article>
+          </div>
+
+          <aside className="space-y-2">
+            <article className="settings-card">
+              <SettingsSectionHeader icon="security" eyebrow="Compte" title="Compte et sécurité" />
+
+              <div className="mt-4 space-y-3">
+                <label className="block text-xs font-semibold text-slate-300">
+                  <span>Adresse email actuelle</span>
+                  <input type="email" value={currentUser?.email || ""} readOnly className={`${authInputClass} opacity-80`} />
+                </label>
+                <label className="block text-xs font-semibold text-slate-300">
+                  <span>Changer l’adresse email</span>
+                  <input
+                    type="email"
+                    value={settingsForm.newEmail}
+                    onChange={(event) => setSettingsForm((prev) => ({ ...prev, newEmail: event.target.value }))}
+                    className={authInputClass}
+                    placeholder="nouveau@email.com"
+                  />
+                  <button
+                    type="submit"
+                    data-settings-action="confirm-email"
+                    disabled={isSettingsSaving}
+                    className="settings-email-confirm-button mt-2"
+                  >
+                    <span>Confirmer mon nouvel email</span>
+                  </button>
+                </label>
+                <label className="block text-xs font-semibold text-slate-300">
+                  <span>Mot de passe actuel</span>
+                  <input
+                    type="password"
+                    value={settingsForm.currentPassword}
+                    onChange={(event) => setSettingsForm((prev) => ({ ...prev, currentPassword: event.target.value }))}
+                    className={authInputClass}
+                    autoComplete="current-password"
+                  />
+                </label>
+                <label className="block text-xs font-semibold text-slate-300">
+                  <span>Changer le mot de passe</span>
+                  <input
+                    type="password"
+                    value={settingsForm.newPassword}
+                    onChange={(event) => setSettingsForm((prev) => ({ ...prev, newPassword: event.target.value }))}
+                    className={authInputClass}
+                    autoComplete="new-password"
+                  />
+                </label>
+                {settingsForm.newPassword ? (
+                  <PasswordRequirements checks={settingsPasswordChecks} labels={null} />
+                ) : null}
+                <label className="block text-xs font-semibold text-slate-300">
+                  <span>Confirmer le mot de passe</span>
+                  <input
+                    type="password"
+                    value={settingsForm.confirmNewPassword}
+                    onChange={(event) => setSettingsForm((prev) => ({ ...prev, confirmNewPassword: event.target.value }))}
+                    className={authInputClass}
+                    autoComplete="new-password"
+                  />
+                </label>
+                <button
+                  type="submit"
+                  data-settings-action="password"
+                  disabled={isSettingsSaving}
+                  className="settings-card-save-button w-full"
+                >
+                  Changer le mot de passe
+                </button>
+              </div>
+            </article>
+
+            <article className="settings-card settings-card--danger">
+              <SettingsSectionHeader icon="danger" eyebrow="Zone sensible" title="Suppression de compte" danger />
+              <p className="mt-2 text-xs leading-relaxed text-slate-300">
+                Vous pouvez supprimer votre compte.
+              </p>
+              <button
+                type="button"
+                onClick={() => setDeleteModalOpen(true)}
+                className="settings-delete-button mt-3 w-full"
+              >
+                Supprimer mon compte
+              </button>
+            </article>
+          </aside>
+        </div>
+        {settingsFeedback.text ? (
+          <p className={`mt-2 rounded-2xl border px-3 py-2 text-xs font-bold ${settingsFeedback.type === "success"
+              ? "border-brand-300/35 bg-brand-500/10 text-brand-200"
+              : "border-red-300/40 bg-red-500/10 text-red-300"
+            }`}>
+            {settingsFeedback.text}
+          </p>
+        ) : null}
+      </form>
+      {deleteModalOpen ? (
+        <div className="settings-delete-modal" role="dialog" aria-modal="true" aria-labelledby="delete-account-title">
+          <div className="settings-delete-modal__card">
+            <p className="settings-card__eyebrow text-red-200">Confirmation</p>
+            <h2 id="delete-account-title" className="settings-delete-modal__title">
+              Est-ce que vous voulez vraiment supprimer votre compte ?
+            </h2>
+            <p className="mt-2 text-xs leading-relaxed text-slate-300">
+              Cette action supprimera définitivement votre accès à l’espace athlète.
+            </p>
+            {settingsFeedback.text ? (
+              <p className={`mt-3 text-xs ${settingsFeedback.type === "success" ? "text-brand-300" : "font-semibold text-red-300"}`}>
+                {settingsFeedback.text}
+              </p>
+            ) : null}
+            <div className="mt-5 grid gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => setDeleteModalOpen(false)}
+                disabled={isSettingsSaving}
+                className="rounded-xl border border-slate-500/70 bg-slate-900/80 px-4 py-2.5 text-sm font-black text-white transition hover:border-brand-300 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={onDeleteAccount}
+                disabled={isSettingsSaving}
+                className="rounded-xl border border-red-600 bg-red-600 px-4 py-2.5 text-sm font-black text-white shadow-[0_14px_28px_-16px_rgba(220,38,38,0.95)] transition hover:border-red-500 hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSettingsSaving ? "Suppression..." : "Confirmer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function getCountryOptions(language) {
+  const locale = countryLocaleMap[language] || "fr";
+  if (countryOptionsCache.has(locale)) {
+    return countryOptionsCache.get(locale);
+  }
+
+  const displayNames =
+    typeof Intl !== "undefined" && Intl.DisplayNames
+      ? new Intl.DisplayNames([locale], { type: "region" })
+      : null;
+
+  const options = countryCodes
+    .map((code) => ({ code, name: displayNames?.of(code) || code }))
+    .sort((a, b) => a.name.localeCompare(b.name, locale));
+
+  countryOptionsCache.set(locale, options);
+  return options;
+}
+const navSectionIds = ["services", "certifications", "experiences", "resultats", "contact"];
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const authLoginRoute = "/auth?mode=login&form=1";
+const authEmailRedirectUrl =
+  import.meta.env.VITE_AUTH_REDIRECT_URL || "http://localhost:5173/auth?mode=login";
+const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey);
+const resetLinkLifetimeMs = 3 * 60 * 1000;
+const resetCodeLifetimeSeconds = Math.floor(resetLinkLifetimeMs / 1000);
+const resetPasswordSessionLifetimeMs = 30 * 60 * 1000;
+const clientReviewsPerPage = 3;
+const reviewMinCharacters = 10;
+const reviewMaxCharacters = 200;
+
+function formatAuthSeconds(seconds) {
+  const safeSeconds = Math.max(0, Math.floor(Number(seconds) || 0));
+  return `${Math.floor(safeSeconds / 60)}:${String(safeSeconds % 60).padStart(2, "0")}`;
+}
+
+function clampResetCodeSeconds(seconds) {
+  const value = Math.ceil(Number(seconds) || 0);
+  return Math.max(0, Math.min(resetCodeLifetimeSeconds, value));
+}
+
+function getResetRequestedAtFromExpiresAt(expiresAtMs) {
+  if (!Number.isFinite(expiresAtMs)) {
+    return Date.now();
+  }
+
+  const requestedAt = expiresAtMs - resetLinkLifetimeMs;
+  if (!Number.isFinite(requestedAt) || requestedAt > Date.now()) {
+    return Date.now();
+  }
+
+  return requestedAt;
+}
+
+function getPasswordChecks(password) {
+  const value = String(password || "");
+  return {
+    minLength: value.length >= 12,
+    lowercase: /[a-z]/.test(value),
+    uppercase: /[A-Z]/.test(value),
+    digit: /\d/.test(value),
+    symbol: /[!@#$%&*_\-?.]/.test(value)
+  };
+}
+
+function isPasswordStrong(password) {
+  return Object.values(getPasswordChecks(password)).every(Boolean);
+}
+
+function PasswordRequirements({ checks, labels }) {
+  const fallbackLabels = {
+    minLength: "Au moins 12 caracteres",
+    lowercase: "Au moins une lettre minuscule : a-z",
+    uppercase: "Au moins une lettre majuscule : A-Z",
+    digit: "Au moins un chiffre : 0-9",
+    symbol: "Au moins un symbole autorise : ! @ # $ % & * _ - ? ."
+  };
+  const nextLabels = labels || fallbackLabels;
+  const requirementColumns = [
+    ["minLength", "lowercase", "uppercase"],
+    ["digit", "symbol"]
+  ];
+
+  return (
+    <div className="mt-2 rounded-2xl border border-slate-600/60 bg-slate-950/35 p-2.5">
+      <div className="grid gap-2 sm:grid-cols-[1.08fr_0.92fr]">
+        {requirementColumns.map((column, columnIndex) => (
+          <ul key={columnIndex} className="space-y-1.5 text-[11px] font-semibold">
+            {column.map((key) => {
+              const label = nextLabels[key];
+              const isValid = Boolean(checks[key]);
+              if (!label) return null;
+
+              return (
+                <li
+                  key={key}
+                  className={`flex items-start gap-2 transition ${isValid ? "text-emerald-300" : "text-red-300"}`}
+                >
+                  <span
+                    className={`mt-0.5 inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border text-[9px] leading-none ${isValid ? "border-emerald-300 bg-emerald-400/20" : "border-red-300 bg-red-400/15"
+                      }`}
+                    aria-hidden="true"
+                  >
+                    {isValid ? "✓" : "!"}
+                  </span>
+                  <span>{label}</span>
+                </li>
+              );
+            })}
+          </ul>
+        ))}
+      </div>
+    </div>
+  );
+}
+function decodeJwtPayload(token) {
+  if (!token || typeof token !== "string") return null;
+
+  try {
+    const [, payload = ""] = token.split(".");
+    if (!payload) return null;
+
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized + "=".repeat((4 - (normalized.length % 4 || 4)) % 4);
+    const decoded = atob(padded);
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
+
+function getResetLinkExpiresAt(accessToken) {
+  const payload = decodeJwtPayload(accessToken);
+  const issuedAtMs = typeof payload?.iat === "number" ? payload.iat * 1000 : 0;
+
+  if (issuedAtMs > 0) {
+    return issuedAtMs + resetLinkLifetimeMs;
+  }
+
+  return Date.now() + resetLinkLifetimeMs;
+}
+
+function isAccessTokenExpired(accessToken, skewMs = 60 * 1000) {
+  const payload = decodeJwtPayload(accessToken);
+  const expiresAtMs = typeof payload?.exp === "number" ? payload.exp * 1000 : 0;
+  return !expiresAtMs || expiresAtMs - skewMs <= Date.now();
+}
+
+async function callSupabaseAuth(path, payload) {
+  if (!hasSupabaseConfig) {
+    throw new Error("SUPABASE_CONFIG_MISSING");
+  }
+
+  const headers = {
+    "Content-Type": "application/json",
+    apikey: supabaseAnonKey
+  };
+
+  // Support both legacy anon JWT keys and new publishable keys.
+  if (typeof supabaseAnonKey === "string" && supabaseAnonKey.startsWith("eyJ")) {
+    headers.Authorization = `Bearer ${supabaseAnonKey}`;
+  }
+
+  const response = await fetch(`${supabaseUrl}/auth/v1/${path}`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload)
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = data.msg || data.error_description || data.message || "SUPABASE_REQUEST_FAILED";
+    const error = new Error(message);
+    error.code = data.code || data.error_code || "";
+    throw error;
+  }
+
+  return data;
+}
+
+async function callSupabaseVerifyOtp(payload) {
+  return callSupabaseAuth("verify", payload);
+}
+
+async function callSupabaseRpc(functionName, payload) {
+  if (!hasSupabaseConfig) {
+    throw new Error("SUPABASE_CONFIG_MISSING");
+  }
+
+  const headers = {
+    "Content-Type": "application/json",
+    apikey: supabaseAnonKey
+  };
+
+  if (typeof supabaseAnonKey === "string" && supabaseAnonKey.startsWith("eyJ")) {
+    headers.Authorization = `Bearer ${supabaseAnonKey}`;
+  }
+
+  const response = await fetch(`${supabaseUrl}/rest/v1/rpc/${functionName}`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload)
+  });
+
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    const message =
+      (data && (data.message || data.error_description || data.msg)) || "SUPABASE_RPC_FAILED";
+    const error = new Error(message);
+    error.code = (data && (data.code || data.error_code)) || "";
+    throw error;
+  }
+
+  return data;
+}
+
+async function callSupabaseRest(path, { method = "GET", accessToken, body, prefer } = {}) {
+  if (!hasSupabaseConfig) {
+    throw new Error("SUPABASE_CONFIG_MISSING");
+  }
+
+  if (!accessToken) {
+    throw new Error("SESSION_REQUIRED");
+  }
+
+  const headers = {
+    apikey: supabaseAnonKey,
+    Authorization: `Bearer ${accessToken}`,
+    "Content-Type": "application/json"
+  };
+
+  if (prefer) {
+    headers.Prefer = prefer;
+  }
+
+  const response = await fetch(`${supabaseUrl}/rest/v1/${path}`, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined
+  });
+
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    const message = (data && (data.message || data.error_description || data.msg)) || "SUPABASE_REST_FAILED";
+    const error = new Error(message);
+    error.code = (data && (data.code || data.error_code)) || "";
+    error.status = response.status;
+    throw error;
+  }
+
+  return data;
+}
+
+async function fetchSportProfile(userId, accessToken) {
+  const data = await callSupabaseRest(
+    `profiles?id=eq.${encodeURIComponent(userId)}&select=${encodeURIComponent(sportProfileFields)}`,
+    { accessToken }
+  );
+  return normalizeSportProfile(Array.isArray(data) ? data[0] || {} : data || {});
+}
+
+async function updateSportProfile(userId, accessToken, payload) {
+  const data = await callSupabaseRest(
+    `profiles?id=eq.${encodeURIComponent(userId)}&select=${encodeURIComponent(sportProfileFields)}`,
+    {
+      method: "PATCH",
+      accessToken,
+      body: payload,
+      prefer: "return=representation"
+    }
+  );
+  return normalizeSportProfile(Array.isArray(data) ? data[0] || payload : data || payload);
+}
+
+async function fetchClientReviews() {
+  const data = await callSupabaseFunction("client-reviews", { action: "list" });
+  return Array.isArray(data.reviews) ? data.reviews.map(normalizeClientReview).filter(Boolean) : [];
+}
+
+async function saveClientReview({ accessToken, rating, message }) {
+  const data = await callSupabaseFunctionWithAuth(
+    "client-reviews",
+    {
+      action: "save",
+      rating,
+      message
+    },
+    accessToken
+  );
+  return normalizeClientReview(data.review);
+}
+
+async function deleteClientReview({ accessToken }) {
+  return callSupabaseFunctionWithAuth("client-reviews", { action: "delete" }, accessToken);
+}
+
+async function callSupabaseFunction(functionName, payload) {
+  if (!hasSupabaseConfig) {
+    throw new Error("SUPABASE_CONFIG_MISSING");
+  }
+
+  const headers = {
+    "Content-Type": "application/json",
+    apikey: supabaseAnonKey
+  };
+
+  if (typeof supabaseAnonKey === "string" && supabaseAnonKey.startsWith("eyJ")) {
+    headers.Authorization = `Bearer ${supabaseAnonKey}`;
+  }
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload)
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const apiError = data?.error || data || {};
+    const message = apiError.message || data.message || "SUPABASE_FUNCTION_FAILED";
+    const error = new Error(message);
+    error.code = apiError.code || data.code || "";
+    error.status = response.status;
+    error.expiresAt = apiError.expiresAt || data.expiresAt || "";
+    error.retryAfterSeconds = apiError.retryAfterSeconds || data.retryAfterSeconds || 0;
+    console.error(`[FN ERROR] ${functionName}`, response.status, error.code, message, data);
+    throw error;
+  }
+
+  return data;
+}
+
+async function callSupabaseFunctionWithAuth(functionName, payload, accessToken) {
+  if (!hasSupabaseConfig) {
+    throw new Error("SUPABASE_CONFIG_MISSING");
+  }
+
+  if (!accessToken) {
+    throw new Error("SESSION_REQUIRED");
+  }
+
+  console.log(`[DEBUG] calling ${functionName}`, {
+    tokenLength: accessToken.length,
+    tokenStart: accessToken.slice(0, 25),
+    tokenIsJwt: accessToken.startsWith("eyJ"),
+    apikeyLength: supabaseAnonKey.length,
+    apikeyStart: supabaseAnonKey.slice(0, 25)
+  });
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: supabaseAnonKey,
+      Authorization: `Bearer ${accessToken}`
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const apiError = data?.error || data || {};
+    const message = apiError.message || data.message || "SUPABASE_FUNCTION_FAILED";
+    const error = new Error(message);
+    error.code = apiError.code || data.code || "";
+    error.status = response.status;
+    throw error;
+  }
+
+  return data;
+}
+
+async function callSupabaseUserUpdate(accessToken, payload, options = {}) {
+  if (!hasSupabaseConfig) {
+    throw new Error("SUPABASE_CONFIG_MISSING");
+  }
+
+  const endpoint = new URL(`${supabaseUrl}/auth/v1/user`);
+  if (options.redirectTo) {
+    endpoint.searchParams.set("redirect_to", options.redirectTo);
+  }
+
+  const response = await fetch(endpoint.toString(), {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: supabaseAnonKey,
+      Authorization: `Bearer ${accessToken}`
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = data.msg || data.error_description || data.message || "SUPABASE_REQUEST_FAILED";
+    const error = new Error(message);
+    error.code = data.code || data.error_code || "";
+    throw error;
+  }
+
+  return data;
+}
+
+function AnimatedNumber({ value, duration = 1400, decimals = 0, suffix = "", className = "", testId }) {
+  const [display, setDisplay] = useState(0);
+  const [done, setDone] = useState(false);
+  const ref = useRef(null);
+  const startedRef = useRef(false);
+  const targetRef = useRef(value);
+  targetRef.current = Number.isFinite(Number(value)) ? Number(value) : 0;
+
+  useEffect(() => {
+    if (!ref.current || typeof window === "undefined") return undefined;
+    if (typeof IntersectionObserver === "undefined") {
+      setDisplay(targetRef.current);
+      setDone(true);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !startedRef.current) {
+            startedRef.current = true;
+            const start = performance.now();
+            const from = 0;
+            const to = targetRef.current;
+            const tick = (now) => {
+              const elapsed = now - start;
+              const progress = Math.min(1, elapsed / duration);
+              const eased = 1 - Math.pow(1 - progress, 3);
+              setDisplay(from + (to - from) * eased);
+              if (progress < 1) {
+                requestAnimationFrame(tick);
+              } else {
+                setDisplay(to);
+                setDone(true);
+              }
+            };
+            requestAnimationFrame(tick);
+            observer.disconnect();
+          }
+        });
+      },
+      { threshold: 0.4 },
+    );
+
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [duration]);
+
+  const formatted = decimals > 0 ? display.toFixed(decimals) : Math.round(display).toLocaleString("fr-FR");
+
+  return (
+    <span
+      ref={ref}
+      data-testid={testId}
+      className={`stat-counter ${done ? "stat-counter--complete" : ""} ${className}`.trim()}
+    >
+      {formatted}
+      {suffix}
+    </span>
+  );
+}
+
+function HeroParticles() {
+  const particles = useMemo(
+    () =>
+      Array.from({ length: 14 }).map((_, i) => {
+        const left = Math.random() * 100;
+        const top = 60 + Math.random() * 40;
+        const tx = (Math.random() - 0.5) * 80;
+        const ty = -(80 + Math.random() * 200);
+        const size = 4 + Math.random() * 6;
+        const duration = 7 + Math.random() * 6;
+        const delay = Math.random() * 8;
+        const opacity = 0.35 + Math.random() * 0.45;
+        return { i, left, top, tx, ty, size, duration, delay, opacity };
+      }),
+    [],
+  );
+
+  return (
+    <div className="hero-particles" aria-hidden="true">
+      {particles.map((p) => (
+        <span
+          key={p.i}
+          className="hero-particle"
+          style={{
+            left: `${p.left}%`,
+            top: `${p.top}%`,
+            width: `${p.size}px`,
+            height: `${p.size}px`,
+            "--particle-tx": `${p.tx}px`,
+            "--particle-ty": `${p.ty}px`,
+            "--particle-duration": `${p.duration}s`,
+            "--particle-delay": `${p.delay}s`,
+            "--particle-opacity": p.opacity,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function SectionTitle({ chip, title, subtitle }) {
+  return (
+    <div>
+      <p className="inline-flex rounded-full border border-brand-400/35 bg-brand-500/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-brand-100">
+        {chip}
+      </p>
+      <h2 className="mt-4 font-display text-3xl font-black text-white md:text-4xl">{title}</h2>
+      <p className="mt-3 max-w-3xl text-slate-300">{subtitle}</p>
+    </div>
+  );
+}
+
+function CertificationMedia({ certTitle, certImages, isSlider, currentImageIndex, dotKeyPrefix }) {
+  return (
+    <div className="relative overflow-hidden rounded-[1.35rem] border border-brand-300/45 bg-slate-950/85 p-3 shadow-[0_18px_36px_rgba(15,118,110,0.28)]">
+      {isSlider ? (
+        <>
+          <div className="relative h-[330px] w-full md:h-[430px]">
+            {certImages.map((image, imageIndex) => (
+              <img
+                key={image}
+                src={image}
+                alt={certTitle}
+                className={`absolute inset-0 h-full w-full rounded-xl object-contain transition-opacity duration-700 ${currentImageIndex === imageIndex ? "opacity-100" : "opacity-0"
+                  }`}
+              />
+            ))}
+          </div>
+          <div className="mt-3 flex items-center justify-center gap-2">
+            {certImages.map((_, dotIndex) => (
+              <span
+                key={`${dotKeyPrefix}-${dotIndex}`}
+                className={`cert-dot h-2.5 w-2.5 rounded-full border border-white/90 transition ${currentImageIndex === dotIndex
+                    ? "cert-dot--active bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+                    : "bg-transparent"
+                  }`}
+              />
+            ))}
+          </div>
+        </>
+      ) : (
+        <img src={certImages[0]} alt={certTitle} className="h-[330px] w-full rounded-xl object-contain md:h-[430px]" />
+      )}
+    </div>
+  );
+}
+
+export default function App() {
+  const heroImages = [coachHero, coachHeroAlt];
+  const cvDownloadHref = "/cv.pdf";
+  const [activeHeroIndex, setActiveHeroIndex] = useState(0);
+  const [activeIfbbSlide, setActiveIfbbSlide] = useState(0);
+  const [activeNavSection, setActiveNavSection] = useState("services");
+  const [language, setLanguage] = useState(() => {
+    try {
+      const saved = window.localStorage.getItem("hm-language");
+      return saved && portfolioData[saved] ? saved : "fr";
+    } catch {
+      return "fr";
+    }
+  });
+  const [theme, setTheme] = useState(() => {
+    try {
+      return window.localStorage.getItem("hm-theme") || "dark";
+    } catch {
+      return "dark";
+    }
+  });
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return window.innerWidth >= 1024;
+  });
+  const [activeNavKey, setActiveNavKey] = useState(() => {
+    try {
+      if ((window.location.pathname || "") !== "/dashboard") return "dashboard";
+      const view = new URLSearchParams(window.location.search || "").get("view") || "dashboard";
+      return dashboardNavKeys.has(view) ? view : "dashboard";
+    } catch {
+      return "dashboard";
+    }
+  });
+  const [contactForm, setContactForm] = useState({
+    message: "",
+    rating: 0
+  });
+  const [editingReviewId, setEditingReviewId] = useState("");
+  const [highlightedReviewId, setHighlightedReviewId] = useState("");
+  const [reviewPage, setReviewPage] = useState(0);
+  const [clientReviews, setClientReviews] = useState([]);
+  const [athleteCount, setAthleteCount] = useState(null);
+  const [isReviewSaving, setIsReviewSaving] = useState(false);
+  const [sendFeedback, setSendFeedback] = useState({ type: "", text: "" });
+  const [authMode, setAuthMode] = useState("login");
+  const [registerStep, setRegisterStep] = useState(1);
+  const [registerPersonalValidated, setRegisterPersonalValidated] = useState(false);
+  const [authForm, setAuthForm] = useState({
+    firstName: "",
+    lastName: "",
+    birthDate: "",
+    sex: "",
+    country: "",
+    email: "",
+    password: "",
+    confirmPassword: ""
+  });
+  const [authFeedback, setAuthFeedback] = useState({ type: "", text: "" });
+  const [resetVerificationCode, setResetVerificationCode] = useState("");
+  const [signupPendingEmail, setSignupPendingEmail] = useState(() => {
+    try {
+      return window.localStorage.getItem("hm-signup-pending") || "";
+    } catch {
+      return "";
+    }
+  });
+  const [pendingMailboxEmail, setPendingMailboxEmail] = useState(() => {
+    try {
+      return window.localStorage.getItem("hm-auth-mailbox-email") || "";
+    } catch {
+      return "";
+    }
+  });
+  const [pendingMailboxIntent, setPendingMailboxIntent] = useState(() => {
+    try {
+      return window.localStorage.getItem("hm-auth-mailbox-intent") || "signup";
+    } catch {
+      return "signup";
+    }
+  });
+  const [resetAccessToken, setResetAccessToken] = useState(() => {
+    try {
+      return (
+        window.sessionStorage.getItem("hm-reset-access-token") ||
+        window.localStorage.getItem("hm-reset-access-token") ||
+        ""
+      );
+    } catch {
+      return "";
+    }
+  });
+  const [resetExpiresAt, setResetExpiresAt] = useState(() => {
+    try {
+      return Number(
+        window.sessionStorage.getItem("hm-reset-expires-at") ||
+        window.localStorage.getItem("hm-reset-expires-at") ||
+        0
+      );
+    } catch {
+      return 0;
+    }
+  });
+  const [resetRequestedAt, setResetRequestedAt] = useState(() => {
+    try {
+      return Number(window.localStorage.getItem("hm-reset-requested-at") || 0);
+    } catch {
+      return 0;
+    }
+  });
+  const [resetCodeSecondsLeft, setResetCodeSecondsLeft] = useState(0);
+  const [resetSecondsLeft, setResetSecondsLeft] = useState(0);
+  const [isResetValidationReady, setIsResetValidationReady] = useState(false);
+  const [showAuthConfirmation, setShowAuthConfirmation] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search || "");
+      const isLoginConfirmationRoute =
+        (window.location.pathname || "/") === "/auth" &&
+        params.get("mode") === "login" &&
+        params.get("form") !== "1";
+      return isLoginConfirmationRoute && Boolean(window.localStorage.getItem("hm-signup-pending"));
+    } catch {
+      return false;
+    }
+  });
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = window.localStorage.getItem("hm-current-user");
+      const parsedUser = saved ? JSON.parse(saved) : null;
+      if (!parsedUser) return null;
+
+      return {
+        ...parsedUser,
+        accessToken: window.sessionStorage.getItem("hm-access-token") || parsedUser.accessToken || "",
+        refreshToken: window.sessionStorage.getItem("hm-refresh-token") || parsedUser.refreshToken || ""
+      };
+    } catch {
+      return null;
+    }
+  });
+  const [sportProfile, setSportProfile] = useState(() => {
+    try {
+      const saved = window.localStorage.getItem("hm-sport-profile");
+      return saved ? normalizeSportProfile(JSON.parse(saved)) : normalizeSportProfile();
+    } catch {
+      return normalizeSportProfile();
+    }
+  });
+  const [sportProfileForm, setSportProfileForm] = useState(() => sportProfileToForm(sportProfile));
+  const [sportProfileFeedback, setSportProfileFeedback] = useState({ type: "", text: "" });
+  const [isSportProfileSaving, setIsSportProfileSaving] = useState(false);
+  const [isSportProfileLoading, setIsSportProfileLoading] = useState(false);
+  const [settingsForm, setSettingsForm] = useState(emptySettingsForm);
+  const [settingsFeedback, setSettingsFeedback] = useState({ type: "", text: "" });
+  const [appToast, setAppToast] = useState({ type: "", text: "" });
+  const [isSettingsSaving, setIsSettingsSaving] = useState(false);
+  const [dashboardWeightRange, setDashboardWeightRange] = useState("week");
+  const [shopSearch, setShopSearch] = useState("");
+  const [shopCategory, setShopCategory] = useState("Tous");
+  const [shopPriceType, setShopPriceType] = useState("Tous");
+  const [isGlobalCartOpen, setIsGlobalCartOpen] = useState(false);
+  const globalCartItems = useMemo(() => {
+    try {
+      const saved = typeof window !== "undefined" ? window.localStorage.getItem("hm-shop-cart") : null;
+      const parsed = saved ? JSON.parse(saved) : [];
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map((entry) => {
+        const id = typeof entry === "string" ? entry : entry?.id;
+        const product = shopProducts.find((p) => p.id === id);
+        return product ? { ...product, priceValue: parseProductPrice(product.price) } : null;
+      }).filter(Boolean);
+    } catch { return []; }
+  }, [isGlobalCartOpen]);
+  const globalCartTotal = globalCartItems.reduce((s, i) => s + (i.priceValue || 0), 0);
+  const removeFromGlobalCart = (productId) => {
+    try {
+      const saved = typeof window !== "undefined" ? window.localStorage.getItem("hm-shop-cart") : "[]";
+      const parsed = JSON.parse(saved || "[]").filter((e) => (typeof e === "string" ? e : e?.id) !== productId);
+      window.localStorage.setItem("hm-shop-cart", JSON.stringify(parsed));
+      setIsGlobalCartOpen((v) => v); // force re-render
+    } catch { /* ignore */ }
+  };
+  // Paiement DIRECT depuis le panier global (sans passer par la page Boutique).
+  const handleGlobalCheckout = async () => {
+    const paidIds = globalCartItems.filter((i) => i.priceValue != null && i.priceValue > 0).map((i) => i.id);
+    const freeIds = globalCartItems.filter((i) => i.priceValue == null || i.priceValue <= 0).map((i) => i.id);
+    if (freeIds.length) {
+      try {
+        const saved = window.localStorage.getItem("hm-shop-purchased");
+        const parsed = saved ? JSON.parse(saved) : [];
+        const next = Array.from(new Set([...(Array.isArray(parsed) ? parsed : []), ...freeIds]));
+        window.localStorage.setItem("hm-shop-purchased", JSON.stringify(next));
+      } catch { /* ignore */ }
+    }
+    if (!paidIds.length) {
+      try { window.localStorage.setItem("hm-shop-cart", JSON.stringify([])); } catch { /* ignore */ }
+      setIsGlobalCartOpen(false);
+      setAppToast({ type: "success", text: "Produits gratuits débloqués." });
+      return;
+    }
+    let token = "";
+    try { const fresh = await refreshCurrentUserSession(); token = fresh?.accessToken || ""; } catch { /* fallback */ }
+    if (!token) token = (typeof window !== "undefined" ? window.sessionStorage.getItem("hm-access-token") : "") || "";
+    if (!token) {
+      setAppToast({ type: "error", text: "Session expirée — reconnecte-toi pour payer." });
+      return;
+    }
+    try {
+      const result = await callSupabaseFunctionWithAuth("create-checkout-session", { items: paidIds, returnTo: "shop" }, token);
+      if (result?.url) {
+        window.location.href = result.url;
+      } else {
+        setAppToast({ type: "error", text: "Impossible de démarrer le paiement. Réessaie." });
+      }
+    } catch (error) {
+      setAppToast({ type: "error", text: `Impossible de démarrer le paiement : ${error?.message || error?.code || "erreur inconnue"}` });
+    }
+  };
+  const [currentRoute, setCurrentRoute] = useState(() => {
+    try {
+      return {
+        path: window.location.pathname || "/",
+        search: window.location.search || ""
+      };
+    } catch {
+      return {
+        path: "/",
+        search: ""
+      };
+    }
+  });
+
+  const content = portfolioData[language] || portfolioData.fr;
+  const isArabic = language === "ar";
+  const isLight = theme === "light";
+  const displayLocale = language === "en" ? "en" : language === "ar" ? "ar" : "fr";
+  const isAuthPage = currentRoute.path === "/auth";
+  const isCompleteProfilePage = currentRoute.path === "/complete-profile";
+  const isDashboardPage = currentRoute.path === "/dashboard";
+  const isHomePage = currentRoute.path === "/";
+  const authSearchParams = new URLSearchParams(currentRoute.search);
+  const authModeQuery = authSearchParams.get("mode");
+  const authFormQuery = authSearchParams.get("form");
+  const isConfirmedAccountPage = authSearchParams.get("confirmed") === "1";
+  const isAuthCheckEmailPage = isAuthPage && authModeQuery === "check-email";
+  const isAuthResetCodePage = isAuthPage && authModeQuery === "reset-code";
+  const isAuthResetPage = isAuthPage && authModeQuery === "reset";
+  const isAuthConfirmationPage =
+    isAuthPage && authModeQuery === "login" && authFormQuery !== "1" && (showAuthConfirmation || isConfirmedAccountPage);
+  const currentLanguageOption = languageOptions[language] || languageOptions.fr;
+  const authText = content.contact.auth;
+  const profileText = content.sportsProfile || portfolioData.fr.sportsProfile;
+  const countryOptions = getCountryOptions(language);
+  const passwordChecks = getPasswordChecks(authForm.password);
+  const settingsPasswordChecks = getPasswordChecks(settingsForm.newPassword);
+  const registerBirthDateIsAdult = !authForm.birthDate || isAdultBirthDate(authForm.birthDate);
+  const registerBirthDateError = Boolean(authForm.birthDate && !registerBirthDateIsAdult);
+  const registerPersonalComplete = Boolean(
+    authForm.firstName.trim() &&
+    authForm.lastName.trim() &&
+    authForm.birthDate &&
+    registerBirthDateIsAdult &&
+    authForm.sex &&
+    authForm.country
+  );
+  const registerConnectionComplete = Boolean(
+    authForm.email.trim() &&
+    authForm.password &&
+    authForm.confirmPassword &&
+    isPasswordStrong(authForm.password) &&
+    authForm.password === authForm.confirmPassword
+  );
+  const signupStepsText = authText.signupSteps || {};
+  const storedResetAccessToken = (() => {
+    try {
+      return (
+        window.sessionStorage.getItem("hm-reset-access-token") ||
+        window.localStorage.getItem("hm-reset-access-token") ||
+        ""
+      );
+    } catch {
+      return "";
+    }
+  })();
+  const storedResetExpiresAt = (() => {
+    try {
+      return Number(
+        window.sessionStorage.getItem("hm-reset-expires-at") ||
+        window.localStorage.getItem("hm-reset-expires-at") ||
+        0
+      );
+    } catch {
+      return 0;
+    }
+  })();
+  const storedResetRequestedAt = (() => {
+    try {
+      return Number(window.localStorage.getItem("hm-reset-requested-at") || 0);
+    } catch {
+      return 0;
+    }
+  })();
+  const effectiveResetAccessToken = resetAccessToken || storedResetAccessToken;
+  const latestResetRequestedAt = Math.max(resetRequestedAt, storedResetRequestedAt);
+  const effectiveResetRequestedAt = latestResetRequestedAt ? Math.min(latestResetRequestedAt, Date.now()) : 0;
+  const effectiveResetCodeExpiresAt = effectiveResetRequestedAt ? effectiveResetRequestedAt + resetLinkLifetimeMs : 0;
+  const effectiveResetExpiresAt = Math.max(
+    resetExpiresAt,
+    storedResetExpiresAt,
+    effectiveResetRequestedAt ? effectiveResetRequestedAt + resetLinkLifetimeMs : 0
+  );
+  const resetCodeCountdownLabel = formatAuthSeconds(resetCodeSecondsLeft);
+  const resetCountdownLabel = formatAuthSeconds(resetSecondsLeft);
+  const resetPageIsValid = Boolean(
+    effectiveResetAccessToken && effectiveResetExpiresAt && effectiveResetExpiresAt > Date.now()
+  );
+  const sportProfileComplete = isSportProfileComplete(sportProfile);
+  const sortedClientReviews = [...clientReviews].sort((firstReview, secondReview) => {
+    const firstIsMine = currentUser?.id && firstReview.authorId === currentUser.id ? 1 : 0;
+    const secondIsMine = currentUser?.id && secondReview.authorId === currentUser.id ? 1 : 0;
+    if (firstIsMine !== secondIsMine) return secondIsMine - firstIsMine;
+    return new Date(secondReview.createdAt).getTime() - new Date(firstReview.createdAt).getTime();
+  });
+  const currentUserReview = currentUser?.id
+    ? sortedClientReviews.find((review) => review.authorId === currentUser.id) || null
+    : null;
+  const clientReviewCount = clientReviews.length;
+  const averageClientRating = clientReviewCount
+    ? clientReviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / clientReviewCount
+    : 0;
+  const averageClientRatingLabel = clientReviewCount ? `${averageClientRating.toFixed(1)}/5` : "0/5";
+  const reviewPageCount = Math.max(1, Math.ceil(sortedClientReviews.length / clientReviewsPerPage));
+  const safeReviewPage = Math.min(reviewPage, reviewPageCount - 1);
+  const visibleClientReviews = sortedClientReviews.slice(
+    safeReviewPage * clientReviewsPerPage,
+    safeReviewPage * clientReviewsPerPage + clientReviewsPerPage
+  );
+  const reviewCharacterCount = contactForm.message.length;
+  const reviewCanSubmit =
+    !isReviewSaving &&
+    contactForm.message.trim().length >= reviewMinCharacters &&
+    (!currentUserReview || Boolean(editingReviewId));
+
+  useEffect(() => {
+    if (!appToast.text) return undefined;
+
+    const timeoutId = window.setTimeout(() => {
+      setAppToast({ type: "", text: "" });
+    }, 4800);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [appToast.text]);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const loadReviews = async () => {
+      try {
+        const reviews = await fetchClientReviews();
+        if (!isCancelled) {
+          setClientReviews(reviews.slice(0, 100));
+        }
+        try {
+          window.localStorage.removeItem("hm-client-reviews");
+        } catch {
+          // ignore storage errors
+        }
+      } catch (error) {
+        console.warn("client reviews load skipped", error);
+        try {
+          window.localStorage.removeItem("hm-client-reviews");
+        } catch {
+          // ignore storage errors
+        }
+      }
+    };
+
+    loadReviews();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const loadAthleteCount = async () => {
+      try {
+        const data = await callSupabaseRpc("public_athlete_count", {});
+        if (isCancelled) return;
+        const value = Array.isArray(data) ? data[0] : data;
+        const numeric = Number(value);
+        if (Number.isFinite(numeric)) {
+          setAthleteCount(numeric);
+        } else {
+          setAthleteCount(0);
+        }
+      } catch (error) {
+        console.warn("athlete count load skipped", error);
+        if (!isCancelled) setAthleteCount(0);
+      }
+    };
+
+    loadAthleteCount();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (reviewPage > reviewPageCount - 1) {
+      setReviewPage(Math.max(0, reviewPageCount - 1));
+    }
+  }, [reviewPage, reviewPageCount]);
+
+  useEffect(() => {
+    if (!registerPersonalComplete) {
+      setRegisterPersonalValidated(false);
+    }
+  }, [registerPersonalComplete]);
+
+  const normalizeEmail = (value) => value.trim().toLowerCase();
+  const getStoredConnectedUser = () => {
+    try {
+      const saved = window.localStorage.getItem("hm-current-user");
+      const parsedUser = saved ? JSON.parse(saved) : null;
+      const accessToken = window.sessionStorage.getItem("hm-access-token") || parsedUser?.accessToken || "";
+      const refreshToken = window.sessionStorage.getItem("hm-refresh-token") || parsedUser?.refreshToken || "";
+
+      if (!parsedUser || (!accessToken && !refreshToken)) return null;
+
+      return {
+        ...parsedUser,
+        accessToken,
+        refreshToken
+      };
+    } catch {
+      return null;
+    }
+  };
+  const clearResetFlow = () => {
+    try {
+      window.sessionStorage.removeItem("hm-reset-access-token");
+      window.sessionStorage.removeItem("hm-reset-expires-at");
+      window.localStorage.removeItem("hm-reset-access-token");
+      window.localStorage.removeItem("hm-reset-expires-at");
+      window.localStorage.removeItem("hm-reset-requested-at");
+    } catch {
+      // ignore storage errors
+    }
+    setResetAccessToken("");
+    setResetExpiresAt(0);
+    setResetRequestedAt(0);
+    setResetSecondsLeft(0);
+  };
+  const clearPendingMailbox = () => {
+    try {
+      window.localStorage.removeItem("hm-auth-mailbox-email");
+      window.localStorage.removeItem("hm-auth-mailbox-intent");
+    } catch {
+      // ignore storage errors
+    }
+    setPendingMailboxEmail("");
+    setPendingMailboxIntent("signup");
+  };
+
+  const savePendingMailbox = (emailValue, intent) => {
+    try {
+      window.localStorage.setItem("hm-auth-mailbox-email", emailValue);
+      window.localStorage.setItem("hm-auth-mailbox-intent", intent);
+    } catch {
+      // ignore storage errors
+    }
+    setPendingMailboxEmail(emailValue);
+    setPendingMailboxIntent(intent);
+  };
+  const getMailboxUrl = (emailValue) => {
+    const domain = normalizeEmail(emailValue).split("@")[1] || "";
+    const map = {
+      "gmail.com": "https://mail.google.com",
+      "googlemail.com": "https://mail.google.com",
+      "outlook.com": "https://outlook.live.com/mail/",
+      "hotmail.com": "https://outlook.live.com/mail/",
+      "live.com": "https://outlook.live.com/mail/",
+      "msn.com": "https://outlook.live.com/mail/",
+      "yahoo.com": "https://mail.yahoo.com",
+      "yahoo.fr": "https://mail.yahoo.com",
+      "icloud.com": "https://www.icloud.com/mail",
+      "me.com": "https://www.icloud.com/mail",
+      "mac.com": "https://www.icloud.com/mail",
+      "proton.me": "https://mail.proton.me",
+      "protonmail.com": "https://mail.proton.me"
+    };
+    return map[domain] || (domain ? `https://${domain}` : "https://mail.google.com");
+  };
+
+  useEffect(() => {
+    heroImages.forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, [heroImages]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setActiveHeroIndex((prev) => (prev + 1) % heroImages.length);
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [heroImages.length]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setActiveIfbbSlide((prev) => (prev + 1) % 2);
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+    document.documentElement.dir = isArabic ? "rtl" : "ltr";
+    setIsLangMenuOpen(false);
+    setSendFeedback({ type: "", text: "" });
+    setAuthFeedback({ type: "", text: "" });
+    try {
+      window.localStorage.setItem("hm-language", language);
+    } catch {
+      // ignore storage errors
+    }
+  }, [language, isArabic]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("hm-theme", theme);
+    } catch {
+      // ignore storage errors
+    }
+  }, [theme]);
+
+  useEffect(() => {
+    const syncRoute = () => {
+      setCurrentRoute({
+        path: window.location.pathname || "/",
+        search: window.location.search || ""
+      });
+    };
+
+    window.addEventListener("popstate", syncRoute);
+    return () => {
+      window.removeEventListener("popstate", syncRoute);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthPage) return;
+    const params = new URLSearchParams(currentRoute.search);
+    const mode = params.get("mode");
+    if (mode === "login" || mode === "register" || mode === "reset" || mode === "reset-code") {
+      setAuthMode(mode === "register" ? "register" : "login");
+      if (mode === "register") {
+        setRegisterStep(1);
+      }
+      if (params.get("form") === "1" || mode === "register" || mode === "reset" || mode === "reset-code") {
+        setShowAuthConfirmation(false);
+      }
+    }
+  }, [isAuthPage, currentRoute.search]);
+
+  useEffect(() => {
+    // Un utilisateur DÉJÀ connecté ne doit jamais voir la page de connexion (« Connecté en tant que… /
+    // Se déconnecter »). On le renvoie vers son espace. On laisse passer les écrans spéciaux :
+    // confirmation de compte créé, vérification d'e-mail, réinitialisation, et les callbacks en cours.
+    if (!isAuthPage || !currentUser) return;
+    if (isAuthConfirmationPage || isAuthCheckEmailPage || isAuthResetPage || isAuthResetCodePage) return;
+    const params = new URLSearchParams(currentRoute.search || "");
+    if (
+      params.get("signup_token") ||
+      params.get("email_change_token") ||
+      params.has("token_hash") ||
+      params.has("code") ||
+      (window.location.hash || "").includes("access_token=")
+    ) {
+      return;
+    }
+    navigateTo("/");
+  }, [
+    isAuthPage,
+    currentUser,
+    currentRoute.search,
+    isAuthConfirmationPage,
+    isAuthCheckEmailPage,
+    isAuthResetPage,
+    isAuthResetCodePage
+  ]);
+
+  useEffect(() => {
+    if (!isAuthCheckEmailPage) return;
+    if (pendingMailboxEmail) return;
+    setShowAuthConfirmation(false);
+    navigateTo(authLoginRoute);
+  }, [isAuthCheckEmailPage, pendingMailboxEmail]);
+
+  useEffect(() => {
+    if (!isAuthResetCodePage) {
+      setResetCodeSecondsLeft(0);
+      return;
+    }
+
+    if (!pendingMailboxEmail || pendingMailboxIntent !== "recovery" || !effectiveResetRequestedAt) {
+      setAuthFeedback({ type: "error", text: authText.resetCodeExpired });
+      navigateTo(authLoginRoute);
+      return;
+    }
+
+    const syncRemaining = () => {
+      const nextSecondsLeft = clampResetCodeSeconds((effectiveResetCodeExpiresAt - Date.now()) / 1000);
+      setResetCodeSecondsLeft(nextSecondsLeft);
+
+      if (nextSecondsLeft <= 0) {
+        setAuthFeedback({ type: "error", text: authText.resetCodeExpired });
+      }
+    };
+
+    syncRemaining();
+    const intervalId = window.setInterval(syncRemaining, 1000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [
+    authText.resetCodeExpired,
+    effectiveResetCodeExpiresAt,
+    effectiveResetRequestedAt,
+    isAuthResetCodePage,
+    pendingMailboxEmail,
+    pendingMailboxIntent
+  ]);
+
+  useEffect(() => {
+    if (!isAuthResetCodePage) return;
+    const params = new URLSearchParams(currentRoute.search || "");
+    const codeFromEmail = (params.get("code") || "").replace(/[^A-Za-z0-9]/g, "").slice(0, 6);
+    const shouldCopyCode = params.get("copy") === "1";
+
+    if (!codeFromEmail) return;
+    setResetVerificationCode(codeFromEmail);
+
+    if (shouldCopyCode) {
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard
+          .writeText(codeFromEmail)
+          .then(() => setAuthFeedback({ type: "success", text: authText.resetCodeCopied }))
+          .catch(() => setAuthFeedback({ type: "success", text: authText.resetCodeCopyBlocked }));
+      } else {
+        setAuthFeedback({ type: "success", text: authText.resetCodeCopyBlocked });
+      }
+    }
+
+    params.delete("code");
+    params.delete("copy");
+    const nextSearch = params.toString();
+    const cleanPath = `${currentRoute.path}${nextSearch ? `?${nextSearch}` : ""}`;
+    window.history.replaceState({}, "", cleanPath);
+    setCurrentRoute({
+      path: currentRoute.path,
+      search: nextSearch ? `?${nextSearch}` : ""
+    });
+  }, [
+    authText.resetCodeCopied,
+    authText.resetCodeCopyBlocked,
+    currentRoute.path,
+    currentRoute.search,
+    isAuthResetCodePage
+  ]);
+
+  useEffect(() => {
+    if (!isAuthResetPage) {
+      setIsResetValidationReady(false);
+      return;
+    }
+
+    const hashParams = new URLSearchParams((window.location.hash || "").replace(/^#/, ""));
+    const incomingAccessToken = hashParams.get("access_token") || "";
+    const incomingType = hashParams.get("type") || "";
+
+    if (incomingType === "recovery" && incomingAccessToken) {
+      setIsResetValidationReady(false);
+      return;
+    }
+
+    if (effectiveResetAccessToken && effectiveResetExpiresAt > Date.now()) {
+      setIsResetValidationReady(true);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setIsResetValidationReady(true);
+    }, 350);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [effectiveResetAccessToken, effectiveResetExpiresAt, isAuthResetPage, currentRoute.search]);
+
+  useEffect(() => {
+    try {
+      if (resetAccessToken) {
+        window.sessionStorage.setItem("hm-reset-access-token", resetAccessToken);
+        window.localStorage.setItem("hm-reset-access-token", resetAccessToken);
+      } else {
+        window.sessionStorage.removeItem("hm-reset-access-token");
+        window.localStorage.removeItem("hm-reset-access-token");
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, [resetAccessToken]);
+
+  useEffect(() => {
+    try {
+      if (resetExpiresAt) {
+        window.sessionStorage.setItem("hm-reset-expires-at", String(resetExpiresAt));
+        window.localStorage.setItem("hm-reset-expires-at", String(resetExpiresAt));
+      } else {
+        window.sessionStorage.removeItem("hm-reset-expires-at");
+        window.localStorage.removeItem("hm-reset-expires-at");
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, [resetExpiresAt]);
+
+  useEffect(() => {
+    if (!isAuthResetPage) return;
+    if (!effectiveResetAccessToken || effectiveResetExpiresAt) return;
+    setResetExpiresAt(getResetLinkExpiresAt(effectiveResetAccessToken));
+  }, [effectiveResetAccessToken, effectiveResetExpiresAt, isAuthResetPage]);
+
+  useEffect(() => {
+    if (!isAuthResetPage || !effectiveResetExpiresAt) return;
+
+    const syncRemaining = () => {
+      const nextSecondsLeft = Math.max(0, Math.ceil((effectiveResetExpiresAt - Date.now()) / 1000));
+      setResetSecondsLeft(nextSecondsLeft);
+
+      if (nextSecondsLeft <= 0) {
+        clearResetFlow();
+        setAuthFeedback({ type: "error", text: authText.resetLinkExpired });
+        navigateTo(authLoginRoute);
+      }
+    };
+
+    syncRemaining();
+    const intervalId = window.setInterval(syncRemaining, 1000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [authText.resetLinkExpired, effectiveResetExpiresAt, isAuthResetPage]);
+
+  useEffect(() => {
+    if (!isAuthResetPage) return;
+    if (!isResetValidationReady) return;
+    if (resetPageIsValid) return;
+    if ((window.location.hash || "").includes("access_token=") || storedResetAccessToken) return;
+    setAuthFeedback({ type: "error", text: authText.resetLinkExpired });
+    navigateTo(authLoginRoute);
+  }, [authText.resetLinkExpired, isAuthResetPage, isResetValidationReady, resetPageIsValid, storedResetAccessToken]);
+
+  const signupConfirmHandledRef = useRef("");
+
+  useEffect(() => {
+    if (!isAuthPage) return;
+
+    const searchParams = new URLSearchParams(currentRoute.search || "");
+    const signupToken = searchParams.get("signup_token") || "";
+    if (!signupToken) return;
+    // Un token de confirmation ne peut être consommé qu'UNE fois. Sans ce garde, React StrictMode
+    // (en dev) ou un re-run d'effet appellerait « confirm-signup » deux fois : le 2e appel échouerait
+    // (« déjà utilisé ») et redirigerait vers le formulaire de connexion au lieu de la page
+    // « Compte créé avec succès ». On garantit donc un seul appel par token.
+    if (signupConfirmHandledRef.current === signupToken) return;
+    signupConfirmHandledRef.current = signupToken;
+
+    const confirmSignup = async () => {
+      try {
+        await callSupabaseFunction("confirm-signup", { token: signupToken });
+
+        try {
+          window.localStorage.removeItem("hm-signup-pending");
+        } catch {
+          // ignore storage errors
+        }
+
+        setSignupPendingEmail("");
+        clearPendingMailbox();
+        clearResetFlow();
+        setAuthMode("login");
+        setShowAuthConfirmation(true);
+        setAuthFeedback({ type: "", text: "" });
+
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.pathname = "/auth";
+        cleanUrl.search = "?mode=login&confirmed=1";
+        cleanUrl.hash = "";
+        window.history.replaceState({}, "", cleanUrl.toString());
+        setCurrentRoute({
+          path: cleanUrl.pathname,
+          search: cleanUrl.search
+        });
+      } catch (error) {
+        const code = String(error?.code || "").toLowerCase();
+        const text = code.includes("expired") ? authText.signupConfirmExpired : authText.signupConfirmInvalid;
+        // Lien invalide / déjà utilisé : on NE déconnecte PAS et on ne force pas la page de connexion.
+        // On renvoie l'utilisateur vers la page où il est déjà (son espace s'il est connecté, sinon la
+        // page de connexion) et on affiche le message en toast.
+        setShowAuthConfirmation(false);
+        setAuthMode("login");
+        setAuthFeedback({ type: "error", text });
+        const cleanUrl = new URL(window.location.href);
+        if (currentUser) {
+          cleanUrl.pathname = "/";
+          cleanUrl.search = "";
+        } else {
+          cleanUrl.pathname = "/auth";
+          cleanUrl.search = "?mode=login&form=1";
+        }
+        cleanUrl.hash = "";
+        window.history.replaceState({}, "", cleanUrl.toString());
+        setCurrentRoute({
+          path: cleanUrl.pathname,
+          search: cleanUrl.search
+        });
+        setAppToast({ type: "error", text });
+      }
+    };
+
+    confirmSignup();
+  }, [authText.signupConfirmExpired, authText.signupConfirmInvalid, currentRoute.search, currentUser, isAuthPage]);
+
+  useEffect(() => {
+    if (!isAuthPage) return;
+
+    const searchParams = new URLSearchParams(currentRoute.search || "");
+    const emailChangeToken = searchParams.get("email_change_token") || "";
+    if (!emailChangeToken) return;
+
+    let isCancelled = false;
+
+    const confirmEmailChange = async () => {
+      try {
+        const result = await callSupabaseFunction("confirm-email-change", { token: emailChangeToken });
+
+        if (isCancelled) return;
+
+        const confirmedEmail = normalizeEmail(result?.email || "");
+        window.localStorage.removeItem("hm-pending-email-change");
+        const storedConnectedUser = getStoredConnectedUser();
+        const isConnectedForEmailChange = Boolean(currentUser || storedConnectedUser);
+
+        if (confirmedEmail) {
+          setCurrentUser((prev) =>
+            prev
+              ? { ...prev, email: confirmedEmail }
+              : storedConnectedUser
+                ? { ...storedConnectedUser, email: confirmedEmail }
+                : prev
+          );
+        }
+
+        setActiveNavKey("settings");
+        setSettingsFeedback({
+          type: "success",
+          text: "Adresse email confirmée. Ton compte utilise maintenant la nouvelle adresse."
+        });
+        if (confirmedEmail) {
+          window.localStorage.setItem("hm-email-change-confirmed", confirmedEmail);
+        }
+        setAppToast({
+          type: "success",
+          text: "Adresse changée avec succès."
+        });
+        setAuthFeedback({
+          type: "success",
+          text: "Adresse changée avec succès."
+        });
+
+        const cleanUrl = new URL(window.location.href);
+        if (isConnectedForEmailChange) {
+          // Connecté : on l'amène sur la page Paramètres (qui affiche la nouvelle adresse) + toast.
+          cleanUrl.pathname = "/dashboard";
+          cleanUrl.search = "?view=settings&email_change=confirmed";
+        } else {
+          // Déconnecté : on l'amène sur la page de connexion, le message/toast s'affiche dessus.
+          cleanUrl.pathname = "/auth";
+          cleanUrl.search = "?mode=login&form=1";
+        }
+        cleanUrl.hash = "";
+        window.history.replaceState({}, "", cleanUrl.toString());
+        setCurrentRoute({
+          path: cleanUrl.pathname,
+          search: cleanUrl.search
+        });
+      } catch (error) {
+        if (isCancelled) return;
+
+        const code = String(error?.code || "").toLowerCase();
+        const storedConnectedUser = getStoredConnectedUser();
+        const isConnectedForEmailChange = Boolean(currentUser || storedConnectedUser);
+        const errorText = code.includes("expired")
+          ? "Le lien de confirmation email a expiré."
+          : "Lien invalide ou déjà utilisé.";
+
+        if (isConnectedForEmailChange) {
+          if (!currentUser && storedConnectedUser) {
+            setCurrentUser(storedConnectedUser);
+          }
+          setActiveNavKey("settings");
+          setSettingsFeedback({ type: "error", text: errorText });
+          setAppToast({ type: "error", text: errorText });
+
+          const cleanUrl = new URL(window.location.href);
+          cleanUrl.pathname = "/dashboard";
+          cleanUrl.search = "?view=settings&email_change=invalid";
+          cleanUrl.hash = "";
+          window.history.replaceState({}, "", cleanUrl.toString());
+          setCurrentRoute({
+            path: cleanUrl.pathname,
+            search: cleanUrl.search
+          });
+          return;
+        }
+
+        setShowAuthConfirmation(false);
+        setAuthMode("login");
+        setAuthFeedback({ type: "error", text: errorText });
+        setAppToast({ type: "error", text: errorText });
+
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.pathname = "/auth";
+        cleanUrl.search = "?mode=login&form=1";
+        cleanUrl.hash = "";
+        window.history.replaceState({}, "", cleanUrl.toString());
+        setCurrentRoute({
+          path: cleanUrl.pathname,
+          search: cleanUrl.search
+        });
+      }
+    };
+
+    confirmEmailChange();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [currentRoute.search, currentUser, isAuthPage]);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams((window.location.hash || "").replace(/^#/, ""));
+    const callbackMode = searchParams.get("mode") || "";
+    const callbackType = searchParams.get("type") || hashParams.get("type");
+    const isCustomConfirmationScreen =
+      (window.location.pathname || "/") === "/auth" &&
+      callbackMode === "login" &&
+      searchParams.get("confirmed") === "1" &&
+      !callbackType &&
+      !searchParams.has("token_hash") &&
+      !hashParams.has("access_token") &&
+      !hashParams.has("refresh_token") &&
+      !searchParams.has("code");
+
+    if (isCustomConfirmationScreen) {
+      setAuthMode("login");
+      setShowAuthConfirmation(true);
+      return;
+    }
+
+    const callbackAccessToken = hashParams.get("access_token") || "";
+    const callbackRefreshToken = hashParams.get("refresh_token") || "";
+    const callbackErrorCode = searchParams.get("error_code") || hashParams.get("error_code");
+    const callbackErrorText =
+      searchParams.get("error_description") ||
+      hashParams.get("error_description") ||
+      searchParams.get("error") ||
+      hashParams.get("error") ||
+      "";
+    const manualConfirmed =
+      searchParams.get("confirmed") === "1" ||
+      hashParams.get("confirmed") === "1" ||
+      searchParams.get("email_confirmed") === "true" ||
+      hashParams.get("email_confirmed") === "true";
+    const hasAuthPayload =
+      searchParams.has("token_hash") ||
+      hashParams.has("access_token") ||
+      hashParams.has("refresh_token") ||
+      searchParams.has("code");
+    const pendingSignup = window.localStorage.getItem("hm-signup-pending");
+    const hasPendingSignup = Boolean(pendingSignup);
+    const hasCallbackError =
+      Boolean(callbackErrorCode) || /expired|invalid|denied|already used/i.test(callbackErrorText);
+    const isSignupCallback = callbackType === "signup" || manualConfirmed;
+    const isRecoveryCallback = callbackType === "recovery";
+    const isEmailChangeCallback = callbackType === "email_change";
+    const isResetRouteIntent = callbackMode === "reset";
+    const hasAuthCallback = Boolean(callbackType) || manualConfirmed || hasAuthPayload || hasCallbackError;
+    const signupConfirmed = !hasCallbackError && hasPendingSignup && (isSignupCallback || hasAuthPayload);
+    const isAlreadyConnected = Boolean(currentUser);
+    const canReuseStoredResetLink = Boolean(storedResetAccessToken && effectiveResetExpiresAt > Date.now());
+    const requestedResetAt = (() => {
+      try {
+        return Number(window.localStorage.getItem("hm-reset-requested-at") || 0);
+      } catch {
+        return 0;
+      }
+    })();
+    const requestBasedExpiresAt = requestedResetAt > 0 ? requestedResetAt + resetLinkLifetimeMs : 0;
+    const tokenBasedExpiresAt = callbackAccessToken ? getResetLinkExpiresAt(callbackAccessToken) : 0;
+    const callbackResetExpiresAt = Math.max(requestBasedExpiresAt, tokenBasedExpiresAt);
+
+    if (!hasAuthCallback) return;
+
+    window.localStorage.removeItem("hm-signup-pending");
+    setSignupPendingEmail("");
+    clearPendingMailbox();
+    setShowAuthConfirmation(signupConfirmed);
+    setAuthMode("login");
+    setAuthFeedback({ type: "", text: "" });
+
+    const cleanUrl = new URL(window.location.href);
+    if (isResetRouteIntent) {
+      if (canReuseStoredResetLink) {
+        setResetAccessToken(storedResetAccessToken);
+        setResetExpiresAt(effectiveResetExpiresAt);
+        setResetRequestedAt(storedResetRequestedAt);
+        cleanUrl.pathname = "/auth";
+        cleanUrl.search = "?mode=reset";
+      } else if (!hasCallbackError && callbackAccessToken && callbackResetExpiresAt > Date.now()) {
+        try {
+          window.sessionStorage.setItem("hm-reset-access-token", callbackAccessToken);
+          window.sessionStorage.setItem("hm-reset-expires-at", String(callbackResetExpiresAt));
+        } catch {
+          // ignore storage errors
+        }
+        setResetAccessToken(callbackAccessToken);
+        setResetExpiresAt(callbackResetExpiresAt);
+        setResetRequestedAt(requestedResetAt || callbackResetExpiresAt - resetLinkLifetimeMs);
+        cleanUrl.pathname = "/auth";
+        cleanUrl.search = "?mode=reset";
+      } else {
+        clearResetFlow();
+        setAuthFeedback({
+          type: "error",
+          text: hasCallbackError || callbackResetExpiresAt <= Date.now() ? authText.resetLinkExpired : authText.resetLinkInvalid
+        });
+        cleanUrl.pathname = "/auth";
+        cleanUrl.search = "?mode=login&form=1";
+      }
+    } else if (!hasCallbackError && isRecoveryCallback && callbackAccessToken) {
+      if (callbackResetExpiresAt <= Date.now()) {
+        clearResetFlow();
+        setAuthFeedback({ type: "error", text: authText.resetLinkExpired });
+        cleanUrl.pathname = "/auth";
+        cleanUrl.search = "?mode=login&form=1";
+      } else {
+        try {
+          window.sessionStorage.setItem("hm-reset-access-token", callbackAccessToken);
+          window.sessionStorage.setItem("hm-reset-expires-at", String(callbackResetExpiresAt));
+        } catch {
+          // ignore storage errors
+        }
+        setResetAccessToken(callbackAccessToken);
+        setResetExpiresAt(callbackResetExpiresAt);
+        setResetRequestedAt(requestedResetAt);
+        cleanUrl.pathname = "/auth";
+        cleanUrl.search = "?mode=reset";
+      }
+    } else if (
+      canReuseStoredResetLink &&
+      ((isRecoveryCallback && hasCallbackError) || (isResetRouteIntent && !callbackAccessToken))
+    ) {
+      setResetAccessToken(storedResetAccessToken);
+      setResetExpiresAt(effectiveResetExpiresAt);
+      setResetRequestedAt(storedResetRequestedAt);
+      cleanUrl.pathname = "/auth";
+      cleanUrl.search = "?mode=reset";
+    } else if (isRecoveryCallback || isResetRouteIntent) {
+      clearResetFlow();
+      setAuthFeedback({
+        type: "error",
+        text: hasCallbackError ? authText.resetLinkExpired : authText.resetLinkInvalid
+      });
+      cleanUrl.pathname = "/auth";
+      cleanUrl.search = "?mode=login&form=1";
+    } else if (signupConfirmed) {
+      clearResetFlow();
+      cleanUrl.pathname = "/auth";
+      cleanUrl.search = "?mode=login";
+    } else if (!hasCallbackError && isEmailChangeCallback) {
+      clearResetFlow();
+      const tokenPayload = callbackAccessToken ? decodeJwtPayload(callbackAccessToken) : null;
+      const pendingEmail = normalizeEmail(window.localStorage.getItem("hm-pending-email-change") || "");
+      const confirmedEmail = normalizeEmail(tokenPayload?.email || pendingEmail || "");
+
+      window.localStorage.removeItem("hm-pending-email-change");
+      setActiveNavKey("settings");
+      if (confirmedEmail) {
+        setCurrentUser((prev) =>
+          prev
+            ? {
+              ...prev,
+              email: confirmedEmail,
+              accessToken: callbackAccessToken || prev.accessToken,
+              refreshToken: callbackRefreshToken || prev.refreshToken
+            }
+            : prev
+        );
+        setSettingsFeedback({ type: "success", text: "Adresse email confirmée. Ton compte utilise maintenant la nouvelle adresse." });
+      }
+      cleanUrl.pathname = "/dashboard";
+      cleanUrl.search = "?view=settings&email_change=confirmed";
+    } else if (isAlreadyConnected) {
+      clearResetFlow();
+      cleanUrl.pathname = "/";
+      cleanUrl.search = "";
+    } else {
+      clearResetFlow();
+      cleanUrl.pathname = "/auth";
+      cleanUrl.search = "?mode=login&form=1";
+    }
+    cleanUrl.hash = "";
+    window.history.replaceState({}, "", cleanUrl.toString());
+    setCurrentRoute({
+      path: cleanUrl.pathname,
+      search: cleanUrl.search
+    });
+  }, [
+    currentRoute.path,
+    currentRoute.search,
+    currentUser,
+    authText.resetLinkInvalid,
+    authText.resetLinkExpired,
+    effectiveResetExpiresAt,
+    storedResetAccessToken,
+    storedResetRequestedAt
+  ]);
+
+  useEffect(() => {
+    try {
+      if (currentUser) {
+        const { accessToken, refreshToken, ...safeUser } = currentUser;
+        window.localStorage.setItem("hm-current-user", JSON.stringify(safeUser));
+        if (accessToken) {
+          window.sessionStorage.setItem("hm-access-token", accessToken);
+        }
+        if (refreshToken) {
+          window.sessionStorage.setItem("hm-refresh-token", refreshToken);
+        }
+      } else {
+        window.localStorage.removeItem("hm-current-user");
+        window.sessionStorage.removeItem("hm-access-token");
+        window.sessionStorage.removeItem("hm-refresh-token");
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    try {
+      if (currentUser) {
+        window.localStorage.setItem("hm-sport-profile", JSON.stringify(sportProfile));
+      } else {
+        window.localStorage.removeItem("hm-sport-profile");
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, [currentUser, sportProfile]);
+
+  useEffect(() => {
+    if (!currentUser) {
+      setSettingsForm(emptySettingsForm);
+      setSettingsFeedback({ type: "", text: "" });
+      return;
+    }
+
+    setSettingsForm(profileSettingsToForm(currentUser, sportProfile));
+    setSettingsFeedback({ type: "", text: "" });
+  }, [currentUser?.id, sportProfile]);
+
+  useEffect(() => {
+    if (currentRoute.path !== "/dashboard") return;
+
+    const params = new URLSearchParams(currentRoute.search || "");
+    const requestedView = params.get("view") || "dashboard";
+    if (dashboardNavKeys.has(requestedView)) {
+      setActiveNavKey(requestedView);
+    }
+    if (params.get("email_change") === "confirmed") {
+      const pendingEmail = normalizeEmail(window.localStorage.getItem("hm-pending-email-change") || "");
+      if (pendingEmail) {
+        setCurrentUser((prev) => (prev ? { ...prev, email: pendingEmail } : prev));
+        window.localStorage.removeItem("hm-pending-email-change");
+      }
+      setSettingsFeedback({
+        type: "success",
+        text: "Adresse changée avec succès."
+      });
+    }
+    if (params.get("email_change") === "invalid") {
+      setSettingsFeedback({ type: "error", text: "Lien invalide ou déjà utilisé." });
+    }
+  }, [currentRoute.path, currentRoute.search]);
+
+  useEffect(() => {
+    if ((isCompleteProfilePage || isDashboardPage) && !currentUser) {
+      navigateTo(authLoginRoute);
+      return;
+    }
+
+    // Onboarding obligatoire : un utilisateur connecté qui n'a pas terminé son profil sportif
+    // (nouveau compte) va DIRECTEMENT sur « compléter le profil », et n'est jamais laissé sur la
+    // page d'accueil ni sur le dashboard. (sportProfileCompleted est fiable : posé à la connexion /
+    // restauration de session, et mis à true une fois le profil complété → pas de boucle ni de flash.)
+    if (
+      currentUser &&
+      currentUser.sportProfileCompleted === false &&
+      (isDashboardPage || isHomePage)
+    ) {
+      navigateTo("/complete-profile");
+    }
+  }, [currentUser, isCompleteProfilePage, isDashboardPage, isHomePage, sportProfile]);
+
+  useEffect(() => {
+    if (isAuthPage) return;
+    const updateActiveSection = () => {
+      const scrollAnchor = window.scrollY + 180;
+      let currentSection = navSectionIds[0];
+
+      navSectionIds.forEach((sectionId) => {
+        const section = document.getElementById(sectionId);
+        if (section && scrollAnchor >= section.offsetTop) {
+          currentSection = sectionId;
+        }
+      });
+
+      setActiveNavSection(currentSection);
+    };
+
+    updateActiveSection();
+    window.addEventListener("scroll", updateActiveSection, { passive: true });
+    window.addEventListener("resize", updateActiveSection);
+
+    return () => {
+      window.removeEventListener("scroll", updateActiveSection);
+      window.removeEventListener("resize", updateActiveSection);
+    };
+  }, [isAuthPage]);
+
+  useEffect(() => {
+    const revealElements = Array.from(document.querySelectorAll(".reveal-up"));
+    if (revealElements.length === 0) return;
+
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) {
+      revealElements.forEach((element) => {
+        element.classList.remove("reveal-ready");
+        element.classList.add("is-visible");
+      });
+      return;
+    }
+
+    revealElements.forEach((element, index) => {
+      element.classList.remove("is-visible");
+      element.classList.add("reveal-ready");
+      element.style.setProperty("--reveal-delay", `${Math.min(index * 45, 260)}ms`);
+    });
+
+    const revealElement = (element) => {
+      element.classList.add("is-visible");
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            revealElement(entry.target);
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        threshold: 0.12,
+        rootMargin: "0px 0px -10% 0px"
+      }
+    );
+
+    revealElements.forEach((element) => observer.observe(element));
+
+    const initialRevealId = window.requestAnimationFrame(() => {
+      revealElements.forEach((element) => {
+        const rect = element.getBoundingClientRect();
+        if (rect.top < window.innerHeight * 0.92) {
+          revealElement(element);
+          observer.unobserve(element);
+        }
+      });
+    });
+
+    const safetyRevealId = window.setTimeout(() => {
+      revealElements.forEach((element) => revealElement(element));
+    }, 2300);
+
+    return () => {
+      window.cancelAnimationFrame(initialRevealId);
+      window.clearTimeout(safetyRevealId);
+      observer.disconnect();
+    };
+  }, [language, theme]);
+
+  const handleContactSubmit = async (event) => {
+    event.preventDefault();
+
+    if (!currentUser) {
+      const text = content.contact.loginRequired || "Connecte-toi à ton compte pour partager ton avis";
+      setAppToast({ type: "error", text });
+      setSendFeedback({ type: "error", text });
+      return;
+    }
+
+    const trimmedMessage = contactForm.message.trim();
+
+    if (!trimmedMessage || !contactForm.rating) {
+      setSendFeedback({
+        type: "error",
+        text: content.contact.feedbackRequired
+      });
+      return;
+    }
+
+    if (trimmedMessage.length < reviewMinCharacters || trimmedMessage.length > reviewMaxCharacters) {
+      setSendFeedback({
+        type: "error",
+        text: content.contact.feedbackLength
+      });
+      return;
+    }
+
+    if (currentUserReview && !editingReviewId) {
+      return;
+    }
+
+    setIsReviewSaving(true);
+
+    try {
+      let sessionUser = null;
+      try {
+        sessionUser = await refreshCurrentUserSession();
+      } catch {
+        const text = content.contact.loginRequired || "Connecte-toi à ton compte pour partager ton avis";
+        setAppToast({ type: "error", text });
+        setSendFeedback({ type: "error", text });
+        return;
+      }
+
+      const savedReview = await saveClientReview({
+        accessToken: sessionUser.accessToken,
+        rating: contactForm.rating,
+        message: trimmedMessage
+      });
+
+      if (!savedReview) {
+        throw new Error("REVIEW_SAVE_FAILED");
+      }
+
+      setClientReviews((prev) => [savedReview, ...prev.filter((review) => review.authorId !== savedReview.authorId)].slice(0, 100));
+      setSendFeedback({ type: "", text: "" });
+      const wasEditing = Boolean(editingReviewId);
+      setEditingReviewId("");
+      setHighlightedReviewId(savedReview.id);
+      setReviewPage(0);
+      setContactForm({
+        message: "",
+        rating: 0
+      });
+      setAppToast({
+        type: "success",
+        text: wasEditing ? "Avis modifié avec succès." : "Avis partagé avec succès."
+      });
+    } catch (error) {
+      console.error("review save failed", error);
+      const fallback = "Impossible d’enregistrer ton avis pour le moment.";
+      const detail = error?.message && error.message !== "SUPABASE_FUNCTION_FAILED" ? error.message : "";
+      const text =
+        error?.code === "AUTH_REQUIRED"
+          ? content.contact.loginRequired || "Connecte-toi à ton compte pour partager ton avis"
+          : detail
+            ? `${fallback} (${detail})`
+            : fallback;
+      setSendFeedback({ type: "error", text });
+      if (error?.code === "AUTH_REQUIRED") {
+        setAppToast({ type: "error", text });
+      }
+    } finally {
+      setIsReviewSaving(false);
+    }
+  };
+
+  const handleEditReview = (review) => {
+    if (!currentUser?.id || review.authorId !== currentUser.id) return;
+    setEditingReviewId(review.id);
+    setContactForm({
+      message: review.message,
+      rating: review.rating
+    });
+    setSendFeedback({ type: "", text: "" });
+    window.requestAnimationFrame(() => {
+      document.getElementById("contact")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    const reviewToDelete = clientReviews.find((review) => review.id === reviewId && review.authorId === currentUser?.id);
+    if (!reviewToDelete) return;
+
+    setIsReviewSaving(true);
+
+    try {
+      let sessionUser = null;
+      try {
+        sessionUser = await refreshCurrentUserSession();
+      } catch {
+        const text = content.contact.loginRequired || "Connecte-toi à ton compte pour partager ton avis";
+        setAppToast({ type: "error", text });
+        setSendFeedback({ type: "error", text });
+        return;
+      }
+
+      await deleteClientReview({ accessToken: sessionUser.accessToken });
+      setClientReviews((prev) => prev.filter((review) => review.authorId !== currentUser?.id));
+      if (editingReviewId === reviewId) {
+        setEditingReviewId("");
+        setContactForm({ message: "", rating: 0 });
+      }
+      if (highlightedReviewId === reviewId) {
+        setHighlightedReviewId("");
+      }
+      setReviewPage(0);
+      setSendFeedback({ type: "", text: "" });
+      setAppToast({ type: "success", text: "Avis supprimé avec succès." });
+    } catch (error) {
+      const text =
+        error?.code === "AUTH_REQUIRED"
+          ? content.contact.loginRequired || "Connecte-toi à ton compte pour partager ton avis"
+          : "Impossible de supprimer ton avis pour le moment.";
+      setSendFeedback({ type: "error", text });
+      if (error?.code === "AUTH_REQUIRED") {
+        setAppToast({ type: "error", text });
+      }
+    } finally {
+      setIsReviewSaving(false);
+    }
+  };
+
+  const handleViewMyReview = () => {
+    if (!currentUserReview) return;
+
+    const reviewIndex = sortedClientReviews.findIndex((review) => review.id === currentUserReview.id);
+    setReviewPage(Math.max(0, Math.floor(reviewIndex / clientReviewsPerPage)));
+    setHighlightedReviewId(currentUserReview.id);
+    window.requestAnimationFrame(() => {
+      document.getElementById("resultats")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+
+  const navigateTo = (path) => {
+    const target = path || "/";
+    const nextUrl = new URL(target, window.location.origin);
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+    const nextPath = `${nextUrl.pathname}${nextUrl.search}`;
+    if (currentUrl === nextPath) return;
+
+    window.history.pushState({}, "", nextPath);
+    setCurrentRoute({
+      path: window.location.pathname || "/",
+      search: window.location.search || ""
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const navigateToAuth = (mode) => {
+    const nextMode = mode === "register" ? "register" : "login";
+    setShowAuthConfirmation(false);
+    setAuthMode(nextMode);
+    setRegisterStep(1);
+    setRegisterPersonalValidated(false);
+    setAuthFeedback({ type: "", text: "" });
+    navigateTo(nextMode === "login" ? authLoginRoute : `/auth?mode=${nextMode}`);
+  };
+
+  const completeLoginFlow = async (loginData) => {
+    const user = loginData.user;
+    const metadata = user?.user_metadata || {};
+    const accessToken = loginData.access_token || "";
+    const refreshToken = loginData.refresh_token || "";
+
+    if (!user?.id || !accessToken) {
+      throw new Error("SESSION_REQUIRED");
+    }
+
+    setIsSportProfileLoading(true);
+    let profile;
+    try {
+      const baseProfile = loginData.profile ? normalizeSportProfile(loginData.profile) : await fetchSportProfile(user.id, accessToken);
+      profile = normalizeSportProfile({
+        ...baseProfile,
+        has_no_supplement: Boolean(metadata.has_no_supplement),
+        dietary_supplements: Array.isArray(metadata.dietary_supplements) ? metadata.dietary_supplements : [],
+        has_no_injury: Boolean(metadata.has_no_injury),
+        injury_history: Array.isArray(metadata.injury_history) ? metadata.injury_history : [],
+        has_no_medical_information: Boolean(metadata.has_no_medical_information),
+        sport_goal_custom: metadata.sport_goal_custom || "",
+        medical_information: Array.isArray(metadata.medical_information) ? metadata.medical_information : []
+      });
+    } finally {
+      setIsSportProfileLoading(false);
+    }
+    const profileCompleted = isSportProfileComplete(profile);
+    const finalFirstName = profile.first_name || metadata.first_name || "";
+    const finalLastName = profile.last_name || metadata.last_name || "";
+    const finalFullName = `${finalFirstName} ${finalLastName}`.trim() || metadata.full_name || "";
+
+    setSportProfile(profile);
+    setSportProfileForm(sportProfileToForm(profile));
+    setSportProfileFeedback({ type: "", text: "" });
+    const nextUser = {
+      id: user.id,
+      firstName: finalFirstName,
+      lastName: finalLastName,
+      fullName: finalFullName || user.email || metadata.email || "Athlete",
+      email: user.email || authForm.email,
+      sex: profile.sex || metadata.sex || "",
+      country: profile.country_code || metadata.country_code || "",
+      avatarUrl: profile.avatar_url || metadata.avatar_url || "",
+      hasNoSupplement: profile.has_no_supplement,
+      dietarySupplements: profile.dietary_supplements,
+      hasNoInjury: profile.has_no_injury,
+      injuryHistory: profile.injury_history,
+      hasNoMedicalInformation: profile.has_no_medical_information,
+      medicalInformation: profile.medical_information,
+      phoneNumber: metadata.phone_number || "",
+      phoneCountryCode: metadata.phone_country_code || "",
+      phoneVerifiedAt: metadata.phone_verified_at || "",
+      addressLine1: metadata.address_line1 || "",
+      addressLine2: metadata.address_line2 || "",
+      postalCode: metadata.postal_code || "",
+      city: metadata.city || "",
+      region: metadata.region || "",
+      accessToken,
+      refreshToken,
+      sportProfileCompleted: profileCompleted
+    };
+    setCurrentUser(nextUser);
+    window.localStorage.removeItem("hm-signup-pending");
+    setSignupPendingEmail("");
+    clearPendingMailbox();
+    clearResetFlow();
+    const confirmedEmailChange = normalizeEmail(window.localStorage.getItem("hm-email-change-confirmed") || "");
+    const shouldOpenSettingsAfterEmailChange =
+      confirmedEmailChange && confirmedEmailChange === normalizeEmail(nextUser.email || "");
+
+    if (shouldOpenSettingsAfterEmailChange) {
+      window.localStorage.removeItem("hm-email-change-confirmed");
+      setActiveNavKey("settings");
+      setSettingsFeedback({ type: "success", text: "Adresse changée avec succès." });
+      setAppToast({ type: "success", text: "Adresse changée avec succès." });
+      setAuthFeedback({ type: "", text: "" });
+      navigateTo("/dashboard?view=settings&email_change=confirmed");
+      return;
+    }
+
+    setAuthFeedback({ type: "success", text: authText.loginSuccess });
+    if (!profileCompleted) {
+      navigateTo("/complete-profile");
+      return;
+    }
+    navigateTo("/");
+  };
+
+  const refreshCurrentUserSession = async () => {
+    if (!currentUser?.id) {
+      throw new Error("SESSION_REQUIRED");
+    }
+
+    if (currentUser.accessToken && !isAccessTokenExpired(currentUser.accessToken)) {
+      return currentUser;
+    }
+
+    if (!currentUser.refreshToken) {
+      throw new Error("SESSION_EXPIRED");
+    }
+
+    const refreshData = await callSupabaseAuth("token?grant_type=refresh_token", {
+      refresh_token: currentUser.refreshToken
+    });
+    const nextAccessToken = refreshData.access_token || "";
+    const nextRefreshToken = refreshData.refresh_token || currentUser.refreshToken || "";
+
+    if (!nextAccessToken) {
+      throw new Error("SESSION_EXPIRED");
+    }
+
+    const nextUser = {
+      ...currentUser,
+      email: refreshData.user?.email || currentUser.email,
+      accessToken: nextAccessToken,
+      refreshToken: nextRefreshToken
+    };
+
+    setCurrentUser(nextUser);
+    return nextUser;
+  };
+
+  const handleAuthSubmit = async (event) => {
+    event.preventDefault();
+
+    const firstName = authForm.firstName.trim();
+    const lastName = authForm.lastName.trim();
+    const birthDate = authForm.birthDate;
+    const sex = authForm.sex;
+    const country = authForm.country;
+    const email = normalizeEmail(authForm.email);
+    const password = authForm.password;
+    const confirmPassword = authForm.confirmPassword;
+
+    if (authMode === "register" && registerStep === 1) {
+      if (!firstName || !lastName || !birthDate || !sex || !country) {
+        setAuthFeedback({ type: "error", text: authText.fillAll });
+        return;
+      }
+      if (!isAdultBirthDate(birthDate)) {
+        setAuthFeedback({ type: "error", text: authText.ageRestriction });
+        return;
+      }
+      setAuthFeedback({ type: "", text: "" });
+      setRegisterPersonalValidated(true);
+      setRegisterStep(2);
+      return;
+    }
+
+    if (
+      !email ||
+      !password ||
+      (authMode === "register" && (!firstName || !lastName || !birthDate || !sex || !country || !confirmPassword))
+    ) {
+      setAuthFeedback({ type: "error", text: authText.fillAll });
+      return;
+    }
+
+    const emailPattern = /^\S+@\S+\.\S+$/;
+    if (!emailPattern.test(email)) {
+      setAuthFeedback({ type: "error", text: authText.invalidEmail });
+      return;
+    }
+
+    if (!hasSupabaseConfig) {
+      setAuthFeedback({ type: "error", text: authText.supabaseConfigMissing });
+      return;
+    }
+
+    try {
+      if (authMode === "register") {
+        if (!isAdultBirthDate(birthDate)) {
+          setRegisterStep(1);
+          setRegisterPersonalValidated(false);
+          setAuthFeedback({ type: "error", text: authText.ageRestriction });
+          return;
+        }
+        if (!isPasswordStrong(password)) {
+          setAuthFeedback({ type: "error", text: authText.passwordStrongRequired || authText.passwordShort });
+          return;
+        }
+        if (password !== confirmPassword) {
+          setAuthFeedback({ type: "error", text: authText.passwordMismatch });
+          return;
+        }
+
+        try {
+          const emailExists = await callSupabaseRpc("email_exists", { check_email: email });
+          if (emailExists === true) {
+            setAuthFeedback({ type: "error", text: authText.userExists });
+            return;
+          }
+        } catch (rpcError) {
+          const rpcErrorMessage = String(rpcError?.message || "").toLowerCase();
+          // If the SQL function is not deployed yet, keep the old fallback detection below.
+          if (
+            rpcErrorMessage !== "supabase_rpc_failed" &&
+            !rpcErrorMessage.includes("could not find the function") &&
+            !rpcErrorMessage.includes("schema cache")
+          ) {
+            throw rpcError;
+          }
+        }
+
+        await callSupabaseFunction("send-signup-confirmation", {
+          firstName,
+          lastName,
+          birthDate,
+          sex,
+          country,
+          email,
+          password,
+          signupClientId: getOrCreateSignupClientId()
+        });
+
+        window.localStorage.setItem("hm-signup-pending", email);
+        setCurrentUser(null);
+        setSignupPendingEmail(email);
+        savePendingMailbox(email, "signup");
+        setAuthMode("login");
+        navigateTo("/auth?mode=check-email");
+        setAuthFeedback({ type: "success", text: authText.registerSuccess });
+      } else {
+        const loginData = await callSupabaseFunction("auth-login", {
+          email,
+          password
+        });
+        await completeLoginFlow(loginData);
+      }
+    } catch (error) {
+      const errorMessage = String(error?.message || "");
+      const normalizedError = errorMessage.toLowerCase();
+      const normalizedCode = String(error?.code || "").toLowerCase();
+
+      if (errorMessage === "SUPABASE_CONFIG_MISSING") {
+        setAuthFeedback({ type: "error", text: authText.supabaseConfigMissing });
+        return;
+      }
+
+      if (
+        normalizedError.includes("failed to fetch") ||
+        normalizedError.includes("networkerror") ||
+        normalizedError.includes("load failed")
+      ) {
+        setAuthFeedback({ type: "error", text: authText.networkError || authText.invalidCredentials });
+        return;
+      }
+
+      if (normalizedError.includes("email not confirmed")) {
+        setAuthFeedback({ type: "error", text: authText.emailNotConfirmed });
+        return;
+      }
+
+      if (
+        normalizedCode.includes("over_email_send_rate_limit") ||
+        normalizedError.includes("rate limit") ||
+        normalizedError.includes("too many requests") ||
+        normalizedError.includes("email rate limit exceeded") ||
+        normalizedError.includes("over_email_send_rate_limit")
+      ) {
+        window.localStorage.setItem("hm-signup-pending", email);
+        setSignupPendingEmail(email);
+        savePendingMailbox(email, "signup");
+        setAuthMode("login");
+        setAuthFeedback({ type: "success", text: authText.registerSuccess });
+        navigateTo("/auth?mode=check-email");
+        return;
+      }
+
+      if (
+        normalizedCode.includes("user_exists") ||
+        normalizedError.includes("already registered") ||
+        normalizedError.includes("already exists") ||
+        normalizedError.includes("already been registered") ||
+        normalizedError.includes("user already exists")
+      ) {
+        setAuthFeedback({ type: "error", text: authText.userExists });
+        return;
+      }
+
+      if (normalizedError.includes("invalid login credentials")) {
+        setAuthFeedback({ type: "error", text: authText.invalidCredentials });
+        return;
+      }
+
+      setAuthFeedback({
+        type: "error",
+        text: errorMessage && errorMessage !== "SUPABASE_REQUEST_FAILED" ? errorMessage : authText.invalidCredentials
+      });
+      return;
+    }
+
+    setRegisterStep(1);
+    setAuthForm({
+      firstName: "",
+      lastName: "",
+      birthDate: "",
+      sex: "",
+      country: "",
+      email: "",
+      password: "",
+      confirmPassword: ""
+    });
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setSportProfile(normalizeSportProfile());
+    setSportProfileForm(emptySportProfileForm);
+    setSportProfileFeedback({ type: "", text: "" });
+    clearResetFlow();
+    setAuthFeedback({ type: "success", text: authText.logoutSuccess });
+    navigateTo("/");
+  };
+
+  const handleForgotPassword = async () => {
+    const email = normalizeEmail(authForm.email);
+
+    if (!email) {
+      setAuthFeedback({ type: "error", text: authText.forgotPasswordFillEmail });
+      return;
+    }
+
+    const emailPattern = /^\S+@\S+\.\S+$/;
+    if (!emailPattern.test(email)) {
+      setAuthFeedback({ type: "error", text: authText.invalidEmail });
+      return;
+    }
+
+    if (!hasSupabaseConfig) {
+      setAuthFeedback({ type: "error", text: authText.supabaseConfigMissing });
+      return;
+    }
+
+    const storedActiveResetAt = (() => {
+      try {
+        return Number(window.localStorage.getItem("hm-reset-requested-at") || 0);
+      } catch {
+        return 0;
+      }
+    })();
+    const storedPendingResetEmail = (() => {
+      try {
+        return normalizeEmail(window.localStorage.getItem("hm-auth-mailbox-email") || "");
+      } catch {
+        return "";
+      }
+    })();
+    const storedPendingResetIntent = (() => {
+      try {
+        return window.localStorage.getItem("hm-auth-mailbox-intent") || "";
+      } catch {
+        return "";
+      }
+    })();
+    const activeResetSecondsLeft = Math.max(
+      0,
+      clampResetCodeSeconds((storedActiveResetAt + resetLinkLifetimeMs - Date.now()) / 1000)
+    );
+
+    if (
+      activeResetSecondsLeft > 0 &&
+      storedPendingResetIntent === "recovery" &&
+      (!storedPendingResetEmail || storedPendingResetEmail === email)
+    ) {
+      setAuthFeedback({
+        type: "error",
+        text: `${authText.resetCodeRetryWait} ${formatAuthSeconds(activeResetSecondsLeft)}.`
+      });
+      savePendingMailbox(storedPendingResetEmail || email, "recovery");
+      navigateTo("/auth?mode=reset-code");
+      return;
+    }
+
+    try {
+      const sendData = await callSupabaseFunction("send-reset-code", { email });
+      const expiresAtMs = sendData?.expiresAt ? new Date(sendData.expiresAt).getTime() : Date.now() + resetLinkLifetimeMs;
+      const requestedAt = getResetRequestedAtFromExpiresAt(expiresAtMs);
+
+      try {
+        window.localStorage.setItem("hm-reset-requested-at", String(requestedAt));
+      } catch {
+        // ignore storage errors
+      }
+
+      setResetRequestedAt(requestedAt);
+      savePendingMailbox(email, "recovery");
+      setResetVerificationCode("");
+      setAuthFeedback({ type: "", text: "" });
+      navigateTo("/auth?mode=reset-code");
+    } catch (error) {
+      if (error?.code === "ACCOUNT_NOT_FOUND" || error?.status === 404) {
+        setAuthFeedback({ type: "error", text: authText.accountNotFound });
+        return;
+      }
+
+      if (error?.code === "RESET_CODE_ACTIVE" || error?.status === 429) {
+        const retryAfterSeconds = clampResetCodeSeconds(error.retryAfterSeconds || 0);
+        const expiresAtMs = error.expiresAt ? new Date(error.expiresAt).getTime() : Date.now() + retryAfterSeconds * 1000;
+        const requestedAt = getResetRequestedAtFromExpiresAt(expiresAtMs);
+
+        try {
+          window.localStorage.setItem("hm-reset-requested-at", String(requestedAt));
+        } catch {
+          // ignore storage errors
+        }
+
+        setResetRequestedAt(requestedAt);
+        savePendingMailbox(email, "recovery");
+        setResetVerificationCode("");
+        setAuthFeedback({
+          type: "error",
+          text: `${authText.resetCodeRetryWait} ${formatAuthSeconds(retryAfterSeconds || activeResetSecondsLeft || 1)}.`
+        });
+        navigateTo("/auth?mode=reset-code");
+        return;
+      }
+
+      const errorMessage = String(error?.message || "");
+      setAuthFeedback({
+        type: "error",
+        text: errorMessage && errorMessage !== "SUPABASE_FUNCTION_FAILED" ? errorMessage : authText.invalidEmail
+      });
+    }
+  };
+
+  const handleResendResetCode = async () => {
+    const email = normalizeEmail(pendingMailboxEmail);
+
+    if (!email) {
+      setAuthFeedback({ type: "error", text: authText.accountNotFound });
+      navigateTo(authLoginRoute);
+      return;
+    }
+
+    if (!hasSupabaseConfig) {
+      setAuthFeedback({ type: "error", text: authText.supabaseConfigMissing });
+      return;
+    }
+
+    try {
+      const sendData = await callSupabaseFunction("send-reset-code", { email });
+      const expiresAtMs = sendData?.expiresAt ? new Date(sendData.expiresAt).getTime() : Date.now() + resetLinkLifetimeMs;
+      const requestedAt = getResetRequestedAtFromExpiresAt(expiresAtMs);
+
+      try {
+        window.localStorage.setItem("hm-reset-requested-at", String(requestedAt));
+      } catch {
+        // ignore storage errors
+      }
+
+      setResetRequestedAt(requestedAt);
+      setResetVerificationCode("");
+      setResetCodeSecondsLeft(clampResetCodeSeconds((expiresAtMs - Date.now()) / 1000));
+      setAuthFeedback({ type: "success", text: authText.forgotPasswordInfo });
+    } catch (error) {
+      if (error?.code === "ACCOUNT_NOT_FOUND" || error?.status === 404) {
+        setAuthFeedback({ type: "error", text: authText.accountNotFound });
+        navigateTo(authLoginRoute);
+        return;
+      }
+
+      if (error?.code === "RESET_CODE_ACTIVE" || error?.status === 429) {
+        const retryAfterSeconds = clampResetCodeSeconds(error.retryAfterSeconds || 0);
+        const expiresAtMs = error.expiresAt ? new Date(error.expiresAt).getTime() : Date.now() + retryAfterSeconds * 1000;
+        const requestedAt = getResetRequestedAtFromExpiresAt(expiresAtMs);
+
+        try {
+          window.localStorage.setItem("hm-reset-requested-at", String(requestedAt));
+        } catch {
+          // ignore storage errors
+        }
+
+        setResetRequestedAt(requestedAt);
+        setResetVerificationCode("");
+        setResetCodeSecondsLeft(Math.max(1, retryAfterSeconds));
+        setAuthFeedback({
+          type: "error",
+          text: `${authText.resetCodeRetryWait} ${formatAuthSeconds(retryAfterSeconds || 1)}.`
+        });
+        return;
+      }
+
+      const errorMessage = String(error?.message || "");
+      setAuthFeedback({
+        type: "error",
+        text: errorMessage && errorMessage !== "SUPABASE_FUNCTION_FAILED" ? errorMessage : authText.invalidEmail
+      });
+    }
+  };
+
+  const handleVerifyResetCode = async (event) => {
+    event.preventDefault();
+
+    const code = resetVerificationCode.trim();
+    const email = normalizeEmail(pendingMailboxEmail);
+    const codePattern = /^[A-Za-z0-9]{6}$/;
+
+    if (!code) {
+      setAuthFeedback({ type: "error", text: authText.resetCodeRequired });
+      return;
+    }
+
+    if (!codePattern.test(code)) {
+      setAuthFeedback({ type: "error", text: authText.resetCodeInvalid });
+      return;
+    }
+
+    if (!email) {
+      setAuthFeedback({ type: "error", text: authText.accountNotFound });
+      navigateTo(authLoginRoute);
+      return;
+    }
+
+    if (!hasSupabaseConfig) {
+      setAuthFeedback({ type: "error", text: authText.supabaseConfigMissing });
+      return;
+    }
+
+    if (!effectiveResetCodeExpiresAt || effectiveResetCodeExpiresAt <= Date.now()) {
+      setAuthFeedback({ type: "error", text: authText.resetCodeExpired });
+      return;
+    }
+
+    try {
+      const verifyData = await callSupabaseFunction("verify-reset-code", { email, code });
+      const nextResetToken = verifyData?.resetToken || "";
+      const resetPasswordExpiresAt = verifyData?.expiresAt
+        ? new Date(verifyData.expiresAt).getTime()
+        : Date.now() + resetPasswordSessionLifetimeMs;
+
+      if (!nextResetToken) {
+        throw new Error("INVALID_RESET_TOKEN");
+      }
+
+      try {
+        window.sessionStorage.setItem("hm-reset-access-token", nextResetToken);
+        window.sessionStorage.setItem("hm-reset-expires-at", String(resetPasswordExpiresAt));
+        window.localStorage.setItem("hm-reset-access-token", nextResetToken);
+        window.localStorage.setItem("hm-reset-expires-at", String(resetPasswordExpiresAt));
+      } catch {
+        // ignore storage errors
+      }
+
+      setResetAccessToken(nextResetToken);
+      setResetExpiresAt(resetPasswordExpiresAt);
+      setResetRequestedAt(effectiveResetRequestedAt);
+      setResetVerificationCode("");
+      setAuthFeedback({ type: "", text: "" });
+      navigateTo("/auth?mode=reset");
+    } catch (error) {
+      if (error?.code === "RESET_CODE_EXPIRED" || error?.status === 410) {
+        setAuthFeedback({ type: "error", text: authText.resetCodeExpired });
+        return;
+      }
+
+      if (error?.code === "ACCOUNT_NOT_FOUND" || error?.status === 404) {
+        setAuthFeedback({ type: "error", text: authText.accountNotFound });
+        navigateTo(authLoginRoute);
+        return;
+      }
+
+      setAuthFeedback({ type: "error", text: authText.resetCodeInvalid });
+    }
+  };
+
+  const handleResetPasswordSubmit = async (event) => {
+    event.preventDefault();
+
+    const password = authForm.password;
+    const confirmPassword = authForm.confirmPassword;
+
+    if (!password || !confirmPassword) {
+      setAuthFeedback({ type: "error", text: authText.fillAll });
+      return;
+    }
+
+    if (!isPasswordStrong(password)) {
+      setAuthFeedback({ type: "error", text: authText.passwordStrongRequired || authText.passwordShort });
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setAuthFeedback({ type: "error", text: authText.passwordMismatch });
+      return;
+    }
+
+    if (!effectiveResetAccessToken || (effectiveResetExpiresAt && effectiveResetExpiresAt <= Date.now())) {
+      clearResetFlow();
+      setAuthFeedback({ type: "error", text: authText.resetLinkExpired });
+      navigateTo(authLoginRoute);
+      return;
+    }
+
+    try {
+      await callSupabaseFunction("complete-reset-password", {
+        resetToken: effectiveResetAccessToken,
+        password
+      });
+
+      clearResetFlow();
+      clearPendingMailbox();
+      setAuthForm({
+        firstName: "",
+        lastName: "",
+        birthDate: "",
+        sex: "",
+        country: "",
+        email: "",
+        password: "",
+        confirmPassword: ""
+      });
+      setAuthFeedback({ type: "success", text: authText.resetSuccess });
+      navigateTo(authLoginRoute);
+    } catch (error) {
+      const code = error?.code || "";
+      const errorMessage = String(error?.message || "");
+      const normalizedError = errorMessage.toLowerCase();
+
+      if (
+        code === "RESET_SESSION_EXPIRED" ||
+        code === "RESET_SESSION_INVALID" ||
+        error?.status === 401 ||
+        error?.status === 410 ||
+        normalizedError.includes("expired") ||
+        normalizedError.includes("invalid")
+      ) {
+        clearResetFlow();
+        setAuthFeedback({
+          type: "error",
+          text: code === "RESET_SESSION_EXPIRED" || normalizedError.includes("expired") ? authText.resetLinkExpired : authText.resetLinkInvalid
+        });
+        navigateTo(authLoginRoute);
+        return;
+      }
+
+      setAuthFeedback({
+        type: "error",
+        text: errorMessage && errorMessage !== "SUPABASE_FUNCTION_FAILED" ? errorMessage : authText.resetLinkInvalid
+      });
+    }
+  };
+
+  const handleSportProfileSubmit = async (event) => {
+    event.preventDefault();
+
+    const height = Number(sportProfileForm.heightCm);
+    const weight = Number(sportProfileForm.currentWeightKg);
+    const sportsAreValid = areSportFieldsValid(sportProfileForm);
+    const supplementsAreValid = areSupplementFieldsValid(sportProfileForm);
+    const injuriesAreValid = areInjuryFieldsValid(sportProfileForm);
+    const medicalInformationIsValid = areMedicalFieldsValid(sportProfileForm);
+    const hasRequiredValues = Boolean(
+      height >= 80 &&
+      height <= 260 &&
+      Number.isInteger(height) &&
+      weight >= 25 &&
+      weight <= 350 &&
+      isSportGoalFieldValid(sportProfileForm) &&
+      sportsAreValid &&
+      supplementsAreValid &&
+      injuriesAreValid &&
+      medicalInformationIsValid
+    );
+
+    if (!hasRequiredValues) {
+      setSportProfileFeedback({ type: "error", text: profileText.requiredError });
+      return;
+    }
+
+    if (!currentUser?.id || (!currentUser?.accessToken && !currentUser?.refreshToken)) {
+      setSportProfileFeedback({ type: "error", text: profileText.sessionExpired });
+      setCurrentUser(null);
+      navigateTo(authLoginRoute);
+      return;
+    }
+
+    setIsSportProfileSaving(true);
+    try {
+      const sessionUser = await refreshCurrentUserSession();
+      const payload = sportProfileFormToPayload(sportProfileForm);
+      const dietarySupplements = sportProfileFormToSupplements(sportProfileForm);
+      const injuryHistory = sportProfileFormToInjuries(sportProfileForm);
+      const medicalInformation = sportProfileFormToMedicalInformation(sportProfileForm);
+      const updatedProfile = await updateSportProfile(sessionUser.id, sessionUser.accessToken, payload);
+      await callSupabaseFunctionWithAuth(
+        "update-account-security",
+        {
+          metadata: {
+            has_no_supplement: Boolean(sportProfileForm.hasNoSupplement),
+            dietary_supplements: dietarySupplements,
+            has_no_injury: Boolean(sportProfileForm.hasNoInjury),
+            injury_history: injuryHistory,
+            has_no_medical_information: Boolean(sportProfileForm.hasNoMedicalInformation),
+            sport_goal_custom: sportProfileForm.sportGoal === "other" ? sportProfileForm.sportGoalCustom.trim() : "",
+            medical_information: medicalInformation
+          }
+        },
+        sessionUser.accessToken
+      );
+      const hydratedProfile = normalizeSportProfile({
+        ...updatedProfile,
+        has_no_supplement: Boolean(sportProfileForm.hasNoSupplement),
+        dietary_supplements: dietarySupplements,
+        has_no_injury: Boolean(sportProfileForm.hasNoInjury),
+        injury_history: injuryHistory,
+        has_no_medical_information: Boolean(sportProfileForm.hasNoMedicalInformation),
+        sport_goal_custom: sportProfileForm.sportGoal === "other" ? sportProfileForm.sportGoalCustom.trim() : "",
+        medical_information: medicalInformation
+      });
+
+      setSportProfile(hydratedProfile);
+      setSportProfileForm(sportProfileToForm(hydratedProfile));
+      setCurrentUser((prev) =>
+        prev
+          ? {
+            ...prev,
+            hasNoSupplement: hydratedProfile.has_no_supplement,
+            dietarySupplements: hydratedProfile.dietary_supplements,
+            hasNoInjury: hydratedProfile.has_no_injury,
+            injuryHistory: hydratedProfile.injury_history,
+            hasNoMedicalInformation: hydratedProfile.has_no_medical_information,
+            medicalInformation: hydratedProfile.medical_information,
+            sportProfileCompleted: isSportProfileComplete(hydratedProfile)
+          }
+          : prev
+      );
+      setSportProfileFeedback({ type: "success", text: profileText.success });
+      // Profil complété → on présente la page « Accéder à mon espace athlète » (page d'accueil avec
+      // le bouton d'accès), au lieu d'aller directement au dashboard.
+      navigateTo("/");
+    } catch (error) {
+      const errorMessage = String(error?.message || "");
+      const normalizedError = errorMessage.toLowerCase();
+      if (
+        normalizedError.includes("session") ||
+        normalizedError.includes("jwt") ||
+        normalizedError.includes("expired")
+      ) {
+        setCurrentUser(null);
+        navigateTo(authLoginRoute);
+      }
+      setSportProfileFeedback({
+        type: "error",
+        text: errorMessage && errorMessage !== "SUPABASE_REST_FAILED" ? errorMessage : profileText.sessionExpired
+      });
+    } finally {
+      setIsSportProfileSaving(false);
+    }
+  };
+
+  const handleAvatarFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) return;
+
+    setSettingsFeedback({ type: "", text: "" });
+
+    try {
+      const avatarUrl = await resizeAvatarFile(file);
+      setSettingsForm((prev) => ({ ...prev, avatarUrl }));
+      setSettingsFeedback({
+        type: "success",
+        text: "Photo ajoutée. Clique sur Enregistrer le profil pour la garder dans ton profil."
+      });
+    } catch (error) {
+      const code = String(error?.message || "");
+      setSettingsFeedback({
+        type: "error",
+        text:
+          code === "PHOTO_TOO_LARGE"
+            ? "La photo est trop lourde. Choisis une image de moins de 6 Mo."
+            : "Impossible d’ajouter cette photo. Choisis une image JPG ou PNG."
+      });
+    }
+  };
+
+  const handleSettingsSubmit = async (event) => {
+    event.preventDefault();
+
+    const firstName = settingsForm.firstName.trim();
+    const lastName = settingsForm.lastName.trim();
+    const submitter = event.nativeEvent?.submitter || null;
+    const submitAction =
+      submitter?.dataset?.settingsAction ||
+      submitter?.getAttribute?.("data-settings-action") ||
+      event.currentTarget?.dataset?.submitAction ||
+      "";
+    const isEmailConfirmAction = submitAction === "confirm-email";
+    const isPasswordAction = submitAction === "password";
+    const isProfileAction = submitAction === "profile";
+    const isContactAction = submitAction === "contact";
+    const isSportProfileAction = submitAction === "sport-profile";
+    const isNutritionAction = submitAction === "nutrition";
+    const isHealthAction = submitAction === "health";
+    const isFullSettingsAction = !submitAction;
+    const height = Number(sportProfileForm.heightCm);
+    const weight = Number(sportProfileForm.currentWeightKg);
+    const sportsAreValid = areSportFieldsValid(sportProfileForm);
+    const supplementsAreValid = areSupplementFieldsValid(sportProfileForm);
+    const injuriesAreValid = areInjuryFieldsValid(sportProfileForm);
+    const medicalInformationIsValid = areMedicalFieldsValid(sportProfileForm);
+    const sportCoreValuesAreValid = Boolean(
+      height >= 80 &&
+      height <= 260 &&
+      Number.isInteger(height) &&
+      weight >= 25 &&
+      weight <= 350 &&
+      isSportGoalFieldValid(sportProfileForm) &&
+      sportsAreValid
+    );
+    const nextEmail = normalizeEmail(settingsForm.newEmail || "");
+    const requestedEmail = isEmailConfirmAction ? nextEmail : "";
+    const shouldUpdatePassword = isPasswordAction;
+    const resolvedPhoneCountryCode = getCountryDialCode(settingsForm.country);
+    const showSettingsError = (text) => {
+      setSettingsFeedback({ type: "error", text });
+      setAppToast({ type: "error", text });
+    };
+
+    if (isEmailConfirmAction && !nextEmail) {
+      showSettingsError("Saisis une nouvelle adresse email avant de confirmer.");
+      return;
+    }
+
+    if ((isProfileAction || isFullSettingsAction) && (!firstName || !lastName || !settingsForm.country)) {
+      showSettingsError("Merci de remplir toutes les informations obligatoires du profil.");
+      return;
+    }
+
+    if (isContactAction && !settingsForm.country) {
+      showSettingsError("Choisis d’abord le pays de résidence pour enregistrer les coordonnées.");
+      return;
+    }
+
+    if ((isSportProfileAction || isFullSettingsAction) && !sportCoreValuesAreValid) {
+      showSettingsError("Merci de remplir toutes les informations obligatoires du profil sportif.");
+      return;
+    }
+
+    if ((isNutritionAction || isFullSettingsAction) && !supplementsAreValid) {
+      showSettingsError("Merci de compléter les informations obligatoires des compléments alimentaires.");
+      return;
+    }
+
+    if ((isHealthAction || isFullSettingsAction) && (!injuriesAreValid || !medicalInformationIsValid)) {
+      showSettingsError("Merci de compléter les informations obligatoires de santé.");
+      return;
+    }
+
+    if (requestedEmail && !/^\S+@\S+\.\S+$/.test(requestedEmail)) {
+      showSettingsError("Adresse email invalide.");
+      return;
+    }
+
+    if (requestedEmail && requestedEmail === normalizeEmail(currentUser?.email || "")) {
+      showSettingsError("Saisis une nouvelle adresse email différente de l’adresse actuelle.");
+      return;
+    }
+
+    if (shouldUpdatePassword) {
+      if (!settingsForm.currentPassword.trim()) {
+        showSettingsError("Saisis ton mot de passe actuel avant de choisir un nouveau mot de passe.");
+        return;
+      }
+      if (!settingsForm.newPassword.trim()) {
+        showSettingsError("Saisis ton nouveau mot de passe.");
+        return;
+      }
+      if (!isPasswordStrong(settingsForm.newPassword)) {
+        showSettingsError("Le nouveau mot de passe ne respecte pas les conditions.");
+        return;
+      }
+      if (settingsForm.newPassword !== settingsForm.confirmNewPassword) {
+        showSettingsError("Les mots de passe ne correspondent pas.");
+        return;
+      }
+    }
+
+    if (!currentUser?.id || (!currentUser?.accessToken && !currentUser?.refreshToken)) {
+      showSettingsError("Connexion à actualiser. Reconnecte-toi puis réessaie.");
+      return;
+    }
+
+    const savedSettingsForm = profileSettingsToForm(currentUser, sportProfile);
+    const savedSportProfileForm = sportProfileToForm(sportProfile);
+    const profileHasChanged = !areSameSettingsSnapshot(
+      settingsProfileSnapshot(settingsForm),
+      settingsProfileSnapshot(savedSettingsForm)
+    );
+    const contactHasChanged = !areSameSettingsSnapshot(
+      settingsContactSnapshot(settingsForm),
+      settingsContactSnapshot(savedSettingsForm)
+    );
+    const sportCoreHasChanged = !areSameSettingsSnapshot(
+      sportCoreSnapshot(sportProfileForm),
+      sportCoreSnapshot(savedSportProfileForm)
+    );
+    const nutritionHasChanged = !areSameSettingsSnapshot(
+      nutritionSnapshot(sportProfileForm),
+      nutritionSnapshot(savedSportProfileForm)
+    );
+    const healthHasChanged = !areSameSettingsSnapshot(
+      healthSnapshot(sportProfileForm),
+      healthSnapshot(savedSportProfileForm)
+    );
+    const hasAnySettingsChange =
+      profileHasChanged || contactHasChanged || sportCoreHasChanged || nutritionHasChanged || healthHasChanged || requestedEmail || shouldUpdatePassword;
+
+    if (
+      (isProfileAction && !profileHasChanged) ||
+      (isContactAction && !contactHasChanged) ||
+      (isSportProfileAction && !sportCoreHasChanged) ||
+      (isNutritionAction && !nutritionHasChanged) ||
+      (isHealthAction && !healthHasChanged) ||
+      (isFullSettingsAction && !hasAnySettingsChange)
+    ) {
+      showSettingsError("Aucune modification détectée.");
+      return;
+    }
+
+    setIsSettingsSaving(true);
+    try {
+      let sessionUser = await refreshCurrentUserSession();
+      const dietarySupplements = sportProfileFormToSupplements(sportProfileForm);
+      const injuryHistory = sportProfileFormToInjuries(sportProfileForm);
+      const medicalInformation = sportProfileFormToMedicalInformation(sportProfileForm);
+      const profilePayload = {
+        ...sportProfileFormToPayload(sportProfileForm),
+        ...settingsFormToProfilePayload(settingsForm)
+      };
+      const emailChangeRedirectTo =
+        typeof window !== "undefined"
+          ? new URL("/dashboard?view=settings&email_change=confirmed", window.location.origin).toString()
+          : "";
+      const accountUpdatePayload = {
+        metadata: {
+          first_name: firstName,
+          last_name: lastName,
+          full_name: `${firstName} ${lastName}`.trim(),
+          country_code: settingsForm.country,
+          avatar_url: settingsForm.avatarUrl.trim(),
+          phone_number: settingsForm.phoneNumber.trim(),
+          phone_country_code: resolvedPhoneCountryCode,
+          phone_verified_at: settingsForm.phoneNumber.trim() ? settingsForm.phoneVerifiedAt || "" : "",
+          address_line1: settingsForm.addressLine1.trim(),
+          address_line2: settingsForm.addressLine2.trim(),
+          postal_code: settingsForm.postalCode.trim(),
+          city: settingsForm.city.trim(),
+          region: settingsForm.region.trim(),
+          has_no_supplement: Boolean(sportProfileForm.hasNoSupplement),
+          dietary_supplements: dietarySupplements,
+          has_no_injury: Boolean(sportProfileForm.hasNoInjury),
+          injury_history: injuryHistory,
+          has_no_medical_information: Boolean(sportProfileForm.hasNoMedicalInformation),
+          medical_information: medicalInformation,
+          sport_goal_custom: sportProfileForm.sportGoal === "other" ? sportProfileForm.sportGoalCustom.trim() : ""
+        },
+        profile: profilePayload,
+        emailRedirectTo: emailChangeRedirectTo
+      };
+
+      if (requestedEmail && requestedEmail !== normalizeEmail(currentUser.email || "")) {
+        accountUpdatePayload.newEmail = requestedEmail;
+        window.localStorage.setItem("hm-pending-email-change", requestedEmail);
+      }
+
+      if (shouldUpdatePassword) {
+        accountUpdatePayload.currentPassword = settingsForm.currentPassword;
+        accountUpdatePayload.newPassword = settingsForm.newPassword;
+      }
+
+      let updatedAccount = { user: { email: currentUser.email } };
+      let profileAccountSyncFailed = false;
+      const isAccountUpdateCritical = requestedEmail || shouldUpdatePassword || !isProfileAction;
+
+      try {
+        updatedAccount = await callSupabaseFunctionWithAuth(
+          "update-account-security",
+          accountUpdatePayload,
+          sessionUser.accessToken
+        );
+      } catch (accountUpdateError) {
+        if (isAccountUpdateCritical) {
+          throw accountUpdateError;
+        }
+
+        profileAccountSyncFailed = true;
+        console.warn("Profile metadata sync skipped", accountUpdateError);
+      }
+      if (shouldUpdatePassword && updatedAccount?.passwordUpdated) {
+        try {
+          const reloginData = await callSupabaseFunction("auth-login", {
+            email: currentUser.email,
+            password: settingsForm.newPassword
+          });
+
+          sessionUser = {
+            ...sessionUser,
+            id: reloginData.user?.id || sessionUser.id,
+            email: reloginData.user?.email || sessionUser.email,
+            accessToken: reloginData.access_token || sessionUser.accessToken,
+            refreshToken: reloginData.refresh_token || sessionUser.refreshToken
+          };
+        } catch (reauthError) {
+          console.warn("Password changed, session refresh skipped", reauthError);
+        }
+      }
+      let updatedProfile = updatedAccount?.profile ? normalizeSportProfile(updatedAccount.profile) : null;
+      if (!updatedProfile && isProfileAction) {
+        updatedProfile = normalizeSportProfile({
+          ...sportProfile,
+          ...settingsFormToProfilePayload(settingsForm),
+          avatar_url: settingsForm.avatarUrl.trim()
+        });
+      }
+      if (!updatedProfile) {
+        try {
+          updatedProfile = await updateSportProfile(sessionUser.id, sessionUser.accessToken, profilePayload);
+        } catch (profileError) {
+          const profileErrorText = String(profileError?.message || "").toLowerCase();
+          const canRecoverAfterPasswordChange =
+            shouldUpdatePassword &&
+            (profileErrorText.includes("session") ||
+              profileErrorText.includes("jwt") ||
+              profileErrorText.includes("expired") ||
+              profileErrorText.includes("invalid"));
+
+          if (!canRecoverAfterPasswordChange) {
+            throw profileError;
+          }
+
+          const reloginData = await callSupabaseFunction("auth-login", {
+            email: currentUser.email,
+            password: settingsForm.newPassword
+          });
+
+          sessionUser = {
+            ...sessionUser,
+            id: reloginData.user?.id || sessionUser.id,
+            email: reloginData.user?.email || sessionUser.email,
+            accessToken: reloginData.access_token || sessionUser.accessToken,
+            refreshToken: reloginData.refresh_token || sessionUser.refreshToken
+          };
+          updatedProfile = await updateSportProfile(sessionUser.id, sessionUser.accessToken, profilePayload);
+        }
+      }
+      updatedProfile = normalizeSportProfile({
+        ...updatedProfile,
+        has_no_supplement: Boolean(sportProfileForm.hasNoSupplement),
+        dietary_supplements: dietarySupplements,
+        has_no_injury: Boolean(sportProfileForm.hasNoInjury),
+        injury_history: injuryHistory,
+        has_no_medical_information: Boolean(sportProfileForm.hasNoMedicalInformation),
+        medical_information: medicalInformation,
+        sport_goal_custom: sportProfileForm.sportGoal === "other" ? sportProfileForm.sportGoalCustom.trim() : ""
+      });
+      const nextFullName = `${updatedProfile.first_name || firstName} ${updatedProfile.last_name || lastName}`.trim();
+
+      setSportProfile(updatedProfile);
+      setSportProfileForm(sportProfileToForm(updatedProfile));
+      if (profileHasChanged && currentUser?.id) {
+        setClientReviews((prev) =>
+          prev.map((review) =>
+            review.authorId === currentUser.id
+              ? {
+                ...review,
+                authorName: nextFullName || review.authorName,
+                avatarUrl: settingsForm.avatarUrl.trim() || review.avatarUrl
+              }
+              : review
+          )
+        );
+      }
+      setCurrentUser((prev) =>
+        prev
+          ? {
+            ...prev,
+            firstName: updatedProfile.first_name || firstName,
+            lastName: updatedProfile.last_name || lastName,
+            fullName: nextFullName || prev.fullName,
+            email: requestedEmail ? prev.email : updatedAccount?.user?.email || prev.email,
+            country: updatedProfile.country_code || settingsForm.country,
+            sex: updatedProfile.sex || prev.sex || "",
+            hasNoSupplement: updatedProfile.has_no_supplement,
+            dietarySupplements: updatedProfile.dietary_supplements,
+            hasNoInjury: updatedProfile.has_no_injury,
+            injuryHistory: updatedProfile.injury_history,
+            hasNoMedicalInformation: updatedProfile.has_no_medical_information,
+            medicalInformation: updatedProfile.medical_information,
+            avatarUrl: settingsForm.avatarUrl.trim(),
+            phoneNumber: settingsForm.phoneNumber.trim(),
+            phoneCountryCode: resolvedPhoneCountryCode,
+            phoneVerifiedAt: settingsForm.phoneNumber.trim() ? settingsForm.phoneVerifiedAt || "" : "",
+            addressLine1: settingsForm.addressLine1.trim(),
+            addressLine2: settingsForm.addressLine2.trim(),
+            postalCode: settingsForm.postalCode.trim(),
+            city: settingsForm.city.trim(),
+            region: settingsForm.region.trim(),
+            accessToken: sessionUser.accessToken || prev.accessToken,
+            refreshToken: sessionUser.refreshToken || prev.refreshToken,
+            sportProfileCompleted: isSportProfileComplete(updatedProfile)
+          }
+          : prev
+      );
+      setSettingsForm((prev) => ({
+        ...profileSettingsToForm(
+          {
+            ...currentUser,
+            firstName: updatedProfile.first_name || firstName,
+            lastName: updatedProfile.last_name || lastName,
+            fullName: nextFullName || currentUser.fullName,
+            email: requestedEmail ? currentUser.email : updatedAccount?.user?.email || sessionUser.email || currentUser.email,
+            sex: updatedProfile.sex || currentUser.sex || "",
+            avatarUrl: settingsForm.avatarUrl.trim(),
+            phoneNumber: settingsForm.phoneNumber.trim(),
+            phoneCountryCode: resolvedPhoneCountryCode,
+            phoneVerifiedAt: settingsForm.phoneNumber.trim() ? settingsForm.phoneVerifiedAt || "" : "",
+            addressLine1: settingsForm.addressLine1.trim(),
+            addressLine2: settingsForm.addressLine2.trim(),
+            postalCode: settingsForm.postalCode.trim(),
+            city: settingsForm.city.trim(),
+            region: settingsForm.region.trim()
+          },
+          updatedProfile
+        ),
+        newEmail: isEmailConfirmAction ? "" : prev.newEmail,
+        currentPassword: isPasswordAction ? "" : prev.currentPassword,
+        newPassword: isPasswordAction ? "" : prev.newPassword,
+        confirmNewPassword: isPasswordAction ? "" : prev.confirmNewPassword
+      }));
+      const actionSuccessText =
+        requestedEmail
+          ? "Un lien de confirmation a été envoyé à votre nouvelle adresse email. Ouvrez votre boîte mail et cliquez sur le lien pour confirmer le changement."
+          : shouldUpdatePassword
+            ? "Mot de passe changé avec succès."
+            : isProfileAction
+              ? "Profil mis à jour avec succès."
+              : isContactAction
+                ? "Coordonnées mises à jour avec succès."
+                : isSportProfileAction
+                  ? "Profil sportif mis à jour avec succès."
+                  : isNutritionAction
+                    ? "Informations nutrition mises à jour avec succès."
+                    : isHealthAction
+                      ? "Informations de santé mises à jour avec succès."
+                      : "Informations mises à jour avec succès.";
+      setSettingsFeedback({
+        type: "success",
+        text: actionSuccessText
+      });
+      setAppToast({
+        type: "success",
+        text: actionSuccessText
+      });
+    } catch (error) {
+      const errorMessage = String(error?.message || "");
+      const errorCode = String(error?.code || "");
+      const normalizedError = errorMessage.toLowerCase();
+      if (requestedEmail) {
+        window.localStorage.removeItem("hm-pending-email-change");
+      }
+      if (
+        normalizedError.includes("session") ||
+        normalizedError.includes("jwt") ||
+        normalizedError.includes("expired")
+      ) {
+        setAppToast({ type: "error", text: "Connexion à actualiser. Aucun changement de page automatique." });
+      }
+      const settingsErrorText =
+        errorCode === "CURRENT_PASSWORD_INVALID" || normalizedError.includes("mot de passe actuel incorrect")
+          ? "Mot de passe actuel incorrect."
+          : normalizedError.includes("failed to fetch")
+            ? "Le service ne répond pas pour le moment. Réessaie dans un instant."
+            : normalizedError.includes("jwt") || normalizedError.includes("expired")
+              ? "Connexion à actualiser. Reconnecte-toi puis réessaie."
+              : errorMessage && errorMessage !== "SUPABASE_REST_FAILED" && errorMessage !== "SUPABASE_FUNCTION_FAILED"
+                ? errorMessage
+                : "Impossible d’enregistrer les paramètres.";
+      setSettingsFeedback({
+        type: "error",
+        text: settingsErrorText
+      });
+      setAppToast({ type: "error", text: settingsErrorText });
+    } finally {
+      setIsSettingsSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!currentUser?.accessToken && !currentUser?.refreshToken) {
+      setSettingsFeedback({ type: "error", text: "Connexion à actualiser. Reconnecte-toi." });
+      return;
+    }
+
+    setIsSettingsSaving(true);
+    setSettingsFeedback({ type: "", text: "" });
+    try {
+      const sessionUser = await refreshCurrentUserSession();
+      await callSupabaseFunctionWithAuth("delete-account", {}, sessionUser.accessToken);
+      setCurrentUser(null);
+      setSportProfile(normalizeSportProfile());
+      setSportProfileForm(emptySportProfileForm);
+      setSettingsForm(emptySettingsForm);
+      setAuthFeedback({ type: "success", text: "Compte supprimé." });
+      navigateTo(authLoginRoute);
+    } catch (error) {
+      const errorMessage = String(error?.message || "");
+      setSettingsFeedback({
+        type: "error",
+        text: errorMessage && errorMessage !== "SUPABASE_FUNCTION_FAILED" ? errorMessage : "Impossible de supprimer le compte."
+      });
+    } finally {
+      setIsSettingsSaving(false);
+    }
+  };
+
+  const updateSportEntry = (index, patch) => {
+    setSportProfileForm((prev) => ({
+      ...prev,
+      sports: prev.sports.map((sport, sportIndex) => (sportIndex === index ? { ...sport, ...patch } : sport))
+    }));
+  };
+
+  const addSportEntry = () => {
+    setSportProfileForm((prev) => ({
+      ...prev,
+      hasNoSport: false,
+      sports: [...prev.sports, { ...emptySportEntry }]
+    }));
+  };
+
+  const removeSportEntry = (index) => {
+    setSportProfileForm((prev) => {
+      const nextSports = prev.sports.filter((_, sportIndex) => sportIndex !== index);
+      return {
+        ...prev,
+        hasNoSport: nextSports.length === 0 ? true : prev.hasNoSport,
+        sports: nextSports.length ? nextSports : [{ ...emptySportEntry }]
+      };
+    });
+  };
+
+  const updateSupplementEntry = (index, patch) => {
+    setSportProfileForm((prev) => ({
+      ...prev,
+      supplements: prev.supplements.map((supplement, supplementIndex) =>
+        supplementIndex === index ? { ...supplement, ...patch } : supplement
+      )
+    }));
+  };
+
+  const addSupplementEntry = () => {
+    setSportProfileForm((prev) => ({
+      ...prev,
+      hasNoSupplement: false,
+      supplements: [...prev.supplements, { ...emptySupplementEntry }]
+    }));
+  };
+
+  const removeSupplementEntry = (index) => {
+    setSportProfileForm((prev) => {
+      const nextSupplements = prev.supplements.filter((_, supplementIndex) => supplementIndex !== index);
+      return {
+        ...prev,
+        hasNoSupplement: nextSupplements.length === 0 ? true : prev.hasNoSupplement,
+        supplements: nextSupplements.length ? nextSupplements : [{ ...emptySupplementEntry }]
+      };
+    });
+  };
+
+  const updateInjuryEntry = (index, patch) => {
+    setSportProfileForm((prev) => ({
+      ...prev,
+      injuryEntries: prev.injuryEntries.map((injury, injuryIndex) =>
+        injuryIndex === index ? { ...injury, ...patch } : injury
+      )
+    }));
+  };
+
+  const addInjuryEntry = () => {
+    setSportProfileForm((prev) => ({
+      ...prev,
+      hasNoInjury: false,
+      injuryEntries: [...prev.injuryEntries, { ...emptyInjuryEntry }]
+    }));
+  };
+
+  const removeInjuryEntry = (index) => {
+    setSportProfileForm((prev) => {
+      const nextInjuries = prev.injuryEntries.filter((_, injuryIndex) => injuryIndex !== index);
+      return {
+        ...prev,
+        hasNoInjury: nextInjuries.length === 0 ? true : prev.hasNoInjury,
+        injuryEntries: nextInjuries.length ? nextInjuries : [{ ...emptyInjuryEntry }]
+      };
+    });
+  };
+
+  const updateMedicalEntry = (index, patch) => {
+    setSportProfileForm((prev) => ({
+      ...prev,
+      medicalEntries: prev.medicalEntries.map((medical, medicalIndex) =>
+        medicalIndex === index ? { ...medical, ...patch } : medical
+      )
+    }));
+  };
+
+  const addMedicalEntry = () => {
+    setSportProfileForm((prev) => ({
+      ...prev,
+      hasNoMedicalInformation: false,
+      medicalEntries: [...prev.medicalEntries, { ...emptyMedicalEntry }]
+    }));
+  };
+
+  const removeMedicalEntry = (index) => {
+    setSportProfileForm((prev) => {
+      const nextMedicalEntries = prev.medicalEntries.filter((_, medicalIndex) => medicalIndex !== index);
+      return {
+        ...prev,
+        hasNoMedicalInformation: nextMedicalEntries.length === 0 ? true : prev.hasNoMedicalInformation,
+        medicalEntries: nextMedicalEntries.length ? nextMedicalEntries : [{ ...emptyMedicalEntry }]
+      };
+    });
+  };
+
+  const handleLanguageChange = (code) => {
+    if (code === language) {
+      setIsLangMenuOpen(false);
+      return;
+    }
+    setLanguage(code);
+    setIsLangMenuOpen(false);
+    setActiveNavSection("services");
+  };
+
+  const getNavLinkClass = (sectionId) =>
+    `group relative inline-flex flex-col items-center pb-1 transition ${activeNavSection === sectionId ? "nav-link-active" : "hover:text-white"
+    }`;
+
+  const getNavIndicatorClass = (sectionId) =>
+    `mt-1 h-0.5 w-full rounded-full transition ${activeNavSection === sectionId
+      ? "nav-link-indicator-active"
+      : "bg-transparent opacity-0 group-hover:bg-brand-300/70 group-hover:opacity-100"
+    }`;
+  const authInputClass =
+    "auth-field mt-1.5 w-full rounded-xl border px-3 py-2 text-sm outline-none transition";
+  const authSelectClass = authInputClass + " appearance-none";
+  const getSportLevelLabel = (value) => profileText.levelOptions?.[value] || value || "-";
+  const getSportGoalLabel = (value, customValue = "") =>
+    value === "other" ? customValue || profileText.goalOptions?.other || "Autre" : profileText.goalOptions?.[value] || value || "-";
+  const authHeader = (
+    <header className="sticky top-3 z-50 mx-auto max-w-6xl px-4 pt-4 sm:px-6">
+      <nav className="intro-nav auth-nav flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-700/70 bg-slate-900/70 px-4 py-3 shadow-[0_12px_36px_rgba(2,8,23,0.5)] backdrop-blur-xl sm:px-6">
+        <button type="button" onClick={() => navigateTo("/")} className="flex items-center gap-3 text-left">
+          <img src={hmLogo} alt="Logo HM" className="h-11 w-11 rounded-xl border border-brand-300/60" />
+          <div>
+            <p className="whitespace-nowrap text-[8px] uppercase tracking-[0.1em] text-brand-300 sm:text-[9px]">{content.nav.coachLabel}</p>
+            <p className="font-display text-base font-bold tracking-wide text-white sm:text-lg">HICHAM-FIT APP</p>
+          </div>
+        </button>
+
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsLangMenuOpen((prev) => !prev)}
+              className="flex items-center gap-2 rounded-xl border border-slate-600/70 bg-slate-900/70 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:border-brand-300"
+              aria-haspopup="menu"
+              aria-expanded={isLangMenuOpen}
+            >
+              <span className="text-sm leading-none">{currentLanguageOption.flag}</span>
+              <span>{currentLanguageOption.label}</span>
+            </button>
+
+            {isLangMenuOpen ? (
+              <div
+                className={`absolute top-full z-30 mt-2 w-44 rounded-xl border border-slate-600/70 bg-slate-900/95 p-1.5 shadow-[0_12px_24px_rgba(2,8,23,0.45)] backdrop-blur ${isArabic ? "right-0" : "left-0"
+                  }`}
+                role="menu"
+              >
+                {Object.entries(languageOptions).map(([code, option]) => (
+                  <button
+                    key={code}
+                    type="button"
+                    onClick={() => handleLanguageChange(code)}
+                    className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-semibold transition ${language === code
+                        ? "bg-brand-500 text-slate-950"
+                        : "text-slate-200 hover:bg-slate-800/90 hover:text-white"
+                      }`}
+                    role="menuitem"
+                  >
+                    <span className="text-sm leading-none">{option.flag}</span>
+                    <span className="min-w-8">{option.label}</span>
+                    <span className={`text-[11px] ${language === code ? "text-slate-900/85" : "text-slate-400"}`}>
+                      {option.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setTheme((prev) => (prev === "dark" ? "light" : "dark"))}
+            className="flex items-center gap-2 rounded-lg border border-slate-600/70 bg-slate-900/70 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:border-brand-300"
+          >
+            <span className="text-sm leading-none" aria-hidden="true">
+              {isLight ? "☀️" : "🌙"}
+            </span>
+            <span>{isLight ? content.controls.lightMode : content.controls.darkMode}</span>
+          </button>
+        </div>
+      </nav>
+    </header>
+  );
+
+  const toastShellClass = appToast.text
+    ? `relative flex w-[min(calc(100vw-2rem),420px)] items-start gap-3 overflow-hidden rounded-3xl border-2 px-4 py-3.5 text-sm shadow-[0_28px_90px_-18px_rgba(0,0,0,0.95)] ring-1 ring-white/10 backdrop-blur-2xl ${appToast.type === "success"
+      ? "border-brand-200 bg-[linear-gradient(135deg,rgba(21,128,61,0.98),rgba(2,6,23,0.96))] text-brand-100"
+      : "border-red-200 bg-[linear-gradient(135deg,rgba(153,27,27,0.98),rgba(2,6,23,0.96))] text-red-100"
+    }`
+    : "";
+  const toastContent = appToast.text ? (
+    <>
+      <span
+        className={`mt-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border-2 ${appToast.type === "success"
+            ? "border-brand-100/90 bg-brand-500 text-white shadow-[0_0_30px_rgba(34,197,94,0.42)]"
+            : "border-red-100/90 bg-red-500 text-white shadow-[0_0_34px_rgba(248,113,113,0.48)]"
+          }`}
+        aria-hidden="true"
+      >
+        {appToast.type === "success" ? (
+          <svg viewBox="0 0 24 24" className="h-6 w-6 fill-current drop-shadow">
+            <path d="m9.55 16.2-3.6-3.6-1.4 1.4 5 5L20 8.45l-1.4-1.4-9.05 9.15Z" />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 24 24" className="h-6 w-6 fill-current drop-shadow">
+            <path d="M12 2 1 21h22L12 2Zm1 15h-2v2h2v-2Zm0-8h-2v6h2V9Z" />
+          </svg>
+        )}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/55">
+          {appToast.type === "success" ? "Succès" : "Attention"}
+        </p>
+        <p className="mt-0.5 text-sm font-black leading-snug text-white">{appToast.text}</p>
+      </div>
+      <button
+        type="button"
+        onClick={() => setAppToast({ type: "", text: "" })}
+        className="rounded-full border border-white/10 bg-white/5 p-1 text-white/60 transition hover:border-white/25 hover:text-white"
+        aria-label="Fermer la notification"
+      >
+        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-current" aria-hidden="true">
+          <path d="m6.4 5 12.6 12.6-1.4 1.4L5 6.4 6.4 5Zm11.2 0L19 6.4 6.4 19 5 17.6 17.6 5Z" />
+        </svg>
+      </button>
+      <span
+        className={`pointer-events-none absolute bottom-0 left-0 h-1 w-full ${appToast.type === "success" ? "bg-brand-300/70" : "bg-red-300/70"
+          }`}
+        aria-hidden="true"
+      />
+    </>
+  ) : null;
+
+  const globalCartNode = isGlobalCartOpen && typeof document !== "undefined"
+    ? createPortal(
+      <div
+        className="fixed inset-0 z-[90] grid place-items-center p-4"
+        style={{ background: "rgba(2,6,23,0.6)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Panier"
+        onClick={() => setIsGlobalCartOpen(false)}
+      >
+        <div
+          className="flex max-h-[85vh] w-[min(100%,32rem)] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(2,6,23,0.25)]"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
+            <div className="flex items-center gap-2">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-brand-500" aria-hidden="true"><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.6 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6" /></svg>
+              <h2 className="font-display text-lg font-black text-slate-900">Mon panier</h2>
+            </div>
+            <button type="button" onClick={() => setIsGlobalCartOpen(false)} aria-label="Fermer le panier" className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-500 transition hover:border-brand-400 hover:text-slate-900">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+            </button>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+            {globalCartItems.length ? (
+              <ul className="space-y-3">
+                {globalCartItems.map((item) => (
+                  <li key={item.id} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-black text-slate-900">{item.title}</p>
+                      <p className="text-xs text-slate-500">{item.badge}</p>
+                    </div>
+                    <span className="shrink-0 text-sm font-black text-slate-900">{item.priceValue != null ? `${item.priceValue} €` : "Sur demande"}</span>
+                    <button type="button" onClick={() => { removeFromGlobalCart(item.id); setIsGlobalCartOpen(false); setTimeout(() => setIsGlobalCartOpen(true), 50); }} aria-label="Retirer du panier" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-400 transition hover:border-rose-400 hover:text-rose-500">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="py-10 text-center">
+                <p className="font-display text-lg font-black text-slate-900">Votre panier est vide</p>
+                <p className="mt-2 text-sm text-slate-500">Ajoutez des programmes payants pour les r\u00e9gler en une seule fois.</p>
+              </div>
+            )}
+          </div>
+          {globalCartItems.length ? (
+            <div className="shrink-0 border-t border-slate-200 px-5 py-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold text-slate-500">Total</span>
+                <span className="font-display text-2xl font-black text-slate-900">{globalCartTotal} €</span>
+              </div>
+              <button type="button" onClick={handleGlobalCheckout} className="mt-3 w-full rounded-2xl border-2 border-brand-300 bg-brand-400 px-4 py-3 text-sm font-black text-slate-950 transition hover:bg-brand-300">Payer {globalCartTotal} €</button>
+            </div>
+          ) : null}
+        </div>
+      </div>,
+      document.body
+    ) : null;
+
+  const appToastNode = appToast.text && typeof document !== "undefined"
+    ? createPortal(
+      <div
+        className={`app-toast-right ${toastShellClass}`}
+        dir="ltr"
+        role={appToast.type === "error" ? "alert" : "status"}
+        aria-live="polite"
+      >
+        {toastContent}
+      </div>,
+      document.body
+    )
+    : null;
+
+  if (isCompleteProfilePage && currentUser) {
+    return (
+      <div
+        className={`auth-page page-enter relative min-h-full overflow-x-clip ${isLight ? "theme-light" : "theme-dark"}`}
+        lang={language}
+        dir={isArabic ? "rtl" : "ltr"}
+      >
+        {authHeader}
+        <main className="relative z-10 mx-auto mt-6 flex h-[calc(100vh-164px)] max-w-5xl items-center overflow-hidden px-4 py-3 sm:px-6">
+          <section className="reveal-up auth-glass-card mx-auto flex max-h-full min-h-0 w-full max-w-3xl flex-col overflow-hidden p-5 md:p-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-200">
+              {profileText.required}
+            </p>
+            <h1 className="mt-2 font-display text-2xl font-black text-white md:text-3xl">
+              {profileText.title}
+            </h1>
+            <p className="mt-2 text-sm leading-relaxed text-slate-200">{profileText.subtitle}</p>
+
+            <form onSubmit={handleSportProfileSubmit} className="mt-4 flex min-h-0 flex-1 flex-col">
+              <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+                <div className="rounded-3xl border border-slate-600/45 bg-slate-950/25 p-4">
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                    <h2 className="text-base font-black text-white">{profileText.physicalTitle}</h2>
+                    <span className="rounded-full border border-brand-300/50 bg-brand-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-brand-200">
+                      {profileText.required}
+                    </span>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="block text-xs font-semibold text-slate-300">
+                      <span>{profileText.heightCm}</span>
+                      <input
+                        type="number"
+                        min="80"
+                        max="260"
+                        value={sportProfileForm.heightCm}
+                        onKeyDown={preventInvalidNumberKey}
+                        onChange={(event) =>
+                          setSportProfileForm((prev) => ({
+                            ...prev,
+                            heightCm: sanitizePositiveNumberInput(event.target.value, { integer: true })
+                          }))
+                        }
+                        className={authInputClass}
+                        inputMode="numeric"
+                      />
+                    </label>
+                    <label className="block text-xs font-semibold text-slate-300">
+                      <span>{profileText.currentWeightKg}</span>
+                      <input
+                        type="number"
+                        min="25"
+                        max="350"
+                        step="0.1"
+                        value={sportProfileForm.currentWeightKg}
+                        onKeyDown={preventInvalidNumberKey}
+                        onChange={(event) =>
+                          setSportProfileForm((prev) => ({
+                            ...prev,
+                            currentWeightKg: sanitizePositiveNumberInput(event.target.value)
+                          }))
+                        }
+                        className={authInputClass}
+                        inputMode="decimal"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="rounded-3xl border border-slate-600/45 bg-slate-950/25 p-4">
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                    <h2 className="text-base font-black text-white">
+                      {profileText.supplementsTitle || "3. Compléments alimentaires"}
+                    </h2>
+                    <span className="rounded-full border border-brand-300/50 bg-brand-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-brand-200">
+                      {profileText.required}
+                    </span>
+                  </div>
+                  <div className="space-y-4">
+                    <label className="flex items-center gap-3 rounded-2xl border border-slate-600/45 bg-slate-950/30 p-3 text-xs font-bold text-slate-200">
+                      <input
+                        type="checkbox"
+                        checked={sportProfileForm.hasNoSupplement}
+                        onChange={(event) =>
+                          setSportProfileForm((prev) => ({
+                            ...prev,
+                            hasNoSupplement: event.target.checked,
+                            supplements: event.target.checked ? [{ ...emptySupplementEntry }] : prev.supplements
+                          }))
+                        }
+                        className="h-4 w-4 accent-emerald-400"
+                      />
+                      <span>{profileText.noSupplement || "Aucun complément alimentaire"}</span>
+                    </label>
+
+                    {!sportProfileForm.hasNoSupplement ? (
+                      <div className="space-y-3">
+                        {sportProfileForm.supplements.map((supplement, index) => (
+                          <div
+                            key={`supplement-entry-${index}`}
+                            className="rounded-2xl border border-slate-600/45 bg-slate-950/25 p-3"
+                          >
+                            <div className="mb-3 flex items-center justify-between gap-3">
+                              <p className="text-xs font-black uppercase tracking-[0.14em] text-brand-200">
+                                {profileText.supplementNumber || "Complément"} {index + 1}
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => removeSupplementEntry(index)}
+                                className="rounded-lg border border-slate-600/70 px-2.5 py-1 text-[11px] font-bold text-slate-200 transition hover:border-red-300 hover:text-red-200"
+                              >
+                                {profileText.removeSupplement || profileText.removeSport}
+                              </button>
+                            </div>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <SelectWithOtherField
+                                label={profileText.supplementName || "Nom du complément"}
+                                value={supplement.name}
+                                customValue={supplement.customName}
+                                options={supplementNameOptions}
+                                customPlaceholder={profileText.supplementCustomValue || "Précise"}
+                                selectClass={authSelectClass}
+                                onChange={(value) =>
+                                  updateSupplementEntry(index, {
+                                    name: value,
+                                    customName: value === "Autre" ? supplement.customName : ""
+                                  })
+                                }
+                                onCustomChange={(value) => updateSupplementEntry(index, { customName: value })}
+                              />
+                              <label className="block text-xs font-semibold text-slate-300">
+                                <span>{profileText.supplementDose || "Dose / Quantité"}</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  value={supplement.dose}
+                                  onKeyDown={preventInvalidNumberKey}
+                                  onChange={(event) =>
+                                    updateSupplementEntry(index, {
+                                      dose: sanitizePositiveNumberInput(event.target.value, { maxDecimals: 2 })
+                                    })
+                                  }
+                                  className={authInputClass}
+                                  inputMode="decimal"
+                                />
+                              </label>
+                              <SelectWithOtherField
+                                label={profileText.supplementUnit || "Unité"}
+                                value={supplement.unit}
+                                customValue={supplement.customUnit}
+                                options={supplementUnitOptions}
+                                otherValue="autre"
+                                customPlaceholder={profileText.supplementCustomValue || "Précise"}
+                                selectClass={authSelectClass}
+                                onChange={(value) =>
+                                  updateSupplementEntry(index, {
+                                    unit: value,
+                                    customUnit: value === "autre" ? supplement.customUnit : ""
+                                  })
+                                }
+                                onCustomChange={(value) => updateSupplementEntry(index, { customUnit: value })}
+                              />
+                              <SelectWithOtherField
+                                label={profileText.supplementFrequency || "Fréquence"}
+                                value={supplement.frequency}
+                                customValue={supplement.customFrequency}
+                                options={supplementFrequencyOptions}
+                                customPlaceholder={profileText.supplementCustomValue || "Précise"}
+                                selectClass={authSelectClass}
+                                onChange={(value) =>
+                                  updateSupplementEntry(index, {
+                                    frequency: value,
+                                    customFrequency: value === "Autre" ? supplement.customFrequency : ""
+                                  })
+                                }
+                                onCustomChange={(value) => updateSupplementEntry(index, { customFrequency: value })}
+                              />
+                              <SelectWithOtherField
+                                label={profileText.supplementTiming || "Moment de prise"}
+                                value={supplement.timing}
+                                customValue={supplement.customTiming}
+                                options={supplementTimingOptions}
+                                customPlaceholder={profileText.supplementCustomValue || "Précise"}
+                                selectClass={authSelectClass}
+                                onChange={(value) =>
+                                  updateSupplementEntry(index, {
+                                    timing: value,
+                                    customTiming: value === "Autre" ? supplement.customTiming : ""
+                                  })
+                                }
+                                onCustomChange={(value) => updateSupplementEntry(index, { customTiming: value })}
+                              />
+                              <SelectWithOtherField
+                                label={profileText.supplementCategory || "Catégorie"}
+                                value={supplement.category}
+                                customValue={supplement.customCategory}
+                                options={supplementCategoryOptions}
+                                customPlaceholder={profileText.supplementCustomValue || "Précise"}
+                                selectClass={authSelectClass}
+                                onChange={(value) =>
+                                  updateSupplementEntry(index, {
+                                    category: value,
+                                    customCategory: value === "Autre" ? supplement.customCategory : ""
+                                  })
+                                }
+                                onCustomChange={(value) => updateSupplementEntry(index, { customCategory: value })}
+                              />
+                              <label className="block text-xs font-semibold text-slate-300">
+                                <span>
+                                  {profileText.supplementStartDate || "Date de début"} ({profileText.optional})
+                                </span>
+                                <input
+                                  type="date"
+                                  value={supplement.startDate}
+                                  onChange={(event) => updateSupplementEntry(index, { startDate: event.target.value })}
+                                  className={authInputClass}
+                                />
+                              </label>
+                              <label className="block text-xs font-semibold text-slate-300">
+                                <StatusLabelWithInfo
+                                  label={profileText.supplementStatus || "Statut"}
+                                  help={profileText.supplementStatusHelp}
+                                />
+                                <select
+                                  value={supplement.status}
+                                  onChange={(event) => updateSupplementEntry(index, { status: event.target.value })}
+                                  className={authSelectClass}
+                                >
+                                  {supplementStatusValues.map((status) => (
+                                    <option key={status.value} value={status.value}>
+                                      {status.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                              <label className="block text-xs font-semibold text-slate-300 sm:col-span-2">
+                                <span>{profileText.supplementRemark || "Remarque"} ({profileText.optional})</span>
+                                <textarea
+                                  value={supplement.remark}
+                                  onChange={(event) => updateSupplementEntry(index, { remark: event.target.value })}
+                                  placeholder={
+                                    profileText.supplementRemarkPlaceholder ||
+                                    "Exemple : à prendre avec de l’eau, après le repas ..."
+                                  }
+                                  className={`${authInputClass} min-h-[86px] resize-y`}
+                                />
+                              </label>
+                            </div>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={addSupplementEntry}
+                          className="rounded-xl border border-brand-300/70 bg-brand-500/10 px-4 py-2 text-xs font-bold text-brand-200 transition hover:border-brand-200 hover:bg-brand-500/15"
+                        >
+                          {profileText.addSupplement || "Ajouter un complément"}
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="rounded-3xl border border-slate-600/45 bg-slate-950/25 p-4">
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                    <h2 className="text-base font-black text-white">{profileText.sportTitle}</h2>
+                    <span className="rounded-full border border-brand-300/50 bg-brand-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-brand-200">
+                      {profileText.required}
+                    </span>
+                  </div>
+                  <div className="space-y-4">
+                    <label className="flex items-center gap-3 rounded-2xl border border-slate-600/45 bg-slate-950/30 p-3 text-xs font-bold text-slate-200">
+                      <input
+                        type="checkbox"
+                        checked={sportProfileForm.hasNoSport}
+                        onChange={(event) =>
+                          setSportProfileForm((prev) => ({
+                            ...prev,
+                            hasNoSport: event.target.checked,
+                            sports: event.target.checked ? [{ ...emptySportEntry }] : prev.sports
+                          }))
+                        }
+                        className="h-4 w-4 accent-emerald-400"
+                      />
+                      <span>{profileText.noSport}</span>
+                    </label>
+
+                    {!sportProfileForm.hasNoSport ? (
+                      <div className="space-y-3">
+                        {sportProfileForm.sports.map((sport, index) => (
+                          <div key={`sport-entry-${index}`} className="rounded-2xl border border-slate-600/45 bg-slate-950/25 p-3">
+                            <div className="mb-3 flex items-center justify-between gap-3">
+                              <p className="text-xs font-black uppercase tracking-[0.14em] text-brand-200">
+                                {profileText.sportNumber} {index + 1}
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => removeSportEntry(index)}
+                                className="rounded-lg border border-slate-600/70 px-2.5 py-1 text-[11px] font-bold text-slate-200 transition hover:border-red-300 hover:text-red-200"
+                              >
+                                {profileText.removeSport}
+                              </button>
+                            </div>
+                            <div className="grid gap-3 sm:grid-cols-3">
+                              <label className="block text-xs font-semibold text-slate-300">
+                                <span>{profileText.sportPracticed}</span>
+                                <input
+                                  type="text"
+                                  value={sport.sportPracticed}
+                                  onChange={(event) => updateSportEntry(index, { sportPracticed: event.target.value })}
+                                  className={authInputClass}
+                                />
+                              </label>
+                              <label className="block text-xs font-semibold text-slate-300">
+                                <span>{profileText.sessionsPerWeek}</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="21"
+                                  value={sport.sessionsPerWeek}
+                                  onKeyDown={preventInvalidNumberKey}
+                                  onChange={(event) =>
+                                    updateSportEntry(index, {
+                                      sessionsPerWeek: sanitizePositiveNumberInput(event.target.value, { integer: true })
+                                    })
+                                  }
+                                  className={authInputClass}
+                                  inputMode="numeric"
+                                />
+                              </label>
+                              <label className="block text-xs font-semibold text-slate-300">
+                                <span>{profileText.sportLevel}</span>
+                                <select
+                                  value={sport.sportLevel}
+                                  onChange={(event) => updateSportEntry(index, { sportLevel: event.target.value })}
+                                  className={authSelectClass}
+                                >
+                                  <option value="">{profileText.sportLevel}</option>
+                                  {sportLevelValues.map((value) => (
+                                    <option key={value} value={value}>
+                                      {getSportLevelLabel(value)}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                            </div>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={addSportEntry}
+                          className="rounded-xl border border-brand-300/70 bg-brand-500/10 px-4 py-2 text-xs font-bold text-brand-200 transition hover:border-brand-200 hover:bg-brand-500/15"
+                        >
+                          {profileText.addSport}
+                        </button>
+                      </div>
+                    ) : null}
+
+                    <SportGoalField
+                      profileText={profileText}
+                      sportProfileForm={sportProfileForm}
+                      setSportProfileForm={setSportProfileForm}
+                      authInputClass={authInputClass}
+                      authSelectClass={authSelectClass}
+                      getSportGoalLabel={getSportGoalLabel}
+                    />
+                  </div>
+                </div>
+
+                <div className="rounded-3xl border border-slate-600/45 bg-slate-950/25 p-4">
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                    <h2 className="text-base font-black text-white">
+                      {profileText.healthTitle || "Blessures et informations médicales"}
+                    </h2>
+                    <span className="rounded-full border border-brand-300/50 bg-brand-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-brand-200">
+                      {profileText.required}
+                    </span>
+                  </div>
+                  <div className="space-y-4">
+                    <HealthInformationEditor
+                      profileText={profileText}
+                      sportProfileForm={sportProfileForm}
+                      setSportProfileForm={setSportProfileForm}
+                      updateInjuryEntry={updateInjuryEntry}
+                      addInjuryEntry={addInjuryEntry}
+                      removeInjuryEntry={removeInjuryEntry}
+                      updateMedicalEntry={updateMedicalEntry}
+                      addMedicalEntry={addMedicalEntry}
+                      removeMedicalEntry={removeMedicalEntry}
+                      authInputClass={authInputClass}
+                      authSelectClass={authSelectClass}
+                    />
+
+                    <label className="block text-xs font-semibold text-slate-300">
+                      <span>{profileText.remarks} ({profileText.optional})</span>
+                      <textarea
+                        value={sportProfileForm.remarks}
+                        onChange={(event) => setSportProfileForm((prev) => ({ ...prev, remarks: event.target.value }))}
+                        className={`${authInputClass} min-h-[96px] resize-y`}
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSportProfileSaving || isSportProfileLoading}
+                className="auth-submit mt-4 w-full shrink-0 rounded-xl px-4 py-2.5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSportProfileSaving ? profileText.saving : profileText.save}
+              </button>
+            </form>
+
+            {sportProfileFeedback.text ? (
+              <p className={`mt-3 text-xs ${sportProfileFeedback.type === "success" ? "text-brand-300" : "font-semibold text-red-500"}`}>
+                {sportProfileFeedback.text}
+              </p>
+            ) : null}
+          </section>
+        </main>
+      </div>
+    );
+  }
+
+  if (currentRoute.path === "/carte-preview") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-black p-8">
+        <div className="w-full max-w-3xl">
+          <AthleteLuxuryCard
+            language={language || "fr"}
+            fullName="Mohamed Ali"
+            matricule="HC-ATH-0001"
+            email="mohamed.ali@example.com"
+            birthDate="14/05/2002"
+            country="France"
+            registrationDate="02/05/2026"
+            initials="MA"
+            photoUrl="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?q=80&w=600&auto=format&fit=crop"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (isDashboardPage && currentUser) {
+    const dashboardLocale = language === "en" ? "en" : language === "ar" ? "ar" : "fr";
+    const athleteCountry =
+      countryOptions.find((option) => option.code === sportProfile.country_code)?.name || sportProfile.country_code || "-";
+    const athleteMatricule = getAthleteMatricule(currentUser.id);
+    const registrationDate = formatDisplayDate(sportProfile.created_at, dashboardLocale);
+    const birthDate = formatDisplayDate(sportProfile.date_of_birth, dashboardLocale);
+    const weightSeries = buildWeightSeries(sportProfile.current_weight_kg, dashboardWeightRange);
+    const objectiveChart = buildObjectiveSeries(sportProfile.sport_goal);
+    const rangeOptions = [
+      { value: "week", label: "Semaine" },
+      { value: "month", label: "Mois" },
+      { value: "year", label: "Année" }
+    ];
+    const dashLocaleTag = dashboardLocale === "en" ? "en-GB" : dashboardLocale === "ar" ? "ar-EG" : "fr-FR";
+    // Prochain rendez-vous : le plus proche non annulé dont le créneau n'est pas encore terminé.
+    const nextAppointmentRaw = (() => {
+      if (typeof window === "undefined") return null;
+      let list = [];
+      try {
+        const saved = window.localStorage.getItem("hm-appointments");
+        const parsed = saved ? JSON.parse(saved) : [];
+        list = Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return null;
+      }
+      const nowMs = Date.now();
+      return (
+        list
+          .filter(
+            (a) =>
+              a && !a.cancelled && a.date && a.time &&
+              new Date(`${a.date}T${a.time}:00`).getTime() + coachSlotDurationMin * 60000 > nowMs
+          )
+          .sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`))[0] || null
+      );
+    })();
+    const nextAppointment = nextAppointmentRaw
+      ? {
+          number: nextAppointmentRaw.number,
+          date: new Date(`${nextAppointmentRaw.date}T00:00:00`).toLocaleDateString(dashLocaleTag, {
+            weekday: "short",
+            day: "2-digit",
+            month: "short"
+          }),
+          time: `${nextAppointmentRaw.time}-${addMinutesToTime(nextAppointmentRaw.time, coachSlotDurationMin)}`,
+          mode: nextAppointmentRaw.mode === "vocal" ? "Appel vocal" : "Appel vidéo",
+          startsAt: new Date(`${nextAppointmentRaw.date}T${nextAppointmentRaw.time}:00`).toISOString()
+        }
+      : null;
+    const appointmentStartsAt = nextAppointment?.startsAt ? new Date(nextAppointment.startsAt) : null;
+    // Bouton « Rejoindre » actif seulement à partir de 10 min avant et jusqu'à 10 min après l'heure.
+    const canJoinAppointment = appointmentStartsAt
+      ? Date.now() >= appointmentStartsAt.getTime() - 10 * 60 * 1000 && Date.now() <= appointmentStartsAt.getTime() + 10 * 60 * 1000
+      : false;
+    // Dernier programme envoyé par le coach (le plus récent).
+    const lastProgram = coachPrograms
+      .slice()
+      .sort((a, b) => new Date(b.sentDate).getTime() - new Date(a.sentDate).getTime())[0] || null;
+    const dashHour = new Date().getHours();
+    const welcomeGreeting =
+      language === "en"
+        ? dashHour < 12
+          ? "Good morning"
+          : dashHour < 18
+            ? "Good afternoon"
+            : "Good evening"
+        : language === "ar"
+          ? "مرحباً"
+          : dashHour < 12
+            ? "Bonjour"
+            : dashHour < 18
+              ? "Bon après-midi"
+              : "Bonsoir";
+    const welcomeName = currentUser.firstName || currentUser.fullName;
+    const dashboardCartCount = (() => {
+      if (typeof window === "undefined") return 0;
+      try {
+        const saved = window.localStorage.getItem("hm-shop-cart");
+        const parsed = saved ? JSON.parse(saved) : [];
+        return Array.isArray(parsed) ? parsed.length : 0;
+      } catch {
+        return 0;
+      }
+    })();
+
+    return (
+      <div
+        className={`auth-page auth-page--dashboard auth-page--dashboard-wrap page-enter relative ${isLight ? "theme-light" : "theme-dark"} ${sidebarOpen ? "hf-sidebar-open" : "hf-sidebar-collapsed"}`}
+        lang={language}
+        dir={isArabic ? "rtl" : "ltr"}
+      >
+        {appToastNode}
+        {globalCartNode}
+        <DashboardSidebar
+          language={language}
+          isOpen={sidebarOpen}
+          onToggle={() => setSidebarOpen((v) => !v)}
+          activeKey={activeNavKey}
+          onNavigate={(key) => {
+            setActiveNavKey(key);
+            navigateTo(key === "dashboard" ? "/dashboard" : `/dashboard?view=${encodeURIComponent(key)}`);
+            if (typeof window !== "undefined" && window.innerWidth < 1024) {
+              setSidebarOpen(false);
+            }
+          }}
+          onLogout={handleLogout}
+          isLight={isLight}
+          onToggleTheme={() => setTheme((prev) => (prev === "dark" ? "light" : "dark"))}
+          onLanguageChange={(code) => {
+            handleLanguageChange(code);
+          }}
+          currentLanguageOption={currentLanguageOption}
+          languageOptions={languageOptions}
+          isLangMenuOpen={isLangMenuOpen}
+          onToggleLangMenu={() => setIsLangMenuOpen((v) => !v)}
+          athleteName={currentUser.fullName}
+          athleteSubtitle={currentUser.email}
+          athleteAvatarUrl={currentUser.avatarUrl}
+        />
+        {!sidebarOpen ? null : (
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Fermer le menu"
+            className="hf-sidebar-overlay"
+          />
+        )}
+        {!sidebarOpen ? (
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Ouvrir le menu"
+            className="hf-mobile-menu-fab"
+            data-testid="sidebar-mobile-fab"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+            Menu
+          </button>
+        ) : null}
+        <main className="hf-dashboard-main relative z-10 mx-auto flex min-h-0 w-full max-w-[1700px] flex-1 flex-col overflow-hidden px-1.5 pb-1.5 pt-0 sm:px-2">
+          {activeNavKey === "settings" ? (
+            <SettingsPage
+              currentUser={currentUser}
+              athleteSex={sportProfile.sex || currentUser.sex || ""}
+              settingsForm={settingsForm}
+              setSettingsForm={setSettingsForm}
+              settingsFeedback={settingsFeedback}
+              setSettingsFeedback={setSettingsFeedback}
+              isSettingsSaving={isSettingsSaving}
+              onSubmit={handleSettingsSubmit}
+              onBack={() => {
+                setActiveNavKey("dashboard");
+                navigateTo("/");
+              }}
+              onGoToShop={() => setIsGlobalCartOpen(true)}
+              onDeleteAccount={handleDeleteAccount}
+              onAvatarFileChange={handleAvatarFileChange}
+              countryOptions={countryOptions}
+              sportProfileForm={sportProfileForm}
+              setSportProfileForm={setSportProfileForm}
+              updateSportEntry={updateSportEntry}
+              addSportEntry={addSportEntry}
+              removeSportEntry={removeSportEntry}
+              updateSupplementEntry={updateSupplementEntry}
+              addSupplementEntry={addSupplementEntry}
+              removeSupplementEntry={removeSupplementEntry}
+              updateInjuryEntry={updateInjuryEntry}
+              addInjuryEntry={addInjuryEntry}
+              removeInjuryEntry={removeInjuryEntry}
+              updateMedicalEntry={updateMedicalEntry}
+              addMedicalEntry={addMedicalEntry}
+              removeMedicalEntry={removeMedicalEntry}
+              profileText={profileText}
+              getSportLevelLabel={getSportLevelLabel}
+              getSportGoalLabel={getSportGoalLabel}
+              authInputClass={authInputClass}
+              authSelectClass={authSelectClass}
+              preventInvalidNumberKey={preventInvalidNumberKey}
+              sanitizePositiveNumberInput={sanitizePositiveNumberInput}
+              settingsPasswordChecks={settingsPasswordChecks}
+            />
+          ) : activeNavKey === "programs" ? (
+            <MyProgramsPage
+              onBack={() => navigateTo("/")}
+              refreshSession={refreshCurrentUserSession}
+              onInvoiceSent={() => setAppToast({ type: "success", text: "Votre facture a été envoyée à votre boîte email" })}
+              onGoToShop={() => setIsGlobalCartOpen(true)}
+            />
+          ) : activeNavKey === "appointments" ? (
+            <AppointmentsPage
+              onBack={() => navigateTo("/")}
+              customerEmail={currentUser.email || ""}
+              onGoToShop={() => setIsGlobalCartOpen(true)}
+            />
+          ) : activeNavKey === "shop" ? (
+            <ShopPage
+              searchValue={shopSearch}
+              onSearchChange={setShopSearch}
+              category={shopCategory}
+              onCategoryChange={setShopCategory}
+              priceType={shopPriceType}
+              onPriceTypeChange={setShopPriceType}
+              onBack={() => navigateTo("/")}
+              customerName={currentUser.fullName || currentUser.firstName || ""}
+              customerEmail={currentUser.email || ""}
+              accessToken={currentUser.accessToken || ""}
+              refreshSession={refreshCurrentUserSession}
+              onInvoiceSent={() => setAppToast({ type: "success", text: "Votre facture a été envoyée à votre boîte email" })}
+            />
+          ) : (
+            <section className="settings-page grid min-h-0 grid-rows-[auto_auto_minmax(0,1fr)_auto] gap-1 overflow-hidden">
+              <div className="settings-hero shrink-0">
+                <div className="settings-hero__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8" aria-hidden="true">
+                    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                    <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                  </svg>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h1 className="settings-hero__title">Tableau de bord</h1>
+                  <p className="settings-hero__subtitle">
+                    <span className="font-bold">{welcomeGreeting} {welcomeName}</span> 👋{" "}
+                    {language === "en"
+                      ? "Here's your fitness tracking space."
+                      : language === "ar"
+                        ? "هذه مساحتك لمتابعة لياقتك الرياضية."
+                        : "Voici ton espace de suivi sportif."}
+                  </p>
+                </div>
+                <div className="settings-hero__actions" aria-label="Actions rapides">
+                  <button
+                    type="button"
+                    onClick={() => navigateTo("/")}
+                    className="settings-hero__back"
+                    aria-label="Revenir en arrière"
+                    title="Revenir en arrière"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M15 18 9 12l6-6" />
+                      <path d="M9 12h11" />
+                    </svg>
+                    <span>Retour</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsGlobalCartOpen(true)}
+                    className="settings-hero__action"
+                    aria-label="Panier"
+                    title="Voir le panier (boutique)"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <circle cx="9" cy="21" r="1" />
+                      <circle cx="20" cy="21" r="1" />
+                      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                    </svg>
+                    {dashboardCartCount > 0 ? (
+                      <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-brand-500 px-1 text-[10px] font-black text-white">
+                        {dashboardCartCount}
+                      </span>
+                    ) : null}
+                  </button>
+                  <CoachInbox />
+                </div>
+              </div>
+
+              <div className="mt-1 flex shrink-0 flex-col gap-1 lg:flex-row lg:items-stretch">
+                <div className="athlete-card-stage flex min-w-0 shrink-0 justify-center lg:justify-start">
+                  <AthleteLuxuryCard
+                    language={language}
+                    fullName={currentUser.fullName}
+                    matricule={athleteMatricule}
+                    email={currentUser.email}
+                    birthDate={birthDate}
+                    country={athleteCountry}
+                    registrationDate={registrationDate}
+                    initials={getInitials(currentUser.fullName)}
+                    photoUrl={currentUser.avatarUrl}
+                  />
+                </div>
+
+                <div className="grid min-w-0 flex-1 grid-cols-3 gap-1 lg:grid-cols-1 lg:gap-1">
+                  {[
+                    {
+                      label:
+                        language === "en" ? "Current weight" : language === "ar" ? "الوزن الحالي" : "Poids actuel",
+                      value: sportProfile.current_weight_kg ? `${sportProfile.current_weight_kg} kg` : "—",
+                      icon: (
+                        <svg viewBox="0 0 24 24" className="h-5 w-5 text-brand-100" aria-hidden>
+                          <path
+                            fill="currentColor"
+                            d="M12 3a4 4 0 0 1 4 4v1h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2V7a4 4 0 0 1 4-4Zm0 2a2 2 0 0 0-2 2v1h4V7a2 2 0 0 0-2-2Zm-4 5H6v8h12v-8h-2v1a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1v-1Z"
+                          />
+                        </svg>
+                      )
+                    },
+                    {
+                      label:
+                        language === "en" ? "Current height" : language === "ar" ? "الطول الحالي" : "Taille actuelle",
+                      value: sportProfile.height_cm ? `${sportProfile.height_cm} cm` : "—",
+                      icon: (
+                        <svg viewBox="0 0 24 24" className="h-5 w-5 text-brand-100" aria-hidden>
+                          <path
+                            fill="currentColor"
+                            d="M11 3h2v3.17l3.59-3.59L18 6l-5 5v8h-2v-8L6 6l1.41-1.42L11 6.17V3Z"
+                          />
+                        </svg>
+                      )
+                    },
+                    {
+                      label:
+                        language === "en"
+                          ? "Sport goal"
+                          : language === "ar"
+                            ? "الهدف الرياضي"
+                            : "Objectif sportif",
+                      value: getSportGoalLabel(sportProfile.sport_goal, sportProfile.sport_goal_custom),
+                      icon: (
+                        <svg viewBox="0 0 24 24" className="h-5 w-5 text-brand-100" aria-hidden>
+                          <path
+                            fill="currentColor"
+                            d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm0 2a8 8 0 1 1-8 8 8 8 0 0 1 8-8Zm3.3 4.3L10 13.6 8.7 12.3a1 1 0 0 0-1.4 1.4l2.5 2.5a1 1 0 0 0 1.4 0l5.7-5.7a1 1 0 0 0-1.4-1.4Z"
+                          />
+                        </svg>
+                      )
+                    }
+                  ].map(({ label, value, icon }) => (
+                    <article key={label} className="dashboard-stat-card p-2 pt-3.5">
+                      <div className="flex items-start justify-between gap-1">
+                        <div className="dashboard-stat-icon h-7 w-7 shrink-0 text-brand-100 [&_svg]:h-3.5 [&_svg]:w-3.5">
+                          {icon}
+                        </div>
+                      </div>
+                      <p className="mt-1 text-[8px] font-bold uppercase tracking-[0.14em] text-slate-400">{label}</p>
+                      <p className="mt-0.5 line-clamp-2 text-xs font-black leading-tight text-white sm:text-sm">{value}</p>
+                    </article>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex min-h-0 flex-1 gap-1 overflow-hidden lg:flex-row flex-col">
+                <article className="auth-glass-card flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-2">
+                  <div className="flex shrink-0 flex-wrap items-center justify-between gap-1">
+                    <div>
+                      <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-brand-200">Suivi athlète</p>
+                      <h2 className="font-display text-sm font-black text-white">Évolution du poids</h2>
+                    </div>
+                    <div className="flex rounded-lg border border-slate-600/60 bg-slate-950/35 p-0.5">
+                      {rangeOptions.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setDashboardWeightRange(option.value)}
+                          className={`rounded-md px-2 py-1 text-[10px] font-black transition ${dashboardWeightRange === option.value
+                              ? "bg-brand-500 text-slate-950"
+                              : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
+                            }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mt-1 flex min-h-0 flex-1 flex-col gap-1 overflow-hidden">
+                    <ProgressChart
+                      compact
+                      title="Évolution du poids"
+                      unit="kg"
+                      values={weightSeries}
+                      action={
+                        <button
+                          type="button"
+                          className="shrink-0 rounded-lg border border-brand-300/60 bg-brand-500/10 px-2 py-1 text-[10px] font-black text-brand-200 transition hover:border-brand-300 hover:bg-brand-500/15"
+                        >
+                          Ajouter une mesure
+                        </button>
+                      }
+                    />
+                    {objectiveChart ? (
+                      <ProgressChart compact title={objectiveChart.title} unit={objectiveChart.unit} values={objectiveChart.values} />
+                    ) : null}
+                  </div>
+                </article>
+              </div>
+
+              <div className="dashboard-row-appo-program grid shrink-0 gap-1 lg:grid-cols-2">
+                <article className="auth-glass-card p-2 md:p-2.5">
+                  <div className="flex flex-wrap items-end justify-between gap-1">
+                    <div>
+                      <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-brand-200">
+                        {language === "en" ? "Coach Hicham" : language === "ar" ? "المدرب هشام" : "Coach Hicham"}
+                      </p>
+                      <h2 className="mt-0.5 font-display text-sm font-black text-white">
+                        {language === "en" ? "Next appointment" : language === "ar" ? "الموعد القادم" : "Prochain rendez-vous"}
+                      </h2>
+                    </div>
+                    <div className="rounded-lg border border-white/12 bg-white/[0.05] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-300">
+                      {language === "en" ? "1:1" : language === "ar" ? "1:1" : "1:1"}
+                    </div>
+                  </div>
+                  <div className="dashboard-meet-card relative mt-1.5 pl-3.5 pr-2 py-2 sm:pl-4">
+                    <div className="grid grid-cols-2 gap-1">
+                      {[
+                        [
+                          language === "en" ? "Appt. #" : language === "ar" ? "رقم الموعد" : "N° RDV",
+                          nextAppointment?.number || "—"
+                        ],
+                        [
+                          language === "en" ? "Date" : language === "ar" ? "التاريخ" : "Date",
+                          nextAppointment?.date || "—"
+                        ],
+                        [
+                          language === "en" ? "Time" : language === "ar" ? "الوقت" : "Heure",
+                          nextAppointment?.time || "—"
+                        ],
+                        [
+                          language === "en" ? "Mode" : language === "ar" ? "الوضع" : "Mode",
+                          nextAppointment?.mode ||
+                          (language === "en"
+                            ? "Audio / video call"
+                            : language === "ar"
+                              ? "صوت / فيديو"
+                              : "Appel audio / Appel vidéo")
+                        ]
+                      ].map(([label, value]) => (
+                        <div
+                          key={String(label)}
+                          className="rounded-lg border border-white/10 bg-slate-950/35 px-2 py-1.5 backdrop-blur-sm"
+                        >
+                          <p className="text-[8px] font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p>
+                          <p className="mt-0.5 truncate text-[10px] font-black text-white">{value}</p>
+                        </div>
+                      ))}
+                    </div>
+                    {!nextAppointment ? (
+                      <p className="mt-1.5 rounded-lg border border-white/10 bg-slate-950/25 px-2 py-1.5 text-[10px] text-slate-300">
+                        {language === "en"
+                          ? "No appointment scheduled yet."
+                          : language === "ar"
+                            ? "لا يوجد موعد مجدول حالياً."
+                            : "Aucun rendez-vous programmé pour le moment."}
+                      </p>
+                    ) : null}
+                  </div>
+                  <button
+                    type="button"
+                    disabled={!canJoinAppointment}
+                    onClick={() => {
+                      setActiveNavKey("appointments");
+                      navigateTo("/dashboard?view=appointments");
+                    }}
+                    className={`mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-lg border px-2 py-1.5 text-[11px] font-black transition ${canJoinAppointment
+                        ? "dashboard-join-btn-active"
+                        : "cursor-not-allowed border-slate-600/50 bg-slate-950/35 text-slate-500"
+                      }`}
+                  >
+                    <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 fill-current" aria-hidden>
+                      <path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1.02 1.02 0 0 0-1.02.24l-2.2 2.2a15.1 15.1 0 0 1-6.59-6.59l2.2-2.2c.28-.28.36-.7.25-1.09A11.7 11.7 0 0 1 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1ZM19 12h2a9 9 0 0 0-9-9v2c3.87 0 7 3.13 7 7Zm-4 0h2c0-2.76-2.24-5-5-5v2c1.66 0 3 1.34 3 3Z" />
+                    </svg>
+                    {language === "en" ? "Join call" : language === "ar" ? "انضم للمكالمة" : "Rejoindre l'appel"}
+                  </button>
+                  <p className="mt-1 hidden text-center text-[9px] text-slate-400 sm:block">
+                    {language === "en"
+                      ? "Active 10 min before."
+                      : language === "ar"
+                        ? "يُفعّل قبل 10 دقائق."
+                        : "Actif 10 min avant le RDV."}
+                  </p>
+                </article>
+
+                <article className="auth-glass-card group relative flex flex-col overflow-hidden p-0">
+                  <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-brand-500/20 blur-2xl" aria-hidden />
+                  <div className="relative z-10 flex items-center justify-between gap-2 p-2.5 md:p-3">
+                    <div className="min-w-0">
+                      <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-brand-200">
+                        {language === "en" ? "Program" : language === "ar" ? "البرنامج" : "Programme"}
+                      </p>
+                      <h2 className="mt-0.5 font-display text-sm font-black text-white">
+                        {language === "en" ? "Last program sent" : language === "ar" ? "آخر برنامج مُرسَل" : "Dernier programme envoyé"}
+                      </h2>
+                    </div>
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-brand-300/40 bg-brand-500/15 text-brand-200">
+                      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                        <path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H18a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6.5A2.5 2.5 0 0 1 4 19.5v-15Z" />
+                        <path d="M8 7h8M8 11h8M8 15h5" />
+                      </svg>
+                    </span>
+                  </div>
+                  {lastProgram ? (
+                    <div className="relative z-10 flex min-h-0 flex-1 flex-col border-t border-white/10 p-2.5 md:p-3">
+                      <div className="flex items-start gap-2.5 rounded-2xl border border-white/10 bg-slate-950/30 p-2.5">
+                        <div className="prog-card__icon relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl">
+                          <svg viewBox="0 0 24 24" className="h-6 w-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z" />
+                            <path d="M14 2v6h6M9 13h6M9 17h4" />
+                          </svg>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-display text-sm font-black text-white">{lastProgram.name}</p>
+                          <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                            <span className="inline-flex items-center gap-1 rounded-md border border-white/12 bg-slate-950/40 px-1.5 py-0.5 text-[10px] font-bold text-slate-200">
+                              <svg viewBox="0 0 24 24" className="h-2.5 w-2.5 text-brand-200" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                                <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" />
+                              </svg>
+                              {new Date(`${lastProgram.sentDate}T00:00:00`).toLocaleDateString(dashLocaleTag, { day: "2-digit", month: "short", year: "numeric" })}
+                            </span>
+                            <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-black ${lastProgram.priceType === "Gratuit" ? "prog-badge--free" : "prog-badge--paid"}`}>
+                              {lastProgram.priceType}
+                            </span>
+                            <span className="rounded-md border border-white/12 bg-slate-950/40 px-1.5 py-0.5 text-[10px] font-black text-slate-300">
+                              {lastProgram.number}
+                            </span>
+                          </div>
+                          {lastProgram.remark ? (
+                            <p className="mt-1.5 line-clamp-2 text-[10px] italic leading-snug text-slate-300/90">“{lastProgram.remark}”</p>
+                          ) : null}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveNavKey("programs");
+                          navigateTo("/dashboard?view=programs");
+                        }}
+                        className="promo-cta mt-2.5 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-[11px] font-black"
+                      >
+                        {language === "en" ? "View my programs" : language === "ar" ? "برامجي" : "Consulter mes programmes"}
+                        <svg viewBox="0 0 24 24" className="promo-cta__arrow h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                          <path d="M5 12h14M13 6l6 6-6 6" />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative z-10 border-t border-white/10 p-2.5 md:p-3">
+                      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/30 p-3 md:p-4">
+                        <div className="pointer-events-none absolute -right-3 -top-3 opacity-[0.12]">
+                          <svg viewBox="0 0 24 24" className="h-16 w-16 text-brand-200" aria-hidden>
+                            <path fill="currentColor" d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 16H5V10h14v10Zm0-12H5V6h14v2Z" />
+                          </svg>
+                        </div>
+                        <p className="relative text-xs font-black text-white">
+                          {language === "en" ? "No program yet" : language === "ar" ? "لا يوجد برنامج بعد" : "Aucun programme pour le moment"}
+                        </p>
+                        <p className="relative mt-1 max-w-sm text-[10px] leading-snug text-slate-300">
+                          {language === "en"
+                            ? "Your coach will send your program soon."
+                            : language === "ar"
+                              ? "سيرسل لك مدربك برنامجك قريباً."
+                              : "Votre coach Hicham vous enverra un programme prochainement."}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveNavKey("programs");
+                            navigateTo("/dashboard?view=programs");
+                          }}
+                          className="promo-cta relative mt-2.5 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-[11px] font-black"
+                        >
+                          {language === "en" ? "View my programs" : language === "ar" ? "برامجي" : "Consulter mes programmes"}
+                          <svg viewBox="0 0 24 24" className="promo-cta__arrow h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                            <path d="M5 12h14M13 6l6 6-6 6" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </article>
+              </div>
+            </section>
+          )}
+        </main>
+      </div>
+    );
+  }
+
+  if (isAuthConfirmationPage) {
+    return (
+      <div
+        className={`auth-page page-enter relative min-h-full overflow-x-clip ${isLight ? "theme-light" : "theme-dark"}`}
+        lang={language}
+        dir={isArabic ? "rtl" : "ltr"}
+      >
+        {authHeader}
+        <main className="relative z-10 mx-auto flex min-h-screen max-w-4xl items-center justify-center px-4 py-12 sm:px-6">
+          <section className="auth-glass-card w-full max-w-2xl p-8 text-center md:p-10">
+            <div className="success-orb mx-auto mb-5" aria-hidden="true">
+              <span className="success-orb-ring" />
+              <span className="success-orb-core">
+                <svg viewBox="0 0 24 24" className="success-orb-check h-8 w-8 fill-current">
+                  <path d="m9.55 16.2-3.6-3.6-1.4 1.4 5 5L20 8.45l-1.4-1.4-9.05 9.15Z" />
+                </svg>
+              </span>
+            </div>
+            <h1 className="font-display text-3xl font-black text-white md:text-4xl">{authText.accountCreatedTitle}</h1>
+            <p className="mt-3 text-slate-300">{authText.accountCreatedSubtitle}</p>
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAuthConfirmation(false);
+                  setAuthMode("login");
+                  setAuthFeedback({ type: "success", text: authText.accountReadyLogin });
+                  navigateTo(authLoginRoute);
+                }}
+                className="rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-brand-400"
+              >
+                {authText.accountCreatedAction}
+              </button>
+              <button
+                type="button"
+                onClick={() => navigateTo("/")}
+                className="rounded-xl border border-slate-500/75 bg-slate-900/70 px-5 py-2.5 text-sm font-semibold text-white transition hover:border-brand-300"
+              >
+                {content.contact.backTop}
+              </button>
+            </div>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
+  if (isAuthResetPage) {
+    return (
+      <div
+        className={`auth-page page-enter relative min-h-full overflow-x-clip ${isLight ? "theme-light" : "theme-dark"}`}
+        lang={language}
+        dir={isArabic ? "rtl" : "ltr"}
+      >
+        {authHeader}
+        <main className="relative z-10 mx-auto flex min-h-screen max-w-4xl items-center justify-center px-4 py-12 sm:px-6">
+          <section className="auth-glass-card w-full max-w-2xl p-8 md:p-10">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-200">{authText.title}</p>
+            <h1 className="mt-3 font-display text-3xl font-black text-white md:text-4xl">{authText.resetTab}</h1>
+            <p className="mt-3 text-slate-200">{authText.resetSubtitle}</p>
+            <p className="mt-3 rounded-2xl border border-brand-300/25 bg-slate-950/45 px-4 py-3 text-sm font-medium text-slate-200">
+              {authText.passwordRule}
+            </p>
+
+            <form onSubmit={handleResetPasswordSubmit} className="mt-6 space-y-4">
+              <label className="block text-xs font-semibold text-slate-300">
+                <span className="inline-flex items-center gap-2">
+                  <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current text-brand-300" aria-hidden="true">
+                    <path d="M17 10h-1V8a4 4 0 1 0-8 0v2H7a2 2 0 0 0-2 2v7h14v-7a2 2 0 0 0-2-2Zm-7-2a2 2 0 1 1 4 0v2h-4V8Z" />
+                  </svg>
+                  <span>{authText.password}</span>
+                </span>
+                <input
+                  type="password"
+                  value={authForm.password}
+                  onChange={(event) => setAuthForm((prev) => ({ ...prev, password: event.target.value }))}
+                  className={authInputClass}
+                  placeholder={authText.passwordPlaceholder}
+                  autoComplete="new-password"
+                />
+              </label>
+
+              <PasswordRequirements checks={passwordChecks} labels={authText.passwordRequirements} />
+
+              <label className="block text-xs font-semibold text-slate-300">
+                <span className="inline-flex items-center gap-2">
+                  <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current text-brand-300" aria-hidden="true">
+                    <path d="M17 10h-1V8a4 4 0 1 0-8 0v2H7a2 2 0 0 0-2 2v7h14v-7a2 2 0 0 0-2-2Zm-7-2a2 2 0 1 1 4 0v2h-4V8Z" />
+                  </svg>
+                  <span>{authText.confirmPassword}</span>
+                </span>
+                <input
+                  type="password"
+                  value={authForm.confirmPassword}
+                  onChange={(event) => setAuthForm((prev) => ({ ...prev, confirmPassword: event.target.value }))}
+                  className={authInputClass}
+                  placeholder={authText.confirmPasswordPlaceholder}
+                  autoComplete="new-password"
+                />
+              </label>
+
+              <button
+                type="submit"
+                className="auth-submit w-full rounded-xl px-4 py-2.5 text-sm font-bold transition"
+              >
+                {authText.resetButton}
+              </button>
+            </form>
+
+            {authFeedback.text ? (
+              <p className={`mt-4 text-xs ${authFeedback.type === "success" ? "text-brand-300" : "font-semibold text-red-500"}`}>
+                {authFeedback.text}
+              </p>
+            ) : null}
+          </section>
+        </main>
+      </div>
+    );
+  }
+
+  if (isAuthResetCodePage) {
+    return (
+      <div
+        className={`auth-page page-enter relative min-h-full overflow-x-clip ${isLight ? "theme-light" : "theme-dark"}`}
+        lang={language}
+        dir={isArabic ? "rtl" : "ltr"}
+      >
+        {authHeader}
+        <main className="relative z-10 mx-auto flex min-h-screen max-w-2xl items-center justify-center px-4 py-12 sm:px-6">
+          <section className="auth-glass-card w-full max-w-2xl p-7 md:p-8">
+            <div className="mx-auto mb-5 inline-flex h-16 w-16 items-center justify-center rounded-full border border-brand-300/70 bg-brand-500/15 text-brand-200">
+              <svg viewBox="0 0 24 24" className="h-8 w-8 fill-current" aria-hidden="true">
+                <path d="M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm6 3a1 1 0 0 0-1 1v3.38l-1.7 1.69a1 1 0 1 0 1.4 1.42l2-2A1 1 0 0 0 13 12V8a1 1 0 0 0-1-1Zm-3.5 8a1 1 0 0 0 0 2h7a1 1 0 1 0 0-2h-7Z" />
+              </svg>
+            </div>
+
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-200">{authText.title}</p>
+            <h1 className="mt-3 font-display text-3xl font-black text-white md:text-4xl">{authText.resetCodeTab}</h1>
+            <p className="mt-3 text-slate-200">{authText.resetCodeSubtitle}</p>
+            <p className="mt-3 text-sm font-semibold text-slate-200">{pendingMailboxEmail}</p>
+
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-300/25 bg-slate-950/45 px-4 py-3 text-sm">
+              <p className="font-medium text-slate-200">{authText.resetCodeCountdown}</p>
+              <p className="font-semibold text-brand-200">{resetCodeCountdownLabel}</p>
+            </div>
+
+            <form onSubmit={handleVerifyResetCode} className="mt-6 space-y-4">
+              <label className="block text-xs font-semibold text-slate-300">
+                <span className="inline-flex items-center gap-2">
+                  <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current text-brand-300" aria-hidden="true">
+                    <path d="M7 4a3 3 0 0 0-3 3v3h2V7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v3h2V7a3 3 0 0 0-3-3H7Zm-1 8a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2H6Zm3 2h2v4H9v-4Zm4 0h2v4h-2v-4Z" />
+                  </svg>
+                  <span>{authText.resetCodeLabel}</span>
+                </span>
+                <input
+                  type="text"
+                  value={resetVerificationCode}
+                  onChange={(event) =>
+                    setResetVerificationCode(event.target.value.replace(/[^A-Za-z0-9]/g, "").slice(0, 6))
+                  }
+                  className={authInputClass}
+                  placeholder={authText.resetCodePlaceholder}
+                  autoComplete="one-time-code"
+                  inputMode="text"
+                  maxLength={6}
+                />
+              </label>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <button
+                  type="submit"
+                  className="min-h-[46px] w-full rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-brand-400 sm:col-span-2"
+                >
+                  {authText.resetCodeButton}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResendResetCode}
+                  disabled={resetCodeSecondsLeft > 0}
+                  className={`min-h-[46px] min-w-0 rounded-lg px-4 py-2.5 text-center text-sm font-semibold leading-snug transition ${resetCodeSecondsLeft > 0
+                      ? "cursor-not-allowed border border-slate-700/60 bg-slate-900/45 text-slate-500"
+                      : "border border-brand-300/60 bg-slate-900/70 text-white hover:border-brand-300"
+                    }`}
+                >
+                  {resetCodeSecondsLeft > 0
+                    ? `${authText.resendCodeWait} ${resetCodeCountdownLabel}`
+                    : authText.resendCodeButton}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => window.open(getMailboxUrl(pendingMailboxEmail), "_blank", "noopener,noreferrer")}
+                  className="min-h-[46px] min-w-0 rounded-lg border border-slate-500/75 bg-slate-900/70 px-4 py-2.5 text-center text-sm font-semibold leading-snug text-white transition hover:border-brand-300"
+                >
+                  {authText.mailboxPromptAction}
+                </button>
+              </div>
+            </form>
+
+            {authFeedback.text ? (
+              <p className={`mt-4 text-xs ${authFeedback.type === "success" ? "text-brand-300" : "font-semibold text-red-500"}`}>
+                {authFeedback.text}
+              </p>
+            ) : null}
+          </section>
+        </main>
+      </div>
+    );
+  }
+
+  if (isAuthCheckEmailPage) {
+    return (
+      <div
+        className={`auth-page page-enter relative min-h-full overflow-x-clip ${isLight ? "theme-light" : "theme-dark"}`}
+        lang={language}
+        dir={isArabic ? "rtl" : "ltr"}
+      >
+        {authHeader}
+        <main className="relative z-10 mx-auto flex min-h-screen max-w-4xl items-center justify-center px-4 py-12 sm:px-6">
+          <section className="auth-glass-card w-full max-w-2xl p-8 text-center md:p-10">
+            <div className="mx-auto mb-5 inline-flex h-16 w-16 items-center justify-center rounded-full border border-brand-300/70 bg-brand-500/15 text-brand-200">
+              <svg viewBox="0 0 24 24" className="h-8 w-8 fill-current" aria-hidden="true">
+                <path d="M3 6.8A1.8 1.8 0 0 1 4.8 5h14.4A1.8 1.8 0 0 1 21 6.8v10.4a1.8 1.8 0 0 1-1.8 1.8H4.8A1.8 1.8 0 0 1 3 17.2V6.8Zm1.8.2 7.2 4.9L19.2 7H4.8Zm14.4 10.2V8.8l-6.7 4.6a.9.9 0 0 1-1 0L4.8 8.8v8.4h14.4Z" />
+              </svg>
+            </div>
+            <h1 className="font-display text-3xl font-black text-white md:text-4xl">{authText.mailboxPromptTitle}</h1>
+            <p className="mt-3 text-slate-300">
+              {pendingMailboxIntent === "recovery" ? authText.resetMailboxSubtitle : authText.mailboxPromptSubtitle}
+            </p>
+            <p className="mt-3 text-sm font-semibold text-slate-200">{pendingMailboxEmail}</p>
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => window.open(getMailboxUrl(pendingMailboxEmail), "_blank", "noopener,noreferrer")}
+                className="rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-brand-400"
+              >
+                {authText.mailboxPromptAction}
+              </button>
+            </div>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
+  if (isAuthPage) {
+    // Pendant la vérification d'un lien de confirmation (signup_token ou email_change_token dans
+    // l'URL), on n'affiche PAS le formulaire de connexion / la boîte « Connecté en tant que… » :
+    // juste un loader discret. Le résultat redirige ensuite (compte créé / adresse confirmée /
+    // lien invalide + message).
+    const authProcessingParams = new URLSearchParams(currentRoute.search || "");
+    const isProcessingEmailChange = Boolean(authProcessingParams.get("email_change_token"));
+    if (authProcessingParams.get("signup_token") || isProcessingEmailChange) {
+      return (
+        <div
+          className={`auth-page page-enter relative flex min-h-full items-center justify-center overflow-x-clip ${isLight ? "theme-light" : "theme-dark"}`}
+          lang={language}
+          dir={isArabic ? "rtl" : "ltr"}
+        >
+          {appToastNode}
+          <div
+            className="flex flex-col items-center gap-4 rounded-3xl border border-white/10 px-8 py-7"
+            style={{ background: "rgba(2,6,23,0.55)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }}
+          >
+            <span className="h-10 w-10 animate-spin rounded-full border-4 border-brand-400/30 border-t-brand-400" />
+            <p className="font-display text-sm font-black" style={{ color: "#fff" }}>
+              {isProcessingEmailChange
+                ? (language === "en" ? "Confirming your new email…" : language === "ar" ? "جارٍ تأكيد بريدك الجديد…" : "Confirmation de ta nouvelle adresse email…")
+                : (language === "en" ? "Confirming your account…" : language === "ar" ? "جارٍ تأكيد حسابك…" : "Confirmation de ton compte en cours…")}
+            </p>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div
+        className={`auth-page page-enter relative min-h-full overflow-x-clip ${isLight ? "theme-light" : "theme-dark"}`}
+        lang={language}
+        dir={isArabic ? "rtl" : "ltr"}
+      >
+        {appToastNode}
+        <header className="sticky top-3 z-50 mx-auto max-w-6xl px-4 pt-4 sm:px-6">
+          <nav className="intro-nav auth-nav flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-700/70 bg-slate-900/70 px-4 py-3 shadow-[0_12px_36px_rgba(2,8,23,0.5)] backdrop-blur-xl sm:px-6">
+            <button type="button" onClick={() => navigateTo("/")} className="flex items-center gap-3 text-left">
+              <img src={hmLogo} alt="Logo HM" className="h-11 w-11 rounded-xl border border-brand-300/60" />
+              <div>
+                <p className="whitespace-nowrap text-[8px] uppercase tracking-[0.1em] text-brand-300 sm:text-[9px]">{content.nav.coachLabel}</p>
+                <p className="font-display text-base font-bold tracking-wide text-white sm:text-lg">HICHAM-FIT APP</p>
+              </div>
+            </button>
+
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsLangMenuOpen((prev) => !prev)}
+                  className="flex items-center gap-2 rounded-xl border border-slate-600/70 bg-slate-900/70 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:border-brand-300"
+                  aria-haspopup="menu"
+                  aria-expanded={isLangMenuOpen}
+                >
+                  <span className="text-sm leading-none">{currentLanguageOption.flag}</span>
+                  <span>{currentLanguageOption.label}</span>
+                </button>
+
+                {isLangMenuOpen ? (
+                  <div
+                    className={`absolute top-full z-30 mt-2 w-44 rounded-xl border border-slate-600/70 bg-slate-900/95 p-1.5 shadow-[0_12px_24px_rgba(2,8,23,0.45)] backdrop-blur ${isArabic ? "right-0" : "left-0"
+                      }`}
+                    role="menu"
+                  >
+                    {Object.entries(languageOptions).map(([code, option]) => (
+                      <button
+                        key={code}
+                        type="button"
+                        onClick={() => handleLanguageChange(code)}
+                        className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-semibold transition ${language === code
+                            ? "bg-brand-500 text-slate-950"
+                            : "text-slate-200 hover:bg-slate-800/90 hover:text-white"
+                          }`}
+                        role="menuitem"
+                      >
+                        <span className="text-sm leading-none">{option.flag}</span>
+                        <span className="min-w-8">{option.label}</span>
+                        <span className={`text-[11px] ${language === code ? "text-slate-900/85" : "text-slate-400"}`}>
+                          {option.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setTheme((prev) => (prev === "dark" ? "light" : "dark"))}
+                className="flex items-center gap-2 rounded-lg border border-slate-600/70 bg-slate-900/70 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:border-brand-300"
+              >
+                <span className="text-sm leading-none" aria-hidden="true">
+                  {isLight ? "☀️" : "🌙"}
+                </span>
+                <span>{isLight ? content.controls.lightMode : content.controls.darkMode}</span>
+              </button>
+
+              {!currentUser ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode("login");
+                      setRegisterStep(1);
+                      setRegisterPersonalValidated(false);
+                      setAuthFeedback({ type: "", text: "" });
+                      navigateTo(authLoginRoute);
+                    }}
+                    className={`auth-tab rounded-xl px-3 py-2 text-xs font-semibold transition ${authMode === "login" ? "auth-tab-active" : "auth-tab-idle"
+                      }`}
+                  >
+                    {authText.loginTab}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode("register");
+                      setRegisterStep(1);
+                      setRegisterPersonalValidated(false);
+                      setAuthFeedback({ type: "", text: "" });
+                      setSignupPendingEmail("");
+                      window.localStorage.removeItem("hm-signup-pending");
+                      navigateTo("/auth?mode=register");
+                    }}
+                    className={`auth-tab rounded-xl px-3 py-2 text-xs font-semibold transition ${authMode === "register" ? "auth-tab-active" : "auth-tab-idle"
+                      }`}
+                  >
+                    {authText.registerTab}
+                  </button>
+                </>
+              ) : null}
+            </div>
+          </nav>
+        </header>
+
+        <main className="relative z-10 mx-auto max-w-6xl px-4 pb-24 pt-12 sm:px-6">
+          <section className="reveal-up auth-glass-card mx-auto max-w-2xl p-8 md:p-10">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-200">{authText.title}</p>
+            <h1 className="mt-3 font-display text-3xl font-black text-white md:text-4xl">
+              {authMode === "register" ? authText.registerTab : authText.loginTab}
+            </h1>
+            <p className="mt-3 text-slate-200">{authText.subtitle}</p>
+
+            {!currentUser ? (
+              <>
+                <form onSubmit={handleAuthSubmit} className="mt-5 space-y-4">
+                  {authMode === "register" ? (
+                    <div className="grid auto-rows-fr items-stretch gap-3 sm:grid-cols-2">
+                      {[
+                        {
+                          index: 1,
+                          title: signupStepsText.personal || "Informations personnelles",
+                          complete: registerPersonalValidated && registerPersonalComplete,
+                          active: registerStep === 1
+                        },
+                        {
+                          index: 2,
+                          title: signupStepsText.connection || "Informations de connexion",
+                          complete: false,
+                          active: registerStep === 2
+                        }
+                      ].map((step) => (
+                        <button
+                          key={step.index}
+                          type="button"
+                          onClick={() => {
+                            if (step.index === 1) {
+                              setRegisterStep(1);
+                              setRegisterPersonalValidated(false);
+                              setAuthFeedback({ type: "", text: "" });
+                              return;
+                            }
+                            if (!registerPersonalComplete) {
+                              setAuthFeedback({ type: "error", text: registerBirthDateError ? authText.ageRestriction : authText.fillAll });
+                              return;
+                            }
+                            setRegisterPersonalValidated(true);
+                            setRegisterStep(2);
+                            setAuthFeedback({ type: "", text: "" });
+                          }}
+                          className={
+                            "group flex h-full min-h-[78px] items-center gap-2.5 rounded-2xl border p-2.5 text-left transition " +
+                            (step.active
+                              ? "border-brand-300 bg-brand-500/15 shadow-[0_18px_45px_rgba(16,185,129,0.18)]"
+                              : "border-slate-600/55 bg-slate-950/35 hover:border-brand-300/70")
+                          }
+                        >
+                          <span
+                            className={
+                              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-[11px] font-black tracking-[0.1em] transition " +
+                              (step.complete
+                                ? "border-brand-300 bg-brand-500 text-slate-950"
+                                : step.active
+                                  ? "border-brand-200 bg-brand-500/20 text-brand-100"
+                                  : "border-slate-500/70 bg-slate-900/60 text-slate-200")
+                            }
+                            aria-label={step.complete ? signupStepsText.complete : undefined}
+                          >
+                            {step.complete ? (
+                              <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true">
+                                <path d="m9.3 16.7-4-4 1.4-1.4 2.6 2.6 8-8 1.4 1.4-9.4 9.4Z" />
+                              </svg>
+                            ) : (
+                              String(step.index).padStart(2, "0")
+                            )}
+                          </span>
+                          <span>
+                            <span className="block text-[13px] font-black leading-tight text-white">{step.title}</span>
+                            <span className="mt-0.5 block text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                              {step.complete ? signupStepsText.complete || "Termine" : step.active ? signupStepsText.active || "En cours" : signupStepsText.step || "Etape"}
+                            </span>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  {authMode === "register" && registerStep === 1 ? (
+                    <div className="space-y-3 rounded-3xl border border-slate-600/45 bg-slate-950/25 p-4">
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <label className="block text-xs font-semibold text-slate-300">
+                          <span className="inline-flex items-center gap-2">
+                            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current text-brand-300" aria-hidden="true">
+                              <path d="M12 12.5a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2.3c-4 0-7.3 2.1-7.3 4.7V21h14.6v-1.5c0-2.6-3.3-4.7-7.3-4.7Z" />
+                            </svg>
+                            <span>{authText.firstName}</span>
+                          </span>
+                          <input
+                            type="text"
+                            value={authForm.firstName}
+                            onChange={(event) => setAuthForm((prev) => ({ ...prev, firstName: event.target.value }))}
+                            className={authInputClass}
+                            placeholder={authText.firstNamePlaceholder}
+                            autoComplete="given-name"
+                          />
+                        </label>
+
+                        <label className="block text-xs font-semibold text-slate-300">
+                          <span className="inline-flex items-center gap-2">
+                            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current text-brand-300" aria-hidden="true">
+                              <path d="M12 12.5a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2.3c-4 0-7.3 2.1-7.3 4.7V21h14.6v-1.5c0-2.6-3.3-4.7-7.3-4.7Z" />
+                            </svg>
+                            <span>{authText.lastName}</span>
+                          </span>
+                          <input
+                            type="text"
+                            value={authForm.lastName}
+                            onChange={(event) => setAuthForm((prev) => ({ ...prev, lastName: event.target.value }))}
+                            className={authInputClass}
+                            placeholder={authText.lastNamePlaceholder}
+                            autoComplete="family-name"
+                          />
+                        </label>
+
+                        <label className="block text-xs font-semibold text-slate-300">
+                          <span className="inline-flex items-center gap-2">
+                            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current text-brand-300" aria-hidden="true">
+                              <path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V2Zm12 8H5v10h14V10Z" />
+                            </svg>
+                            <span>{authText.birthDate}</span>
+                          </span>
+                          <input
+                            type="date"
+                            value={authForm.birthDate}
+                            onChange={(event) => setAuthForm((prev) => ({ ...prev, birthDate: event.target.value }))}
+                            className={authInputClass}
+                            max={todayInputDate}
+                            aria-label={authText.birthDatePlaceholder}
+                          />
+                          {registerBirthDateError ? (
+                            <p className="mt-1.5 text-[11px] font-semibold text-red-400">{authText.ageRestriction}</p>
+                          ) : null}
+                        </label>
+
+                        <label className="block text-xs font-semibold text-slate-300">
+                          <span className="inline-flex items-center gap-2">
+                            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current text-brand-300" aria-hidden="true">
+                              <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm-7 9a7 7 0 0 1 14 0H5Zm13.5-9.5h2v-2h1.5v2h2V13h-2v2h-1.5v-2h-2v-1.5Z" />
+                            </svg>
+                            <span>{authText.sex}</span>
+                          </span>
+                          <select
+                            value={authForm.sex}
+                            onChange={(event) => setAuthForm((prev) => ({ ...prev, sex: event.target.value }))}
+                            className={authSelectClass}
+                          >
+                            <option value="">{authText.sexPlaceholder}</option>
+                            <option value="male">{authText.sexOptions?.male || "Homme"}</option>
+                            <option value="female">{authText.sexOptions?.female || "Femme"}</option>
+                          </select>
+                        </label>
+
+                        <label className="block text-xs font-semibold text-slate-300 sm:col-span-2">
+                          <span className="inline-flex items-center gap-2">
+                            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current text-brand-300" aria-hidden="true">
+                              <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm6.9 9h-3.1a15.6 15.6 0 0 0-1.1-5A8.1 8.1 0 0 1 18.9 11ZM12 4.1A13 13 0 0 1 13.8 11h-3.6A13 13 0 0 1 12 4.1ZM4.3 13h3.9a15.6 15.6 0 0 0 1.1 5A8.1 8.1 0 0 1 4.3 13Zm3.9-2H5.1A8.1 8.1 0 0 1 9.3 6a15.6 15.6 0 0 0-1.1 5ZM12 19.9A13 13 0 0 1 10.2 13h3.6A13 13 0 0 1 12 19.9Zm2.7-1.9a15.6 15.6 0 0 0 1.1-5h3.9a8.1 8.1 0 0 1-5 5Z" />
+                            </svg>
+                            <span>{authText.country}</span>
+                          </span>
+                          <select
+                            value={authForm.country}
+                            onChange={(event) => setAuthForm((prev) => ({ ...prev, country: event.target.value }))}
+                            className={authSelectClass}
+                          >
+                            <option value="">{authText.countryPlaceholder}</option>
+                            {countryOptions.map((country) => (
+                              <option key={country.code} value={country.code}>
+                                {country.name}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {(authMode === "login" || (authMode === "register" && registerStep === 2)) ? (
+                    <div className="space-y-2.5 rounded-3xl border border-slate-600/45 bg-slate-950/25 p-3.5 sm:p-4">
+                      <label className="block text-xs font-semibold text-slate-300">
+                        <span className="inline-flex items-center gap-2">
+                          <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current text-brand-300" aria-hidden="true">
+                            <path d="M3 6.8A1.8 1.8 0 0 1 4.8 5h14.4A1.8 1.8 0 0 1 21 6.8v10.4a1.8 1.8 0 0 1-1.8 1.8H4.8A1.8 1.8 0 0 1 3 17.2V6.8Zm1.8.2 7.2 4.9L19.2 7H4.8Zm14.4 10.2V8.8l-6.7 4.6a.9.9 0 0 1-1 0L4.8 8.8v8.4h14.4Z" />
+                          </svg>
+                          <span>{authText.email}</span>
+                        </span>
+                        <input
+                          type="email"
+                          value={authForm.email}
+                          onChange={(event) => setAuthForm((prev) => ({ ...prev, email: event.target.value }))}
+                          className={authInputClass}
+                          placeholder={authText.emailPlaceholder}
+                          autoComplete="email"
+                        />
+                      </label>
+
+                      <div className={authMode === "register" ? "grid gap-2.5 sm:grid-cols-2" : "space-y-2.5"}>
+                        <label className="block text-xs font-semibold text-slate-300">
+                          <span className="inline-flex items-center gap-2">
+                            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current text-brand-300" aria-hidden="true">
+                              <path d="M17 10h-1V8a4 4 0 1 0-8 0v2H7a2 2 0 0 0-2 2v7h14v-7a2 2 0 0 0-2-2Zm-7-2a2 2 0 1 1 4 0v2h-4V8Z" />
+                            </svg>
+                            <span>{authText.password}</span>
+                          </span>
+                          <input
+                            type="password"
+                            value={authForm.password}
+                            onChange={(event) => setAuthForm((prev) => ({ ...prev, password: event.target.value }))}
+                            className={authInputClass}
+                            placeholder={authText.passwordPlaceholder}
+                            autoComplete={authMode === "login" ? "current-password" : "new-password"}
+                          />
+                        </label>
+
+                        {authMode === "register" ? (
+                          <label className="block text-xs font-semibold text-slate-300">
+                            <span className="inline-flex items-center gap-2">
+                              <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current text-brand-300" aria-hidden="true">
+                                <path d="M17 10h-1V8a4 4 0 1 0-8 0v2H7a2 2 0 0 0-2 2v7h14v-7a2 2 0 0 0-2-2Zm-7-2a2 2 0 1 1 4 0v2h-4V8Z" />
+                              </svg>
+                              <span>{authText.confirmPassword}</span>
+                            </span>
+                            <input
+                              type="password"
+                              value={authForm.confirmPassword}
+                              onChange={(event) => setAuthForm((prev) => ({ ...prev, confirmPassword: event.target.value }))}
+                              className={authInputClass}
+                              placeholder={authText.confirmPasswordPlaceholder}
+                              autoComplete="new-password"
+                            />
+                          </label>
+                        ) : null}
+                      </div>
+
+                      {authMode === "register" ? (
+                        <PasswordRequirements checks={passwordChecks} labels={authText.passwordRequirements} />
+                      ) : null}
+
+                      {authMode === "login" ? (
+                        <div className="space-y-2">
+                          <button
+                            type="button"
+                            onClick={handleForgotPassword}
+                            className="text-left text-xs font-semibold text-brand-300 transition hover:text-brand-200"
+                          >
+                            {authText.forgotPassword}
+                          </button>
+                          {authFeedback.text ? (
+                            <p className={`text-xs ${authFeedback.type === "success" ? "text-brand-300" : "font-semibold text-red-500"}`}>
+                              {authFeedback.text}
+                            </p>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+
+                  {authMode === "register" ? (
+                    <div className="flex flex-col gap-3 sm:flex-row">
+                      {registerStep === 2 ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRegisterStep(1);
+                            setRegisterPersonalValidated(false);
+                            setAuthFeedback({ type: "", text: "" });
+                          }}
+                          className="w-full rounded-xl border border-slate-600/70 bg-slate-900/55 px-4 py-2.5 text-sm font-bold text-slate-100 transition hover:border-brand-300 sm:w-1/2"
+                        >
+                          {signupStepsText.back || "Retour"}
+                        </button>
+                      ) : null}
+
+                      {registerStep === 1 ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!registerPersonalComplete) {
+                              setAuthFeedback({ type: "error", text: registerBirthDateError ? authText.ageRestriction : authText.fillAll });
+                              return;
+                            }
+                            setAuthFeedback({ type: "", text: "" });
+                            setRegisterPersonalValidated(true);
+                            setRegisterStep(2);
+                          }}
+                          className="auth-submit w-full rounded-xl px-4 py-2.5 text-sm font-bold transition"
+                        >
+                          {signupStepsText.next || "Continuer"}
+                        </button>
+                      ) : (
+                        <button
+                          type="submit"
+                          className="auth-submit w-full rounded-xl px-4 py-2.5 text-sm font-bold transition sm:flex-1"
+                        >
+                          {authText.registerButton}
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      type="submit"
+                      className="auth-submit w-full rounded-xl px-4 py-2.5 text-sm font-bold transition"
+                    >
+                      {authText.loginButton}
+                    </button>
+                  )}
+                </form>
+              </>
+            ) : (
+              <div className="mt-5 rounded-lg border border-brand-400/55 bg-brand-500/10 p-4">
+                <p className="text-sm font-semibold text-brand-200">
+                  {authText.connectedAs}: {currentUser.fullName}
+                </p>
+                <p className="mt-1 text-xs text-slate-300">{currentUser.email}</p>
+                <p className="mt-2 text-xs text-brand-100">{authText.statusReady}</p>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="rounded-lg border border-slate-500/75 bg-slate-900/70 px-3 py-2 text-xs font-semibold text-white transition hover:border-brand-300"
+                  >
+                    {authText.logoutButton}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {authFeedback.text && authMode !== "login" ? (
+              <p className={`mt-3 text-xs ${authFeedback.type === "success" ? "text-brand-300" : "font-semibold text-red-500"}`}>
+                {authFeedback.text}
+              </p>
+            ) : null}
+          </section>
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`page-enter relative min-h-full overflow-x-clip ${isLight ? "theme-light bg-slate-50" : "theme-dark bg-slate-950"}`}
+      lang={language}
+      dir={isArabic ? "rtl" : "ltr"}
+    >
+      {appToastNode}
+      <div
+        className={`pointer-events-none absolute inset-x-0 top-[-240px] h-[520px] bg-[radial-gradient(circle_at_15%_45%,rgba(16,185,129,0.22),transparent_42%),radial-gradient(circle_at_80%_35%,rgba(56,189,248,0.20),transparent_40%)] ${isLight ? "opacity-0" : ""
+          }`}
+      />
+      <div
+        className={`pointer-events-none absolute inset-x-0 top-[520px] h-[620px] bg-[radial-gradient(circle_at_75%_30%,rgba(16,185,129,0.14),transparent_42%),radial-gradient(circle_at_20%_70%,rgba(45,212,191,0.10),transparent_46%)] ${isLight ? "opacity-0" : ""
+          }`}
+      />
+
+      <header className="sticky top-3 z-50 mx-auto max-w-7xl px-4 pt-4 sm:px-6">
+        <nav className="intro-nav flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-700/70 bg-slate-900/70 px-4 py-3 shadow-[0_12px_36px_rgba(2,8,23,0.5)] backdrop-blur-xl sm:px-6 xl:flex-nowrap">
+          <div className="flex shrink-0 items-center gap-3">
+            <img src={hmLogo} alt="Logo HM" className="h-11 w-11 rounded-xl border border-brand-300/60" />
+            <div>
+              <p className="whitespace-nowrap text-[8px] uppercase tracking-[0.1em] text-brand-300 sm:text-[9px]">{content.nav.coachLabel}</p>
+              <p className="font-display text-base font-bold tracking-wide text-white sm:text-lg">HICHAM-FIT APP</p>
+            </div>
+          </div>
+
+          <ul className="hidden items-center gap-4 text-sm text-slate-300 lg:flex">
+            <li>
+              <a
+                href="#services"
+                onClick={() => setActiveNavSection("services")}
+                className={getNavLinkClass("services")}
+              >
+                <span>{content.nav.services}</span>
+                <span className={getNavIndicatorClass("services")} />
+              </a>
+            </li>
+            <li>
+              <a
+                href="#certifications"
+                onClick={() => setActiveNavSection("certifications")}
+                className={getNavLinkClass("certifications")}
+              >
+                <span>{content.nav.certifications}</span>
+                <span className={getNavIndicatorClass("certifications")} />
+              </a>
+            </li>
+            <li>
+              <a
+                href="#experiences"
+                onClick={() => setActiveNavSection("experiences")}
+                className={getNavLinkClass("experiences")}
+              >
+                <span>{content.nav.experiences}</span>
+                <span className={getNavIndicatorClass("experiences")} />
+              </a>
+            </li>
+            <li>
+              <a
+                href="#resultats"
+                onClick={() => setActiveNavSection("resultats")}
+                className={getNavLinkClass("resultats")}
+              >
+                <span>{content.nav.results}</span>
+                <span className={getNavIndicatorClass("resultats")} />
+              </a>
+            </li>
+            <li>
+              <a
+                href="#contact"
+                onClick={() => setActiveNavSection("contact")}
+                className={getNavLinkClass("contact")}
+              >
+                <span>{content.nav.contact}</span>
+                <span className={getNavIndicatorClass("contact")} />
+              </a>
+            </li>
+          </ul>
+
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center sm:gap-3 xl:shrink-0">
+            <div className="relative w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={() => setIsLangMenuOpen((prev) => !prev)}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-600/70 bg-slate-900/70 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:border-brand-300 sm:w-auto"
+                aria-haspopup="menu"
+                aria-expanded={isLangMenuOpen}
+              >
+                <span className="text-sm leading-none">{currentLanguageOption.flag}</span>
+                <span>{currentLanguageOption.label}</span>
+              </button>
+
+              {isLangMenuOpen ? (
+                <div
+                  className={`absolute top-full z-30 mt-2 w-44 rounded-xl border border-slate-600/70 bg-slate-900/95 p-1.5 shadow-[0_12px_24px_rgba(2,8,23,0.45)] backdrop-blur ${isArabic ? "right-0" : "left-0"
+                    }`}
+                  role="menu"
+                >
+                  {Object.entries(languageOptions).map(([code, option]) => (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={() => handleLanguageChange(code)}
+                      className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-semibold transition ${language === code
+                          ? "bg-brand-500 text-slate-950"
+                          : "text-slate-200 hover:bg-slate-800/90 hover:text-white"
+                        }`}
+                      role="menuitem"
+                    >
+                      <span className="text-sm leading-none">{option.flag}</span>
+                      <span className="min-w-8">{option.label}</span>
+                      <span className={`text-[11px] ${language === code ? "text-slate-900/85" : "text-slate-400"}`}>
+                        {option.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              onClick={() => setTheme((prev) => (prev === "dark" ? "light" : "dark"))}
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-600/70 bg-slate-900/70 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:border-brand-300 sm:w-auto"
+            >
+              <span className="text-sm leading-none" aria-hidden="true">
+                {isLight ? "☀️" : "🌙"}
+              </span>
+              <span>{isLight ? content.controls.lightMode : content.controls.darkMode}</span>
+            </button>
+
+            {currentUser ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveNavKey("dashboard");
+                  navigateTo(currentUser.sportProfileCompleted ? "/dashboard" : "/complete-profile");
+                }}
+                className="w-full whitespace-nowrap rounded-lg border border-brand-300/70 bg-brand-500/15 px-3 py-2 text-xs font-semibold text-brand-200 transition hover:border-brand-300 hover:bg-brand-500/20 sm:w-auto"
+              >
+                {authText.accessAthleteSpace}
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => navigateToAuth("login")}
+                  className="w-full whitespace-nowrap rounded-lg border border-slate-600/70 bg-slate-900/70 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:border-brand-300 sm:w-auto"
+                >
+                  {authText.loginTab}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => navigateToAuth("register")}
+                  className="w-full whitespace-nowrap rounded-lg border border-brand-300/70 bg-brand-500/15 px-3 py-2 text-xs font-semibold text-brand-200 transition hover:border-brand-300 hover:bg-brand-500/20 sm:w-auto"
+                >
+                  {authText.registerTab}
+                </button>
+              </>
+            )}
+
+          </div>
+        </nav>
+      </header>
+
+      <main key={`content-${language}-${theme}`} className="relative z-10 mx-auto max-w-6xl px-4 pb-24 sm:px-6">
+        <section id="hero" className="grid items-center gap-10 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-stretch lg:py-20">
+          <div className="intro-left">
+            <p className="inline-flex rounded-full border border-brand-400/35 bg-brand-500/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-brand-100">
+              {content.hero.chip}
+            </p>
+            <h1 className="mt-5 font-display text-5xl font-black leading-[1.02] text-white sm:text-6xl lg:text-7xl">
+              {content.hero.line1}
+              <span className="block text-brand-400">{content.hero.line2}</span>
+            </h1>
+            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-slate-300">{content.hero.description}</p>
+            <div className="mt-9 flex flex-wrap gap-4">
+              <a
+                href="#contact"
+                className="rounded-xl bg-brand-500 px-7 py-3 text-base font-bold text-slate-950 shadow-[0_16px_32px_rgba(16,185,129,0.35)] transition hover:bg-brand-400"
+              >
+                {content.hero.primaryCta}
+              </a>
+              <a
+                href="#resultats"
+                className="rounded-xl border border-slate-600 bg-slate-900/70 px-7 py-3 text-base font-semibold text-slate-100 transition hover:border-brand-400"
+              >
+                {content.hero.secondaryCta}
+              </a>
+            </div>
+          </div>
+
+          <div className="intro-right relative isolate lg:h-full">
+            <div className="hero-float pointer-events-none absolute -left-8 top-10 h-36 w-36 rounded-full bg-brand-500/20 blur-3xl" />
+            <div className="hero-float pointer-events-none absolute -bottom-8 -right-4 h-40 w-40 rounded-full bg-cyan-400/15 blur-3xl" />
+
+            <div
+              className="overflow-hidden rounded-[1.45rem] border border-brand-300/45 bg-slate-900/75 shadow-[0_35px_90px_rgba(15,118,110,0.35)] backdrop-blur-xl"
+              style={{
+                backgroundImage: `url(${coachHero})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center"
+              }}
+            >
+              <div className="relative h-[340px] w-full sm:h-[410px] lg:h-[470px]">
+                {heroImages.map((image, index) => (
+                  <img
+                    key={image}
+                    src={image}
+                    alt="Hicham coach sportif"
+                    loading="eager"
+                    onError={(e) => {
+                      if (!e.currentTarget.dataset.fallbackApplied) {
+                        e.currentTarget.dataset.fallbackApplied = "1";
+                        e.currentTarget.src = coachHero;
+                      }
+                    }}
+                    className={`hero-slide absolute inset-0 h-full w-full rounded-[1.45rem] object-cover object-center ${activeHeroIndex === index ? "hero-slide--active" : "hero-slide--inactive"
+                      }`}
+                  />
+                ))}
+                <div key={`glint-${activeHeroIndex}`} className="hero-glint" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="reveal-up pb-10" style={{ "--d": "520ms" }}>
+          <div className="grid gap-4 md:grid-cols-3">
+            {content.stats.map((item, index) => {
+              const isRatingStat = index === 2;
+              const isClientsStat = index === 1;
+              const clientsValue = athleteCount === null ? "…" : String(athleteCount);
+              return (
+                <article key={`stat-${index}`} className="reveal-up rounded-3xl border border-white/80 bg-slate-900/65 p-3">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className="font-display text-2xl font-black tracking-tight text-slate-100">
+                      {isRatingStat
+                        ? averageClientRatingLabel
+                        : isClientsStat
+                          ? clientsValue
+                          : item.value}
+                    </p>
+                    {isRatingStat ? (
+                      <p
+                        data-testid="rating-review-count"
+                        className="text-xs font-black uppercase tracking-[0.08em] text-brand-200 whitespace-nowrap"
+                      >
+                        {clientReviewCount} {clientReviewCount > 1 ? "avis" : "avis"}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="mt-1 space-y-0">
+                    {item.labelLines.map((line) => (
+                      <p key={line} className="text-sm uppercase tracking-[0.08em] text-slate-300 md:text-base">
+                        {line}
+                      </p>
+                    ))}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        <section id="services" className="reveal-up py-16" style={{ "--d": "620ms" }}>
+          <SectionTitle
+            chip={content.servicesSection.chip}
+            title={content.servicesSection.title}
+            subtitle={content.servicesSection.subtitle}
+          />
+          <div className="mt-8 grid gap-5 md:grid-cols-3">
+            {content.services.map((service, index) => (
+              <article
+                key={`service-${index}`}
+                className="reveal-up rounded-[2rem] border border-brand-400/60 bg-slate-900/70 p-7 shadow-[0_14px_30px_rgba(2,8,23,0.38)] transition hover:border-brand-300"
+              >
+                <p className="inline-flex rounded-full border border-brand-400/70 bg-brand-500/15 px-3 py-1 text-sm font-black tracking-[0.16em] text-brand-300">
+                  {service.icon}
+                </p>
+                <h3 className="mt-3 font-display text-2xl font-bold text-white">{service.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-slate-300">{service.description}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="certifications" className="reveal-up py-16" style={{ "--d": "860ms" }}>
+          <SectionTitle
+            chip={content.certificationsSection.chip}
+            title={content.certificationsSection.title}
+            subtitle={content.certificationsSection.subtitle}
+          />
+
+          <div className="mt-8 space-y-6">
+            {content.certifications.map((cert, index) => {
+              const certImages = cert.sliderImages ?? (cert.image ? [cert.image] : []);
+              const hasImage = certImages.length > 0;
+              const isSlider = certImages.length > 1;
+              const imageOnRight = cert.imagePosition === "right";
+              const currentImageIndex = isSlider ? activeIfbbSlide : 0;
+
+              return (
+                <article
+                  key={`cert-${index}`}
+                  className="reveal-up group relative overflow-hidden rounded-[2rem] border border-slate-500/55 bg-[linear-gradient(145deg,rgba(15,23,42,0.94),rgba(2,6,23,0.96))] p-6 shadow-[0_18px_42px_rgba(2,8,23,0.45)] md:p-8"
+                >
+                  <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-brand-500/10 blur-3xl" />
+                  <div className="pointer-events-none absolute -bottom-16 -left-16 h-36 w-36 rounded-full bg-cyan-400/10 blur-3xl" />
+
+                  <div className={`relative z-10 grid gap-8 ${hasImage ? "lg:grid-cols-2 lg:items-center" : ""}`}>
+                    {hasImage && !imageOnRight ? (
+                      <CertificationMedia
+                        certTitle={cert.title}
+                        certImages={certImages}
+                        isSlider={isSlider}
+                        currentImageIndex={currentImageIndex}
+                        dotKeyPrefix="ifbb-dot-left"
+                      />
+                    ) : null}
+
+                    <div>
+                      <h3 className="font-display text-3xl font-bold leading-tight text-white">{cert.title}</h3>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <span className="rounded-full border border-brand-300/55 bg-brand-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.11em] text-brand-200">
+                          {cert.organization}
+                        </span>
+                        <span className="rounded-full border border-slate-400/45 bg-slate-800/40 px-3 py-1 text-xs uppercase tracking-[0.11em] text-slate-200">
+                          {cert.dateLocation}
+                        </span>
+                        {cert.serial ? (
+                          <span className="rounded-full border border-slate-400/45 bg-slate-800/40 px-3 py-1 text-xs uppercase tracking-[0.11em] text-slate-200">
+                            {content.contact.labels.serial}: {cert.serial}
+                          </span>
+                        ) : null}
+                      </div>
+                      <ul className="mt-4 space-y-2 text-sm text-slate-300">
+                        {cert.details.map((item) => (
+                          <li key={item} className="flex items-start gap-2">
+                            <span className="mt-2 h-1.5 w-1.5 rounded-full bg-brand-400" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {hasImage && imageOnRight ? (
+                      <CertificationMedia
+                        certTitle={cert.title}
+                        certImages={certImages}
+                        isSlider={isSlider}
+                        currentImageIndex={currentImageIndex}
+                        dotKeyPrefix="ifbb-dot-right"
+                      />
+                    ) : null}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        <section id="experiences" className="reveal-up py-16" style={{ "--d": "1040ms" }}>
+          <SectionTitle
+            chip={content.experiencesSection.chip}
+            title={content.experiencesSection.title}
+            subtitle={content.experiencesSection.subtitle}
+          />
+
+          <div className="relative mt-8 space-y-6 md:pl-10">
+            <div className="absolute bottom-2 left-3 top-2 hidden w-px bg-gradient-to-b from-brand-300/85 via-brand-400/50 to-transparent md:block" />
+            {content.experiences.map((experience, index) => (
+              <article
+                key={`experience-${index}`}
+                className="reveal-up group relative overflow-hidden rounded-[1.8rem] border border-slate-500/55 bg-[linear-gradient(145deg,rgba(15,23,42,0.94),rgba(2,6,23,0.96))] p-6 shadow-[0_16px_36px_rgba(2,8,23,0.45)] transition hover:border-brand-300/65 md:p-7"
+              >
+                <div className="pointer-events-none absolute -right-16 -top-16 h-36 w-36 rounded-full bg-brand-500/10 blur-3xl" />
+                <span className="absolute -left-[1.05rem] top-12 hidden h-4 w-4 rounded-full border-2 border-slate-900 bg-brand-300 shadow-[0_0_16px_rgba(52,211,153,0.8)] md:block" />
+                <div className="relative z-10 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <h3 className="font-display text-3xl font-bold leading-tight text-white">{experience.role}</h3>
+                    <p className="mt-2 inline-flex rounded-full border border-brand-300/55 bg-brand-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.11em] text-brand-200">
+                      {experience.company}
+                    </p>
+                  </div>
+                  <p className="text-sm text-slate-200 md:rounded-full md:border md:border-slate-400/45 md:bg-slate-800/40 md:px-3 md:py-1 md:text-xs md:uppercase md:tracking-[0.11em]">
+                    {experience.dateLocation}
+                  </p>
+                </div>
+                <ul className="relative z-10 mt-5 space-y-2 text-sm text-slate-300 md:text-base">
+                  {experience.points.map((point) => (
+                    <li key={point} className="flex items-start gap-2">
+                      <span className="mt-2 h-2 w-2 rounded-full bg-brand-300 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="apropos" className="reveal-up py-16" style={{ "--d": "1160ms" }}>
+          <div className="reveal-up rounded-3xl border border-slate-700 bg-slate-900/70 p-8 md:p-10">
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <SectionTitle
+                chip={content.aboutSection.chip}
+                title={content.aboutSection.title}
+                subtitle={content.aboutSection.subtitle}
+              />
+              <div className="flex flex-wrap items-center gap-3 md:mt-2 md:shrink-0">
+                <a
+                  href={cvDownloadHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="self-start rounded-xl border border-slate-500/70 bg-slate-900/65 px-5 py-2.5 text-sm font-semibold text-white transition hover:border-brand-300"
+                >
+                  {content.nav.viewCv}
+                </a>
+                <a
+                  href={cvDownloadHref}
+                  download
+                  className="self-start rounded-xl border border-brand-300/70 bg-brand-500/10 px-5 py-2.5 text-sm font-semibold text-brand-200 transition hover:border-brand-300 hover:bg-brand-500/15"
+                >
+                  {content.nav.downloadCv}
+                </a>
+              </div>
+            </div>
+
+            <div className="reveal-up mt-7 rounded-2xl border border-brand-300/35 bg-slate-950/50 p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-300">
+                {content.aboutSection.missionTitle}
+              </p>
+              <p className="mt-2 text-base leading-relaxed text-slate-200">{content.aboutSection.missionText}</p>
+            </div>
+
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              <article className="reveal-up rounded-2xl border border-slate-600/70 bg-slate-950/45 p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-300">
+                  {content.aboutSection.approachTitle}
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-slate-300">{content.aboutSection.approachText}</p>
+              </article>
+
+              <article className="reveal-up rounded-2xl border border-slate-600/70 bg-slate-950/45 p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-300">
+                  {content.aboutSection.objectiveTitle}
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-slate-300">{content.aboutSection.objectiveText}</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section id="resultats" className="reveal-up py-16" style={{ "--d": "1240ms" }}>
+          <SectionTitle
+            chip={content.resultsSection.chip}
+            title={content.resultsSection.title}
+            subtitle={content.resultsSection.subtitle}
+          />
+          <div className="mt-8 grid gap-5 md:grid-cols-3">
+            {content.results.map((result, index) => (
+              <article key={`result-${index}`} className="reveal-up overflow-hidden rounded-2xl border border-slate-700 bg-slate-900/70">
+                <img src={result.image} alt={`Resultat client ${result.name}`} className="h-44 w-full object-cover" />
+                <div className="p-5">
+                  <p className="font-display text-2xl font-black text-brand-400">{result.detail}</p>
+                  <p className="mt-1 text-sm text-slate-300">
+                    {content.resultsSection.witnessPrefix} {result.name}
+                  </p>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          {clientReviews.length ? (
+            <div className="mt-10 rounded-3xl border border-brand-400/30 bg-slate-900/65 p-5 shadow-[0_24px_70px_-40px_rgba(34,197,94,0.65)] backdrop-blur md:p-6">
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-brand-300">{content.resultsSection.title}</p>
+                  <h3 className="mt-2 font-display text-2xl font-black text-white md:text-3xl">{content.contact.reviewsTitle}</h3>
+                  {content.contact.reviewsSubtitle ? (
+                    <p className="mt-1 text-sm text-slate-300">{content.contact.reviewsSubtitle}</p>
+                  ) : null}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {currentUserReview ? (
+                    <button
+                      type="button"
+                      onClick={handleViewMyReview}
+                      className="rounded-full border border-brand-300/70 bg-brand-500/15 px-3 py-1 text-xs font-black text-brand-100 transition hover:bg-brand-500/25"
+                    >
+                      {content.contact.viewMyReview}
+                    </button>
+                  ) : null}
+                  <span className="rounded-full border border-brand-300/45 bg-brand-500/10 px-3 py-1 text-xs font-black text-brand-200">
+                    {clientReviews.length} avis
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-5 grid auto-rows-fr gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {visibleClientReviews.map((review) => {
+                  const isOwnReview = Boolean(currentUser?.id && review.authorId === currentUser.id);
+                  const isHighlightedReview = highlightedReviewId === review.id;
+                  const reviewAvatarUrl = isOwnReview
+                    ? currentUser.avatarUrl || sportProfile.avatar_url || review.avatarUrl
+                    : review.avatarUrl;
+
+                  return (
+                    <article
+                      key={review.id}
+                      className={`relative flex h-[285px] flex-col rounded-2xl border bg-slate-950/55 p-4 transition ${isHighlightedReview || isOwnReview
+                          ? "border-brand-300/90 shadow-[0_0_0_1px_rgba(52,211,153,0.45),0_20px_50px_-35px_rgba(34,197,94,0.9)]"
+                          : "border-slate-700/80"
+                        }`}
+                    >
+                      <div className="flex min-h-0 flex-1 items-start gap-3">
+                        <div className="inline-flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-brand-300/55 bg-brand-500 text-sm font-black text-slate-950 shadow-[0_12px_30px_-18px_rgba(34,197,94,0.9)]">
+                          {reviewAvatarUrl ? (
+                            <img src={reviewAvatarUrl} alt={review.authorName} className="h-full w-full object-cover" />
+                          ) : (
+                            <span>
+                              {getInitials(review.authorName)}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-black text-white">{review.authorName}</p>
+                              <p className="text-xs font-semibold text-slate-400">{formatDisplayDate(review.createdAt, displayLocale)}</p>
+                            </div>
+                            <div className="shrink-0 text-sm leading-none" aria-label={`${review.rating}/5`}>
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <span key={star} className={review.rating >= star ? "text-amber-300" : "text-slate-600"}>
+                                  ★
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <p className={`hf-review-card__message mt-3 text-sm leading-relaxed text-slate-200 ${isOwnReview ? "pb-12" : ""}`}>
+                            {review.message}
+                          </p>
+                          {isOwnReview ? (
+                            <div className="absolute bottom-4 right-4 flex flex-wrap justify-end gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleEditReview(review)}
+                                disabled={isReviewSaving}
+                                className="rounded-lg border border-brand-300/55 bg-brand-500/10 px-3 py-1.5 text-xs font-black text-brand-200 transition hover:bg-brand-500/20"
+                              >
+                                {content.contact.reviewEdit}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteReview(review.id)}
+                                disabled={isReviewSaving}
+                                className="rounded-lg border border-red-600/90 bg-red-950 px-3 py-1.5 text-xs font-black text-red-50 shadow-[0_10px_24px_-18px_rgba(248,113,113,0.95)] transition hover:border-red-400 hover:bg-red-900 disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                {content.contact.reviewDelete}
+                              </button>
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+
+              {reviewPageCount > 1 ? (
+                <div className="mt-5 flex flex-wrap items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setReviewPage((prev) => Math.max(0, prev - 1))}
+                    disabled={safeReviewPage === 0}
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-600/70 bg-slate-950/55 text-slate-100 transition hover:border-brand-300 hover:text-brand-200 disabled:cursor-not-allowed disabled:opacity-45"
+                    aria-label={content.contact.reviewsPrevious}
+                    title={content.contact.reviewsPrevious}
+                  >
+                    <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="m15 18-6-6 6-6" />
+                    </svg>
+                  </button>
+                  <span className="rounded-xl border border-brand-300/35 bg-brand-500/10 px-3 py-2 text-xs font-black text-brand-200">
+                    {safeReviewPage + 1}/{reviewPageCount}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setReviewPage((prev) => Math.min(reviewPageCount - 1, prev + 1))}
+                    disabled={safeReviewPage >= reviewPageCount - 1}
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-600/70 bg-slate-950/55 text-slate-100 transition hover:border-brand-300 hover:text-brand-200 disabled:cursor-not-allowed disabled:opacity-45"
+                    aria-label={content.contact.reviewsNext}
+                    title={content.contact.reviewsNext}
+                  >
+                    <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="m9 6 6 6-6 6" />
+                    </svg>
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </section>
+
+        <section id="contact" className="reveal-up py-16" style={{ "--d": "1400ms" }}>
+          <div className="rounded-3xl border border-brand-400/35 bg-gradient-to-r from-brand-500/15 via-slate-900/70 to-cyan-500/10 p-8 md:p-12">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-200">{content.contact.chip}</p>
+            <h2 className="mt-3 font-display text-4xl font-black text-white md:text-5xl">{content.contact.title}</h2>
+            <p className="mt-4 max-w-2xl text-slate-200">{content.contact.subtitle}</p>
+
+            <div className="mt-8 grid gap-8 lg:grid-cols-2">
+              <form onSubmit={handleContactSubmit} className="reveal-up rounded-2xl border border-slate-600/70 bg-slate-900/65 p-5">
+                <div className="rounded-2xl border border-brand-400/30 bg-brand-500/10 px-4 py-3">
+                  <p className="text-xs font-black uppercase tracking-[0.14em] text-brand-300">
+                    {currentUser ? content.contact.reviewAccountLabel : content.contact.reviewAccountRequired}
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-slate-100">
+                    {currentUser ? getUserDisplayName(currentUser) : content.contact.loginRequired}
+                  </p>
+                  <p className="mt-2 rounded-xl border border-brand-300/25 bg-slate-950/35 px-3 py-2 text-xs font-bold leading-relaxed text-brand-100">
+                    {content.contact.singleReviewNote}
+                  </p>
+                </div>
+
+                <label className="mt-4 block text-sm text-slate-200">
+                  <span className="flex items-center justify-between gap-3">
+                    <span>{content.contact.fields.message}</span>
+                    <span className="text-xs font-black text-slate-400">
+                      entre {reviewMinCharacters} et {reviewMaxCharacters} caractères
+                    </span>
+                  </span>
+                  <span className="relative mt-2 block">
+                    <textarea
+                      value={contactForm.message}
+                      onChange={(e) =>
+                        setContactForm((prev) => ({
+                          ...prev,
+                          message: e.target.value.slice(0, reviewMaxCharacters)
+                        }))
+                      }
+                      maxLength={reviewMaxCharacters}
+                      rows={5}
+                      className="w-full resize-none rounded-lg border border-slate-500/70 bg-slate-950/70 px-3 pb-7 pt-2 text-sm text-white outline-none transition focus:border-brand-300"
+                      placeholder={content.contact.fields.messagePlaceholder}
+                    />
+                    <span className="pointer-events-none absolute bottom-2 right-3 rounded-md bg-slate-950/80 px-1.5 py-0.5 text-[11px] font-black text-slate-400">
+                      {reviewCharacterCount}/{reviewMaxCharacters}
+                    </span>
+                  </span>
+                </label>
+
+                <div className="mt-4">
+                  <p className="text-sm text-slate-200">{content.contact.ratingLabel}</p>
+                  <div className="mt-2 flex items-center gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setContactForm((prev) => ({ ...prev, rating: star }))}
+                        className="text-2xl leading-none transition hover:scale-110"
+                        aria-label={`${content.contact.ratingAction} ${star}/5`}
+                      >
+                        <span className={contactForm.rating >= star ? "text-amber-300" : "text-slate-500"}>★</span>
+                      </button>
+                    ))}
+                    <span className="ml-2 text-sm font-semibold text-slate-200">
+                      {contactForm.rating ? `${contactForm.rating}/5` : "0/5"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <button
+                    type="submit"
+                    disabled={!reviewCanSubmit}
+                    className="rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-brand-400 disabled:cursor-not-allowed disabled:bg-brand-500 disabled:text-white disabled:opacity-45 disabled:hover:bg-brand-500"
+                  >
+                    {editingReviewId ? content.contact.submitEdit : content.contact.submit}
+                  </button>
+                </div>
+
+                {sendFeedback.text ? (
+                  <p className={`mt-3 rounded-2xl border px-3 py-2 text-xs font-bold ${sendFeedback.type === "success"
+                      ? "border-brand-300/35 bg-brand-500/10 text-brand-200"
+                      : "border-red-300/40 bg-red-500/10 text-red-300"
+                    }`}>
+                    {sendFeedback.text}
+                  </p>
+                ) : null}
+              </form>
+
+              <div className="reveal-up rounded-2xl border border-slate-600/70 bg-slate-900/65 p-5">
+                <h3 className="flex items-center gap-2 font-display text-2xl font-bold text-white">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-brand-400/60 bg-brand-500/10 text-brand-300">
+                    <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true">
+                      <path d="M12 2 3 6.5v11L12 22l9-4.5v-11L12 2Zm0 2.2 6.9 3.4L12 11 5.1 7.6 12 4.2Zm-7 5.1 6 3v7.1l-6-3V9.3Zm8 10.1v-7.1l6-3v7.1l-6 3Z" />
+                    </svg>
+                  </span>
+                  <span>{content.contact.socialTitle}</span>
+                </h3>
+                <div className="mt-4 space-y-3 text-sm text-slate-200">
+                  <a
+                    href="https://www.facebook.com/Hicham-fit"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group flex items-center gap-3 rounded-xl border border-slate-600/70 bg-slate-950/55 px-3 py-2.5 transition hover:border-brand-300"
+                  >
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-400/60 bg-brand-500/10 text-brand-300">
+                      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true">
+                        <path d="M13.5 22v-8h2.7l.4-3h-3.1V9.1c0-.9.3-1.5 1.6-1.5h1.7V5c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.4V11H8v3h2.6v8h2.9Z" />
+                      </svg>
+                    </span>
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.12em] text-slate-300">{content.contact.labels.facebook}</p>
+                      <p className="font-semibold text-brand-300 group-hover:text-brand-200">Hicham-fit</p>
+                    </div>
+                  </a>
+
+                  <a
+                    href="https://www.tiktok.com/@mechkour_hicham7"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group flex items-center gap-3 rounded-xl border border-slate-600/70 bg-slate-950/55 px-3 py-2.5 transition hover:border-brand-300"
+                  >
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-400/60 bg-brand-500/10 text-brand-300">
+                      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true">
+                        <path d="M14.8 3.1c.6 1.6 1.9 2.8 3.5 3.2v2.3a6.2 6.2 0 0 1-3.2-.9v5.2a5.9 5.9 0 1 1-5.1-5.9v2.4a3.5 3.5 0 1 0 2.7 3.4V2.5h2.1v.6Z" />
+                      </svg>
+                    </span>
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.12em] text-slate-300">{content.contact.labels.tiktok}</p>
+                      <p className="font-semibold text-brand-300 group-hover:text-brand-200">mechkour_hicham7</p>
+                    </div>
+                  </a>
+
+                  <a
+                    href="https://wa.me/213779477711"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group flex items-center gap-3 rounded-xl border border-slate-600/70 bg-slate-950/55 px-3 py-2.5 transition hover:border-brand-300"
+                  >
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-400/60 bg-brand-500/10 text-brand-300">
+                      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true">
+                        <path d="M20.5 3.5A11.8 11.8 0 0 0 1.8 17.7L.5 23.5l5.9-1.2A11.8 11.8 0 1 0 20.5 3.5Zm-8.7 18a9.8 9.8 0 0 1-5-1.4l-.3-.2-3.5.7.8-3.4-.2-.4A9.9 9.9 0 1 1 11.8 21.5Zm5.4-7.4c-.3-.1-1.9-1-2.2-1.1-.3-.1-.5-.1-.7.1l-.9 1.1c-.2.2-.4.2-.7.1a8.1 8.1 0 0 1-2.4-1.5 8.9 8.9 0 0 1-1.7-2.1c-.2-.3 0-.5.1-.7l.5-.6.3-.6a.6.6 0 0 0 0-.6c-.1-.1-.7-1.7-1-2.3-.2-.5-.5-.4-.7-.4h-.6a1.2 1.2 0 0 0-.9.4A3.6 3.6 0 0 0 5 9.3a6.2 6.2 0 0 0 1.3 3.3 14.2 14.2 0 0 0 5.3 4.7 17.5 17.5 0 0 0 1.8.7 4.3 4.3 0 0 0 2 .1 3.2 3.2 0 0 0 2.1-1.5 2.6 2.6 0 0 0 .2-1.5c-.1-.1-.3-.2-.6-.3Z" />
+                      </svg>
+                    </span>
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.12em] text-slate-300">{content.contact.labels.whatsapp}</p>
+                      <p className="font-semibold text-brand-300 group-hover:text-brand-200">+213 779 47 77 11</p>
+                    </div>
+                  </a>
+
+                  <a
+                    href="mailto:hichamechkour39@gmail.com"
+                    className="group flex items-center gap-3 rounded-xl border border-slate-600/70 bg-slate-950/55 px-3 py-2.5 transition hover:border-brand-300"
+                  >
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-400/60 bg-brand-500/10 text-brand-300">
+                      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true">
+                        <path d="M3 6.8A1.8 1.8 0 0 1 4.8 5h14.4A1.8 1.8 0 0 1 21 6.8v10.4a1.8 1.8 0 0 1-1.8 1.8H4.8A1.8 1.8 0 0 1 3 17.2V6.8Zm1.8.2 7.2 4.9L19.2 7H4.8Zm14.4 10.2V8.8l-6.7 4.6a.9.9 0 0 1-1 0L4.8 8.8v8.4h14.4Z" />
+                      </svg>
+                    </span>
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.12em] text-slate-300">{content.contact.labels.email}</p>
+                      <p className="font-semibold text-brand-300 group-hover:text-brand-200">hichamechkour39@gmail.com</p>
+                    </div>
+                  </a>
+                </div>
+
+                <a
+                  href="#hero"
+                  className="mt-6 inline-block rounded-xl border border-slate-500/70 bg-slate-900/65 px-5 py-2.5 text-sm font-semibold text-white transition hover:border-brand-300"
+                >
+                  {content.contact.backTop}
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="border-t border-slate-800/80 bg-slate-950/90">
+        <div className="mx-auto max-w-6xl px-4 py-6 text-center text-xs text-slate-400 sm:px-6 sm:text-sm">
+          <p>{content.footer.rights}</p>
+        </div>
+      </footer>
+    </div>
+  );
+}

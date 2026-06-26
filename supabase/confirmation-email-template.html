@@ -1,0 +1,58 @@
+<div style="margin:0;padding:32px 16px;background:#f8fafc;font-family:Arial,sans-serif;color:#0f172a;">
+  <div style="max-width:640px;margin:0 auto;background:#ffffff;border:1px solid #dbeafe;border-radius:28px;overflow:hidden;box-shadow:0 24px 70px rgba(15,23,42,0.12);">
+    <div style="padding:44px 32px;background:linear-gradient(135deg,#effcf5 0%,#ffffff 42%,#ecfeff 100%);text-align:center;">
+      <img
+        src="https://ptubcrfmxngjlvbkftlv.supabase.co/storage/v1/object/public/logo.png/670800963_3250706728442808_2186841394431811837_n.jpg"
+        alt="Hicham-Fit App"
+        style="width:96px;height:96px;object-fit:contain;border-radius:26px;margin:0 auto 24px;display:block;background:#0f172a;padding:10px;"
+      />
+
+      <div style="display:inline-block;padding:10px 18px;border-radius:999px;border:1px solid #86efac;background:#ecfdf5;color:#047857;font-size:12px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;">
+        Confirmation de compte
+      </div>
+
+      <h1 style="margin:26px 0 12px;font-size:38px;line-height:1.1;color:#0f172a;font-weight:800;">
+        Bienvenue sur Hicham-Fit App
+      </h1>
+
+      <p style="margin:0;font-size:18px;line-height:1.7;color:#475569;">
+        Bonjour,<br />
+        Confirme ton adresse email pour activer ton compte et accéder à ton espace personnel.
+      </p>
+    </div>
+
+    <div style="padding:36px 32px 42px;text-align:center;background:#ffffff;">
+      <div style="margin:0 auto 26px;max-width:460px;padding:26px 22px;border-radius:24px;border:1px solid #86efac;background:linear-gradient(180deg,#f0fdf4 0%,#ffffff 100%);text-align:center;">
+        <div style="font-size:14px;letter-spacing:0.2em;text-transform:uppercase;color:#059669;font-weight:700;margin-bottom:12px;">
+          Email à confirmer
+        </div>
+        <div style="font-size:18px;font-weight:700;color:#0f172a;word-break:break-word;">
+          {{ .Email }}
+        </div>
+      </div>
+
+      <a
+        href="{{ .ConfirmationURL }}"
+        style="display:inline-block;background:#10b981;color:#020617;text-decoration:none;font-size:17px;font-weight:800;padding:16px 30px;border-radius:16px;box-shadow:0 18px 38px rgba(16,185,129,0.25);"
+      >
+        Confirmer mon compte
+      </a>
+
+      <p style="margin:26px 0 10px;font-size:15px;line-height:1.7;color:#475569;">
+        Si le bouton ne fonctionne pas, copie et colle ce lien dans ton navigateur :
+      </p>
+
+      <p style="margin:0 auto 22px;max-width:520px;font-size:13px;line-height:1.6;color:#64748b;word-break:break-all;">
+        {{ .ConfirmationURL }}
+      </p>
+
+      <p style="margin:0 0 12px;font-size:14px;line-height:1.7;color:#64748b;">
+        Si tu n'es pas à l'origine de cette demande, ignore simplement cet email.
+      </p>
+
+      <p style="margin:0;font-size:13px;line-height:1.7;color:#94a3b8;">
+        Cet email est envoyé automatiquement, merci de ne pas répondre.
+      </p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,27 @@
+<svg width="1200" height="1500" viewBox="0 0 1200 1500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="80" x2="1080" y2="1420" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F172A"/>
+      <stop offset="1" stop-color="#14532D"/>
+    </linearGradient>
+    <radialGradient id="shine" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(900 240) rotate(142) scale(480 560)">
+      <stop stop-color="#34D399" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#34D399" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="1500" rx="52" fill="url(#bg)"/>
+  <rect width="1200" height="1500" rx="52" fill="url(#shine)"/>
+
+  <circle cx="600" cy="510" r="190" fill="#22C55E" fill-opacity="0.22"/>
+  <circle cx="600" cy="430" r="116" fill="#22C55E"/>
+  <rect x="445" y="560" width="310" height="450" rx="150" fill="#16A34A"/>
+
+  <rect x="70" y="82" width="350" height="82" rx="18" fill="#0B1220" fill-opacity="0.72" stroke="#4ADE80" stroke-opacity="0.45"/>
+  <text x="108" y="133" fill="#DCFCE7" font-size="34" font-family="Arial, sans-serif" font-weight="700">HICHEM COACH</text>
+
+  <rect x="784" y="1114" width="340" height="280" rx="24" fill="#0B1220" fill-opacity="0.68" stroke="#34D399" stroke-opacity="0.4"/>
+  <text x="834" y="1192" fill="#34D399" font-size="56" font-family="Arial, sans-serif" font-weight="700">+250</text>
+  <text x="834" y="1245" fill="#E5E7EB" font-size="28" font-family="Arial, sans-serif">clients suivis</text>
+  <text x="834" y="1302" fill="#9CA3AF" font-size="24" font-family="Arial, sans-serif">coaching premium</text>
+</svg>

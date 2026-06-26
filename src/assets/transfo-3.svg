@@ -1,0 +1,9 @@
+<svg width="900" height="700" viewBox="0 0 900 700" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="700" rx="28" fill="#0F172A"/>
+  <rect x="32" y="32" width="836" height="636" rx="20" fill="#111827" stroke="#1F2937"/>
+  <text x="70" y="120" fill="#34D399" font-size="58" font-family="Arial, sans-serif" font-weight="700">21 km</text>
+  <text x="70" y="175" fill="#D1D5DB" font-size="28" font-family="Arial, sans-serif">Semi-marathon valide</text>
+  <rect x="70" y="230" width="760" height="16" rx="8" fill="#1F2937"/>
+  <rect x="70" y="230" width="700" height="16" rx="8" fill="#10B981"/>
+  <text x="70" y="310" fill="#9CA3AF" font-size="24" font-family="Arial, sans-serif">Endurance + plan de course</text>
+</svg>

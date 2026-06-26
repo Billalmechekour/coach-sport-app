@@ -1,0 +1,38 @@
+[functions.send-reset-code]
+verify_jwt = false
+
+[functions.verify-reset-code]
+verify_jwt = false
+
+[functions.complete-reset-password]
+verify_jwt = false
+
+[functions.send-signup-confirmation]
+verify_jwt = false
+
+[functions.confirm-signup]
+verify_jwt = false
+
+[functions.delete-account]
+verify_jwt = false
+
+[functions.update-account-security]
+verify_jwt = false
+
+[functions.auth-login]
+verify_jwt = false
+
+[functions.confirm-email-change]
+verify_jwt = false
+
+[functions.client-reviews]
+verify_jwt = false
+
+[functions.send-invoice]
+verify_jwt = false
+
+[functions.create-checkout-session]
+verify_jwt = false
+
+[functions.verify-checkout-session]
+verify_jwt = false
