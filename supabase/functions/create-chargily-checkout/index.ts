@@ -1,4 +1,3 @@
-import Stripe from "https://esm.sh/stripe@17.7.0?target=deno";
 import {
   corsHeaders,
   createAdminClient,
@@ -6,9 +5,9 @@ import {
   jsonResponse,
 } from "../_shared/reset-helpers.ts";
 
-// Catalogue de prix AUTORITAIRE (côté serveur). Les montants envoyés par le client ne sont JAMAIS
-// utilisés : on ne se fie qu'à ce catalogue (en centimes) pour éviter toute manipulation de prix.
-// Doit rester synchronisé avec `shopProducts` du frontend (produits « Payant »).
+// Catalogue de prix AUTORITAIRE (côté serveur), en CENTIMES d'euro — identique à create-checkout-session.
+// Le prix en dinars (DZD) est calculé automatiquement : DZD = EUR × 28 (règle fixée par le coach).
+// Les montants envoyés par le client ne sont JAMAIS utilisés (anti-fraude).
 const PRODUCT_CATALOG: Record<string, { name: string; amount: number }> = {
   "fat-loss-program": { name: "Programme Perte de gras", amount: 4900 },
   "mass-gain-plan": { name: "Plan Prise de masse", amount: 3900 },
@@ -30,7 +29,20 @@ const PRODUCT_CATALOG: Record<string, { name: string; amount: number }> = {
   "express-abs": { name: "Programme Abdos Express", amount: 1200 },
   "cardio-blast": { name: "Programme Cardio Blast", amount: 1500 },
 };
-const CURRENCY = "eur";
+
+// Taux fixe EUR -> DZD (le coach Hicham fixe le prix en dinars = prix € × 28).
+const EUR_TO_DZD = 28;
+
+// Convertit un montant en centimes d'euro vers un montant en dinars ENTIERS (DZD).
+function eurCentsToDzd(amountCents: number): number {
+  return Math.round((amountCents / 100) * EUR_TO_DZD);
+}
+
+function getChargilyBaseUrl(): string {
+  return (Deno.env.get("CHARGILY_BASE_URL") || "https://pay.chargily.net/test/api/v2")
+    .trim()
+    .replace(/\/+$/, "");
+}
 
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") {
@@ -41,9 +53,9 @@ Deno.serve(async (request) => {
   }
 
   try {
-    const secretKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!secretKey) {
-      return errorResponse(500, "STRIPE_CONFIG_MISSING", "Clé Stripe manquante côté serveur.");
+    const apiKey = Deno.env.get("CHARGILY_API_SECRET");
+    if (!apiKey) {
+      return errorResponse(500, "CHARGILY_CONFIG_MISSING", "Clé Chargily manquante côté serveur.");
     }
 
     // Auth : on exige une session valide (comme les autres fonctions du projet).
@@ -85,57 +97,60 @@ Deno.serve(async (request) => {
       return errorResponse(500, "APP_URL_MISSING", "URL de l'application manquante.");
     }
 
-    const stripe = new Stripe(secretKey, {
-      // @ts-ignore -- la version d'API la plus récente peut ne pas figurer dans les types du SDK installé
-      apiVersion: "2026-03-25.dahlia",
-      httpClient: Stripe.createFetchHttpClient(),
-    });
+    // Montant total en dinars (DZD), calculé depuis le catalogue € × 28.
+    const amountCentsEur = uniqueIds.reduce((sum, id) => sum + PRODUCT_CATALOG[id].amount, 0);
+    const amountDzd = eurCentsToDzd(amountCentsEur);
+    if (amountDzd < 50) {
+      // Chargily impose un montant minimum (~50 DZD).
+      return errorResponse(400, "AMOUNT_TOO_LOW", "Montant trop faible pour un paiement CCP.");
+    }
 
-    const lineItems = uniqueIds.map((id) => {
-      const product = PRODUCT_CATALOG[id];
-      return {
-        quantity: 1,
-        price_data: {
-          currency: CURRENCY,
-          unit_amount: product.amount,
-          product_data: { name: product.name, metadata: { product_id: id } },
-        },
-      };
-    });
+    const description = uniqueIds
+      .map((id) => PRODUCT_CATALOG[id].name)
+      .join(", ")
+      .slice(0, 250);
 
-    const metadata = { user_id: user.id, product_ids: uniqueIds.join(",") };
+    const successUrl = `${appUrl}/dashboard?view=${returnTo}&chargily=success`;
+    const failureUrl = `${appUrl}/dashboard?view=${returnTo}&chargily=cancel`;
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      line_items: lineItems,
-      customer_email: user.email ?? undefined,
-      client_reference_id: user.id,
-      metadata,
-      payment_intent_data: {
-        metadata,
-        statement_descriptor: "HICHAM FIT APP",
-        statement_descriptor_suffix: "PROG",
+    // Création du checkout Chargily Pay v2.
+    const chargilyResponse = await fetch(`${getChargilyBaseUrl()}/checkouts`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
       },
-      // invoice_creation RETIRÉ : incompatible avec PayPal dans Checkout (Stripe filtre PayPal).
-      // La facture est désormais créée MANUELLEMENT après paiement (voir verify-checkout-session).
-      // customer_creation: "always" garantit un Customer Stripe auquel rattacher cette facture.
-      customer_creation: "always",
-      custom_text: {
-        submit: { message: "Hicham Fit App — Coaching sportif & nutrition" },
-      },
-      // Adresse de facturation collectée sur la page Stripe (utile pour une facture conforme).
-      billing_address_collection: "auto",
-      success_url: `${appUrl}/dashboard?view=${returnTo}&checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${appUrl}/dashboard?view=${returnTo}&checkout=cancel`,
+      body: JSON.stringify({
+        amount: amountDzd,
+        currency: "dzd",
+        success_url: successUrl,
+        failure_url: failureUrl,
+        locale: "fr",
+        description: `Hicham Fit App — ${description}`,
+        // Metadata récupérée à la vérification (source de vérité pour le déblocage).
+        metadata: [{ user_id: user.id, product_ids: uniqueIds.join(",") }],
+      }),
     });
 
-    return jsonResponse({ success: true, url: session.url, sessionId: session.id });
+    const chargilyData = await chargilyResponse.json().catch(() => ({}));
+    if (!chargilyResponse.ok || !chargilyData?.checkout_url) {
+      console.error("chargily create error", chargilyResponse.status, chargilyData);
+      const reason = chargilyData?.message || chargilyData?.error || `HTTP ${chargilyResponse.status}`;
+      return errorResponse(502, "CHARGILY_CREATE_FAILED", `Impossible de créer le paiement CCP : ${reason}`);
+    }
+
+    return jsonResponse({
+      success: true,
+      url: chargilyData.checkout_url,
+      checkoutId: chargilyData.id,
+      amountDzd,
+    });
   } catch (error) {
-    console.error("create-checkout-session error", error);
+    console.error("create-chargily-checkout error", error);
     return errorResponse(
       500,
-      "CHECKOUT_CREATE_FAILED",
-      `Impossible de créer la session de paiement: ${error?.message || String(error)}`,
+      "CHARGILY_CREATE_FAILED",
+      `Impossible de créer le paiement CCP : ${error?.message || String(error)}`,
     );
   }
 });

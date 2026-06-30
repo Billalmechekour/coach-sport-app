@@ -105,19 +105,13 @@ Deno.serve(async (request) => {
       .map((id) => id.trim())
       .filter(Boolean);
 
-    // L'envoi de la facture par email se fait EN ARRIÈRE-PLAN (waitUntil) : on répond TOUT DE SUITE
-    // (toast + redirection rapides côté app), l'email part juste après sans bloquer la réponse.
-    const willSendInvoice = Boolean(paid && session.invoice);
+    // Facture créée MANUELLEMENT après paiement (invoice_creation retiré pour autoriser PayPal).
+    // Envoi en arrière-plan (waitUntil) → réponse instantanée côté app.
+    const willSendInvoice = paid;
 
     if (willSendInvoice) {
       const sendInvoiceTask = (async () => {
         try {
-          const invoiceId = typeof session.invoice === "string" ? session.invoice : session.invoice.id;
-          const invoice = await stripe.invoices.retrieve(invoiceId);
-          const invoicePdfUrl = invoice.invoice_pdf || null;
-          const hostedUrl = invoice.hosted_invoice_url || null;
-          const invoiceNumber = invoice.number || invoiceId;
-
           const customerEmail = user.email;
           if (!customerEmail) throw new Error("No customer email found");
 
@@ -133,6 +127,49 @@ Deno.serve(async (request) => {
             /* profil optionnel */
           }
 
+          // Customer Stripe (créé via customer_creation:"always", sinon on en crée un).
+          let customerId = typeof session.customer === "string" ? session.customer : session.customer?.id;
+          if (!customerId) {
+            const created = await stripe.customers.create({
+              email: customerEmail,
+              name: fullName ?? undefined,
+              metadata: { user_id: user.id },
+            });
+            customerId = created.id;
+          }
+
+          // Lignes de facture = articles achetés (récupérés depuis la session Checkout).
+          const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 100 });
+          for (const li of lineItems.data) {
+            await stripe.invoiceItems.create({
+              customer: customerId,
+              amount: li.amount_total ?? 0,
+              currency: li.currency || "eur",
+              description: li.description || "Programme — Hicham Fit App",
+            });
+          }
+
+          // Création + finalisation, puis marquée payée HORS-STRIPE (le paiement a déjà eu lieu via
+          // Checkout) → AUCUN double débit.
+          const draft = await stripe.invoices.create({
+            customer: customerId,
+            collection_method: "send_invoice",
+            days_until_due: 30,
+            auto_advance: false,
+            metadata: { user_id: user.id, product_ids: productIds.join(",") },
+            footer: "Merci pour votre confiance — Hicham Fit App",
+            custom_fields: [{ name: "Application", value: "Hicham Fit App" }],
+          });
+          const invoice = await stripe.invoices.finalizeInvoice(draft.id);
+          try {
+            await stripe.invoices.pay(invoice.id, { paid_out_of_band: true });
+          } catch (payError) {
+            console.error("[invoice] mark-paid OOB error (non-bloquant):", payError);
+          }
+
+          const invoicePdfUrl = invoice.invoice_pdf || null;
+          const hostedUrl = invoice.hosted_invoice_url || null;
+          const invoiceNumber = invoice.number || invoice.id;
           const amountTotal = ((session.amount_total || 0) / 100).toFixed(2);
           const currency = session.currency || "eur";
 

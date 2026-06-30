@@ -12,6 +12,8 @@ import ifbbDiploma from "./assets/certifications/diplome-ifbb.jpeg";
 import ifbbCard from "./assets/certifications/carte-ifbb.jpeg";
 import mmImage from "./assets/certifications/mm.jpg";
 import hmLogo from "./assets/images/logo-trident.png";
+import noAppointmentsGif from "./assets/images/no-appointments.gif";
+import exercisesFrData from "./assets/exercises-fr.json";
 
 const portfolioData = {
   fr: {
@@ -2905,12 +2907,7 @@ function DashboardSidebar({
       label: t.exercises,
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M6.5 6.5L4 9l2.5 2.5" />
-          <path d="M17.5 17.5 20 15l-2.5-2.5" />
-          <path d="M8 16 16 8" />
-          <path d="M3.5 11.5 6 14" />
-          <path d="M18 10l2.5 2.5" />
-          <path d="M10 18l2.5 2.5" />
+          <path d="M6.5 6.5 17.5 17.5M4 9l2-2M20 15l-2 2M9 4 7 6M17 20l-2-2M3 14l4 4M21 10l-4-4" />
         </svg>
       )
     },
@@ -3474,6 +3471,45 @@ const shopProducts = [
       "Le coaching le plus poussé : programme 100% personnalisé, plan nutritionnel sur mesure, ajustements hebdomadaires et accès direct au coach. Pour atteindre tes objectifs avec un suivi d'élite.",
     tags: ["Coaching", "Premium", "Suivi 1-à-1"],
     images: [coachHero, coachHeroAlt, ifbbDiploma]
+  },
+  {
+    id: "discovery-program",
+    title: "Programme Découverte",
+    category: "Programmes sportifs",
+    priceType: "Payant",
+    price: "9 €",
+    badge: "Découverte",
+    description: "Petit programme d'essai pour tester le paiement et découvrir la méthode.",
+    longDescription:
+      "Un programme court et accessible pour découvrir la méthode Hicham Fit App : quelques séances clés pour te lancer en douceur. Idéal pour tester l'application et le paiement.",
+    tags: ["Découverte", "Débutant", "Essai"],
+    images: [coachHero]
+  },
+  {
+    id: "express-abs",
+    title: "Programme Abdos Express",
+    category: "Plans d'entraînement",
+    priceType: "Payant",
+    price: "12 €",
+    badge: "Plan",
+    description: "Routine ciblée abdos / gainage à faire en 15 minutes par jour.",
+    longDescription:
+      "Une routine express centrée sur les abdominaux et le gainage : exercices ciblés, progression sur 4 semaines, faisable à la maison en 15 minutes par jour.",
+    tags: ["Abdos", "Gainage", "Maison"],
+    images: [mmImage]
+  },
+  {
+    id: "cardio-blast",
+    title: "Programme Cardio Blast",
+    category: "Programmes sportifs",
+    priceType: "Payant",
+    price: "15 €",
+    badge: "Cardio",
+    description: "Séances cardio intenses pour brûler un maximum de calories.",
+    longDescription:
+      "Un programme cardio dynamique pour augmenter ton endurance et brûler un maximum de calories : intervalles, circuits et progression contrôlée sur plusieurs semaines.",
+    tags: ["Cardio", "Endurance", "Brûle-graisse"],
+    images: [transfo1]
   }
 ];
 
@@ -3617,6 +3653,15 @@ const coachPrograms = [
 function parseProductPrice(price) {
   const match = String(price).match(/(\d+(?:[.,]\d+)?)/);
   return match ? Number(match[1].replace(",", ".")) : null;
+}
+
+// Taux fixe EUR -> DZD (le coach Hicham fixe le prix en dinars = prix € × 28).
+const EUR_TO_DZD = 28;
+
+// Affiche un prix selon la résidence : en dinars (DZD) pour l'Algérie, sinon en euros.
+function formatRegionalPrice(eurValue, isAlgeria) {
+  if (eurValue == null) return null;
+  return isAlgeria ? `${Math.round(eurValue * EUR_TO_DZD)} DZD` : `${eurValue} €`;
 }
 
 function addShopNotification(text) {
@@ -4231,6 +4276,1040 @@ function CoachInbox() {
   );
 }
 
+// Bibliothèque d'exercices du coach Hicham (démos, exécution, erreurs, variantes).
+// Petite bibliothèque FR de repli (utilisée seulement si la base en ligne ne charge pas).
+const exerciseLibrary = [
+  {
+    id: "bench-press", name: "Développé couché", emoji: "🏋️", muscle: "Pectoraux", equipment: "Barre", level: "Intermédiaire",
+    targets: ["Pectoraux", "Triceps", "Épaules"], sets: "4 × 8-10",
+    steps: ["Allonge-toi sur le banc, pieds au sol, omoplates serrées.", "Saisis la barre un peu plus large que les épaules.", "Descends la barre vers le milieu de la poitrine en contrôlant.", "Pousse jusqu'à l'extension complète sans verrouiller brutalement."],
+    mistakes: ["Ne fais pas rebondir la barre sur la poitrine.", "Ne décolle pas les fessiers du banc.", "N'écarte pas trop les coudes (90°)."],
+    variants: { easier: "Développé haltères ou à la machine guidée.", harder: "Tempo lent 3s à la descente + pause poitrine." },
+  },
+  {
+    id: "push-up", name: "Pompes", emoji: "🤸", muscle: "Pectoraux", equipment: "Poids du corps", level: "Débutant",
+    targets: ["Pectoraux", "Triceps", "Gainage"], sets: "4 × 12-20",
+    steps: ["Mains sous les épaules, corps gainé en planche.", "Descends en gardant les coudes à ~45°.", "Frôle le sol puis pousse fort.", "Garde le bassin aligné (pas de creux)."],
+    mistakes: ["Ne cambre pas le bas du dos.", "Ne raccourcis pas l'amplitude.", "Ne laisse pas la tête plonger en avant."],
+    variants: { easier: "Sur les genoux ou contre un mur.", harder: "Pieds surélevés / lestée / déclinées." },
+  },
+  {
+    id: "squat", name: "Squat", emoji: "🦵", muscle: "Jambes", equipment: "Barre", level: "Intermédiaire",
+    targets: ["Quadriceps", "Fessiers", "Ischios"], sets: "4 × 6-10",
+    steps: ["Barre sur le haut du dos, pieds largeur épaules.", "Inspire, gaine, descends en poussant les hanches en arrière.", "Descends au moins jusqu'à cuisses parallèles.", "Remonte en poussant dans les talons."],
+    mistakes: ["Ne laisse pas les genoux rentrer vers l'intérieur.", "Ne laisse pas le dos s'arrondir.", "Ne laisse pas les talons décoller."],
+    variants: { easier: "Squat au poids du corps / box squat.", harder: "Squat avant / tempo / pause basse." },
+  },
+  {
+    id: "lunges", name: "Fentes", emoji: "🦵", muscle: "Jambes", equipment: "Haltères", level: "Débutant",
+    targets: ["Quadriceps", "Fessiers"], sets: "3 × 10-12 / jambe",
+    steps: ["Un haltère dans chaque main, buste droit.", "Avance d'un grand pas.", "Descends le genou arrière vers le sol.", "Pousse sur la jambe avant pour revenir."],
+    mistakes: ["Ne laisse pas le genou avant dépasser la pointe du pied.", "Ne penche pas le buste en avant.", "Ne fais pas un pas trop court."],
+    variants: { easier: "Fentes statiques sans charge.", harder: "Fentes marchées / fentes bulgares." },
+  },
+  {
+    id: "deadlift", name: "Soulevé de terre", emoji: "🏋️", muscle: "Dos", equipment: "Barre", level: "Avancé",
+    targets: ["Ischios", "Fessiers", "Dos", "Trapèzes"], sets: "4 × 4-6",
+    steps: ["Pieds largeur hanches, barre au-dessus du milieu du pied.", "Saisis la barre, dos plat, poitrine haute.", "Pousse dans le sol et tire la barre le long des jambes.", "Verrouille hanches et genoux en haut."],
+    mistakes: ["N'arrondis pas le dos.", "Ne laisse pas la barre s'éloigner du corps.", "Ne pars pas en hyperextension en haut."],
+    variants: { easier: "Soulevé roumain léger / kettlebell.", harder: "Déficit / tempo contrôlé." },
+  },
+  {
+    id: "pull-up", name: "Tractions", emoji: "💪", muscle: "Dos", equipment: "Poids du corps", level: "Avancé",
+    targets: ["Grand dorsal", "Biceps"], sets: "4 × max",
+    steps: ["Prise pronation un peu plus large que les épaules.", "Gaine et tire les coudes vers le bas.", "Monte jusqu'à ce que le menton dépasse la barre.", "Descends en contrôlant (pas en chute)."],
+    mistakes: ["Ne pars pas en à-coups ni en balancier.", "Ne raccourcis pas l'amplitude.", "Ne laisse pas les épaules désengagées."],
+    variants: { easier: "Tractions assistées élastique / tirage vertical.", harder: "Tractions lestées / tempo." },
+  },
+  {
+    id: "db-row", name: "Rowing haltère", emoji: "💪", muscle: "Dos", equipment: "Haltères", level: "Intermédiaire",
+    targets: ["Dos", "Biceps"], sets: "4 × 10-12",
+    steps: ["Un genou et une main sur le banc, dos plat.", "Haltère bras tendu.", "Tire le coude vers la hanche.", "Contracte le dos puis redescends contrôlé."],
+    mistakes: ["Ne tourne pas le buste.", "Ne tire pas avec le bras seul (engage le dos).", "N'arrondis pas le dos."],
+    variants: { easier: "Rowing à l'élastique.", harder: "Tempo lent / charge plus lourde." },
+  },
+  {
+    id: "ohp", name: "Développé militaire", emoji: "🏋️", muscle: "Épaules", equipment: "Barre", level: "Intermédiaire",
+    targets: ["Épaules", "Triceps"], sets: "4 × 6-10",
+    steps: ["Barre au niveau des clavicules, gaine fessiers et abdos.", "Pousse la barre au-dessus de la tête.", "Passe légèrement la tête sous la barre en haut.", "Redescends contrôlé aux clavicules."],
+    mistakes: ["Ne cambre pas excessivement.", "Ne pousse pas vers l'avant.", "Ne verrouille pas brutalement."],
+    variants: { easier: "Développé haltères assis.", harder: "Strict press / push press." },
+  },
+  {
+    id: "lateral-raise", name: "Élévations latérales", emoji: "💪", muscle: "Épaules", equipment: "Haltères", level: "Débutant",
+    targets: ["Deltoïdes latéraux"], sets: "3 × 12-15",
+    steps: ["Haltères le long du corps, léger fléchissement des coudes.", "Monte les bras sur les côtés jusqu'à l'horizontale.", "Mène le mouvement avec les coudes.", "Redescends lentement."],
+    mistakes: ["N'utilise pas l'élan.", "Ne monte pas au-dessus des épaules.", "Ne mets pas une charge trop lourde."],
+    variants: { easier: "Charges légères / un bras à la fois.", harder: "Tempo / série dégressive." },
+  },
+  {
+    id: "biceps-curl", name: "Curl biceps", emoji: "💪", muscle: "Bras", equipment: "Haltères", level: "Débutant",
+    targets: ["Biceps"], sets: "3 × 10-12",
+    steps: ["Haltères en supination, coudes près du corps.", "Fléchis les avant-bras.", "Contracte en haut.", "Descends en contrôlant."],
+    mistakes: ["Ne balance pas le buste.", "Ne bouge pas les coudes.", "Ne raccourcis pas l'amplitude."],
+    variants: { easier: "Curl à la barre / assis.", harder: "Tempo lent / curl marteau." },
+  },
+  {
+    id: "dips", name: "Dips", emoji: "🤸", muscle: "Bras", equipment: "Poids du corps", level: "Intermédiaire",
+    targets: ["Triceps", "Pectoraux"], sets: "4 × 8-12",
+    steps: ["Bras tendus sur les barres parallèles, gaine.", "Descends en pliant les coudes.", "Garde le buste droit pour cibler les triceps.", "Pousse jusqu'à extension."],
+    mistakes: ["Ne descends pas trop profond (douleur).", "Ne laisse pas les épaules monter vers les oreilles.", "Ne fais pas d'à-coups."],
+    variants: { easier: "Dips sur un banc.", harder: "Dips lestés." },
+  },
+  {
+    id: "plank", name: "Gainage planche", emoji: "🧘", muscle: "Abdos", equipment: "Poids du corps", level: "Débutant",
+    targets: ["Abdos", "Gainage"], sets: "3 × 30-60s",
+    steps: ["Appuis sur les avant-bras, coudes sous les épaules.", "Corps aligné de la tête aux talons.", "Serre abdos et fessiers.", "Respire calmement."],
+    mistakes: ["Ne place pas le bassin trop haut ni trop bas.", "Ne relève pas la tête.", "Ne bloque pas ta respiration."],
+    variants: { easier: "Planche sur les genoux.", harder: "Planche dynamique / lestée." },
+  },
+  {
+    id: "crunch", name: "Crunch", emoji: "🧘", muscle: "Abdos", equipment: "Poids du corps", level: "Débutant",
+    targets: ["Grand droit"], sets: "3 × 15-20",
+    steps: ["Allongé, genoux fléchis, mains aux tempes.", "Enroule le haut du dos vers les genoux.", "Contracte les abdos en haut.", "Redescends sans relâcher totalement."],
+    mistakes: ["Ne tire pas sur la nuque.", "Ne monte pas avec l'élan.", "Ne décolle pas tout le dos."],
+    variants: { easier: "Amplitude réduite.", harder: "Lesté / avec relevé de jambes." },
+  },
+  {
+    id: "burpees", name: "Burpees", emoji: "🔥", muscle: "Full body", equipment: "Poids du corps", level: "Intermédiaire",
+    targets: ["Full body", "Cardio"], sets: "4 × 10-15",
+    steps: ["Debout, descends en squat mains au sol.", "Lance les pieds en arrière en planche.", "(Option pompe) puis ramène les pieds.", "Saute en extension, bras au-dessus de la tête."],
+    mistakes: ["Ne creuse pas le dos en planche.", "Ne réceptionne pas genoux raides.", "Ne pars pas dans un rythme désordonné."],
+    variants: { easier: "Sans saut et sans pompe.", harder: "Avec pompe + saut groupé." },
+  },
+  {
+    id: "mountain-climbers", name: "Mountain climbers", emoji: "🔥", muscle: "Full body", equipment: "Poids du corps", level: "Débutant",
+    targets: ["Abdos", "Cardio"], sets: "4 × 30-45s",
+    steps: ["Position de planche bras tendus.", "Ramène un genou vers la poitrine.", "Alterne rapidement les jambes.", "Garde le bassin stable."],
+    mistakes: ["Ne laisse pas les fessiers monter.", "Ne laisse pas tes appuis devenir instables.", "Ne va pas trop vite sans contrôle."],
+    variants: { easier: "Tempo lent et contrôlé.", harder: "Croisés / avec sliders." },
+  },
+  {
+    id: "hip-thrust", name: "Hip thrust", emoji: "🦵", muscle: "Jambes", equipment: "Barre", level: "Intermédiaire",
+    targets: ["Fessiers", "Ischios"], sets: "4 × 8-12",
+    steps: ["Haut du dos sur un banc, barre sur les hanches (avec un coussin).", "Pieds à plat, talons sous les genoux.", "Pousse les hanches vers le haut.", "Contracte les fessiers en haut puis redescends."],
+    mistakes: ["Ne pars pas en hyperextension lombaire.", "Ne pousse pas avec les pointes de pied.", "Ne fais pas une amplitude trop courte."],
+    variants: { easier: "Pont fessier au sol sans charge.", harder: "Une jambe / pause en haut." },
+  },
+];
+
+// Fonction pure : fait avancer le minuteur d'une seconde selon la config (Tabata/EMOM/perso).
+function tickTimer(t, cfg) {
+  if (!t.running) return t;
+  if (t.remaining > 1) return { ...t, remaining: t.remaining - 1 };
+  if (t.phase === "work" && cfg.rest > 0) return { ...t, phase: "rest", remaining: cfg.rest };
+  if (t.round < cfg.rounds) return { ...t, phase: "work", remaining: cfg.work, round: t.round + 1 };
+  return { ...t, phase: "done", remaining: 0, running: false };
+}
+
+function loadJSON(key, fallback) {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const saved = window.localStorage.getItem(key);
+    const parsed = saved ? JSON.parse(saved) : fallback;
+    return parsed ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+// Base d'exercices open-source (yuhonas/free-exercise-db) : ~870 exercices avec PHOTOS RÉELLES
+// du mouvement (position de départ + position finale) et instructions. Chargée à la volée + cache.
+const EX_DB_CDN = "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main";
+const EX_DB_URL = `${EX_DB_CDN}/dist/exercises.json`;
+let exDbCache = null;
+
+const exMuscleGroupFr = { abdominals: "Abdos", abductors: "Jambes", adductors: "Jambes", biceps: "Bras", calves: "Jambes", chest: "Pectoraux", forearms: "Bras", glutes: "Jambes", hamstrings: "Jambes", lats: "Dos", "lower back": "Dos", "middle back": "Dos", neck: "Cou", quadriceps: "Jambes", shoulders: "Épaules", traps: "Dos", triceps: "Bras" };
+const exMuscleLabelFr = { abdominals: "Abdominaux", abductors: "Abducteurs", adductors: "Adducteurs", biceps: "Biceps", calves: "Mollets", chest: "Pectoraux", forearms: "Avant-bras", glutes: "Fessiers", hamstrings: "Ischios", lats: "Grand dorsal", "lower back": "Bas du dos", "middle back": "Milieu du dos", neck: "Cou", quadriceps: "Quadriceps", shoulders: "Épaules", traps: "Trapèzes", triceps: "Triceps" };
+const exEquipFr = { "body only": "Poids du corps", barbell: "Barre", dumbbell: "Haltères", cable: "Poulie", machine: "Machine", kettlebells: "Kettlebell", bands: "Élastique", "e-z curl bar": "Barre EZ", "exercise ball": "Swiss ball", "medicine ball": "Medicine ball", "foam roll": "Rouleau", other: "Autre" };
+const exLevelFr = { beginner: "Débutant", intermediate: "Intermédiaire", expert: "Avancé" };
+const exGroupEmoji = { Pectoraux: "💪", Dos: "🏋️", Jambes: "🦵", "Épaules": "🏋️", Bras: "💪", Biceps: "💪", Triceps: "💪", "Avant-bras": "🤝", Abdos: "🧘", Abdominaux: "🧘", Lombaires: "🧎", Fessiers: "🍑", Quadriceps: "🦵", "Ischio-jambiers": "🦵", Adducteurs: "🦵", Abducteurs: "🦵", Mollets: "🦶", "Tibial antérieur": "🦶", Cou: "🧍", Autre: "🤸" };
+const exMuscleGroupsFr = ["Pectoraux", "Dos", "Épaules", "Biceps", "Triceps", "Avant-bras", "Abdominaux", "Obliques", "Lombaires", "Fessiers", "Quadriceps", "Ischio-jambiers", "Adducteurs", "Abducteurs", "Mollets", "Tibial antérieur", "Cou"];
+// Conseils « à éviter » génériques (affichés quand l'exercice n'a pas d'erreurs spécifiques).
+const exGenericMistakes = [
+  "Ne donne pas d'à-coups : contrôle chaque répétition.",
+  "Ne sacrifie pas la posture : garde le dos gainé et stable.",
+  "Ne bloque pas ta respiration (souffle à l'effort).",
+  "Ne réduis pas l'amplitude : fais le mouvement complet.",
+];
+// « Comment faire » en français propre (générique, adapté au type/matériel/muscle).
+function exGenericSteps(type, equipment, muscle) {
+  const eq = equipment && equipment !== "Autre" ? ` avec ${String(equipment).toLowerCase()}` : "";
+  const m = muscle ? String(muscle).toLowerCase() : "le muscle ciblé";
+  if (type === "Mobilité") return [
+    "Place-toi en position d'étirement en douceur, sans à-coups.",
+    `Va progressivement jusqu'à une tension confortable sur ${m}.`,
+    "Maintiens la position en respirant calmement, sans forcer.",
+  ];
+  if (type === "Cardio") return [
+    "Mets-toi en position, gainage engagé.",
+    "Réalise le mouvement de façon dynamique et régulière.",
+    "Garde un rythme contrôlé pendant toute la durée prévue.",
+  ];
+  if (type === "Corps complet") return [
+    `Installe-toi en position de départ${eq}, gainage engagé.`,
+    "Enchaîne le mouvement complet en contrôlant la technique (regarde la démo / la vidéo).",
+    "Reviens en position de départ et enchaîne les répétitions.",
+  ];
+  return [
+    `Installe-toi en position de départ${eq}, dos gainé et stable.`,
+    `Réalise le mouvement en contrôlant la charge sur toute l'amplitude (cible : ${m}).`,
+    "Reviens lentement en position de départ en soufflant, puis enchaîne les répétitions.",
+  ];
+}
+
+// « À éviter » SPÉCIFIQUE à chaque exercice (composé selon muscle + mouvement + matériel + type).
+const exMuscleMistake = {
+  Pectoraux: "N'écarte pas trop les coudes (protège les épaules).",
+  Dos: "Ne tire pas seulement avec les bras : engage le dos.",
+  "Épaules": "Ne cambre pas le bas du dos en poussant.",
+  Biceps: "Ne balance pas le buste pour soulever.",
+  Triceps: "Ne bouge pas les coudes pendant le mouvement.",
+  "Avant-bras": "Ne bouge pas l'avant-bras : seul le poignet travaille.",
+  Abdominaux: "Ne tire pas sur la nuque.",
+  Obliques: "Ne compense pas avec les bras : tourne le buste.",
+  Lombaires: "Ne pars pas en hyperextension brutale.",
+  Fessiers: "Ne cambre pas le bas du dos en haut du mouvement.",
+  Quadriceps: "Ne laisse pas les genoux rentrer vers l'intérieur.",
+  "Ischio-jambiers": "N'arrondis pas le dos en descendant.",
+  Adducteurs: "Ne force pas l'amplitude (aine).",
+  Abducteurs: "Ne te penche pas pour tricher.",
+  Mollets: "Ne raccourcis pas l'amplitude en haut.",
+  "Tibial antérieur": "Ne force pas : garde un mouvement contrôlé.",
+  Cou: "Ne force pas : reste progressif.",
+};
+const exEquipMistake = {
+  Barre: "Ne laisse pas la barre dévier de sa trajectoire.",
+  "Haltères": "Ne cogne pas les haltères et contrôle la descente.",
+  Poulie: "Ne te balance pas pour tricher avec la poulie.",
+  Machine: "Ne donne pas d'à-coups sur la machine.",
+  "Élastique": "Ne relâche pas brutalement l'élastique.",
+  Kettlebell: "Ne soulève pas avec le dos : utilise les hanches.",
+  "Poids du corps": "Ne sacrifie pas la posture pour faire plus de répétitions.",
+};
+const exNameMistakes = [
+  [/(squat|goblet|hack)/, "Ne laisse pas les talons décoller du sol."],
+  [/(fente|lunge|montée)/, "Ne laisse pas le genou avant dépasser la pointe du pied."],
+  [/(soulevé|deadlift)/, "Ne laisse pas la barre s'éloigner de tes jambes."],
+  [/(développé|pompe|pec deck|écarté)/, "Ne verrouille pas les coudes brutalement."],
+  [/curl/, "Ne bouge pas les coudes pendant la montée."],
+  [/(rowing|tirage|traction)/, "Ne te redresse pas en tirant : garde la position."],
+  [/(crunch|relevé de buste|sit)/, "Ne décolle pas tout le dos d'un coup."],
+  [/(gainage|planche|plank)/, "Ne laisse pas le bassin s'affaisser."],
+  [/(saut|jump|burpee|corde)/, "Ne réceptionne pas jambes raides : amortis."],
+  [/(mollet|calf)/, "Ne plie pas les genoux pour tricher."],
+  [/(étirement|stretch|mobilité)/, "Ne force pas jusqu'à la douleur."],
+  [/(hip thrust|pont|kickback)/, "Ne pars pas en hyperextension lombaire."],
+  [/dips/, "Ne descends pas trop bas (épaules)."],
+  [/(extension triceps|barre au front|pushdown)/, "Ne bouge pas les coudes."],
+  [/(élévation|oiseau|face pull)/, "N'utilise pas l'élan pour monter."],
+];
+function exMistakesFor(ex) {
+  const name = (ex.name || "").toLowerCase();
+  const out = [];
+  if (exMuscleMistake[ex.muscle]) out.push(exMuscleMistake[ex.muscle]);
+  for (const [rx, tip] of exNameMistakes) { if (rx.test(name)) { out.push(tip); break; } }
+  if (exEquipMistake[ex.equipment]) out.push(exEquipMistake[ex.equipment]);
+  if (ex.type === "Mobilité") out.push("Ne bloque pas ta respiration pendant l'étirement.");
+  else if (ex.type === "Cardio") out.push("Ne sacrifie pas la posture pour aller plus vite.");
+  else out.push("Ne bloque pas ta respiration (souffle à l'effort).");
+  const uniq = [];
+  for (const s of out) if (!uniq.includes(s)) uniq.push(s);
+  for (const g of exGenericMistakes) { if (uniq.length >= 3) break; if (!uniq.includes(g)) uniq.push(g); }
+  return uniq.slice(0, 4);
+}
+// Types d'exercices (ce ne sont PAS des muscles) : filtre séparé.
+const exTypeOptions = ["Tous", "Musculation", "Cardio", "Mobilité", "Corps complet"];
+const exEquipmentOptions = ["Tous", "Poids du corps", "Barre", "Haltères", "Machine", "Poulie", "Élastique", "Kettlebell", "Medicine ball", "Swiss ball", "Rouleau", "Autre"];
+const exTypeOverride = {
+  "Rope_Jumping": "Cardio",
+  "Mountain_Climbers": "Cardio",
+  "burpees": "Cardio",
+  "Barbell_Deadlift": "Corps complet",
+  "One-Arm_Kettlebell_Swings": "Corps complet",
+  "Kettlebell_Thruster": "Corps complet",
+  "Clean_and_Press": "Corps complet",
+  "Power_Clean": "Corps complet",
+  "Hip_Circles_prone": "Mobilité",
+  "Arm_Circles": "Mobilité",
+  "All_Fours_Quad_Stretch": "Mobilité",
+  "90_90_Hamstring": "Mobilité",
+};
+// Reclasse certains exercices dans un groupe musculaire PRÉCIS (par id).
+const exMuscleOverride = {
+  "Cable_Russian_Twists": "Obliques",
+  "Bosu_Ball_Cable_Crunch_With_Side_Bends": "Obliques",
+  "Hyperextensions_Back_Extensions": "Lombaires",
+  "Barbell_Full_Squat": "Quadriceps",
+  "Calf_Press_On_The_Leg_Press_Machine": "Mollets",
+  "Leg_Extensions": "Quadriceps",
+  "Lying_Leg_Curls": "Ischio-jambiers",
+  "Romanian_Deadlift": "Ischio-jambiers",
+  "Dumbbell_Lunges": "Quadriceps",
+  "Standing_Calf_Raises": "Mollets",
+  "Barbell_Hip_Thrust": "Fessiers",
+  "Goblet_Squat": "Quadriceps",
+  "Rope_Jumping": "Mollets",
+  "One-Arm_Kettlebell_Swings": "Fessiers",
+  "Barbell_Curl": "Biceps",
+  "Dumbbell_Alternate_Bicep_Curl": "Biceps",
+  "Cable_Hammer_Curls_-_Rope_Attachment": "Biceps",
+  "Concentration_Curls": "Biceps",
+  "Reverse_Grip_Triceps_Pushdown": "Triceps",
+  "Lying_Triceps_Press": "Triceps",
+  "Close-Grip_Barbell_Bench_Press": "Triceps",
+  "Standing_Dumbbell_Triceps_Extension": "Triceps",
+  "Dips_-_Triceps_Version": "Triceps",
+};
+
+function mapDbExercise(raw) {
+  const primary = raw.primaryMuscles || [];
+  const group = exMuscleGroupFr[primary[0]] || "Autre";
+  return {
+    id: raw.id,
+    name: raw.name,
+    muscle: group,
+    equipment: exEquipFr[raw.equipment] || raw.equipment || "Autre",
+    level: exLevelFr[raw.level] || raw.level || "—",
+    targets: [...(raw.primaryMuscles || []), ...(raw.secondaryMuscles || [])].map((m) => exMuscleLabelFr[m] || m),
+    steps: raw.instructions || [],
+    images: (raw.images || []).map((p) => `${EX_DB_CDN}/exercises/${p}`),
+    category: raw.category || "",
+    emoji: exGroupEmoji[group] || "🤸",
+  };
+}
+
+// Photos réelles du mouvement (début/fin) depuis la base open-source, réutilisées dans notre
+// bibliothèque 100% FRANÇAISE (noms + instructions rédigés en français).
+const exUrl = (f) => [`${EX_DB_CDN}/exercises/${f}/0.jpg`, `${EX_DB_CDN}/exercises/${f}/1.jpg`];
+const exerciseLibraryFr = [
+  { id: "Barbell_Bench_Press_-_Medium_Grip", name: "Développé couché (barre)", muscle: "Pectoraux", equipment: "Barre", level: "Intermédiaire", targets: ["Pectoraux", "Triceps", "Épaules"], steps: ["Allonge-toi, omoplates serrées, pieds au sol.", "Descends la barre au milieu de la poitrine en contrôlant.", "Pousse jusqu'à l'extension complète."], mistakes: ["Ne fais pas rebondir la barre sur la poitrine.", "Ne décolle pas les fessiers du banc.", "N'écarte pas trop les coudes (90°)."], images: exUrl("Barbell_Bench_Press_-_Medium_Grip") },
+  { id: "Incline_Dumbbell_Press", name: "Développé incliné haltères", muscle: "Pectoraux", equipment: "Haltères", level: "Débutant", targets: ["Haut des pectoraux", "Épaules"], steps: ["Banc incliné ~30°, un haltère dans chaque main.", "Descends les haltères au niveau des pectoraux.", "Pousse vers le haut sans verrouiller brutalement."], mistakes: ["Ne cambre pas excessivement le bas du dos.", "Ne cogne pas les haltères en haut.", "Ne descends pas trop bas (épaules)."], images: exUrl("Incline_Dumbbell_Press") },
+  { id: "Plyo_Kettlebell_Pushups", name: "Pompes pliométriques", muscle: "Pectoraux", equipment: "Kettlebell", level: "Avancé", targets: ["Pectoraux", "Triceps", "Gainage"], steps: ["Mains sur deux kettlebells, corps gainé.", "Descends en contrôle.", "Pousse explosivement pour décoller les mains."], mistakes: ["Ne creuse pas le bas du dos.", "Ne réceptionne pas bras tendus raides.", "Ne néglige pas le gainage."], images: exUrl("Plyo_Kettlebell_Pushups") },
+  { id: "Decline_Dumbbell_Flyes", name: "Écarté haltères décliné", muscle: "Pectoraux", equipment: "Haltères", level: "Débutant", targets: ["Pectoraux"], steps: ["Banc décliné, haltères au-dessus de la poitrine, coudes légèrement fléchis.", "Ouvre les bras en arc de cercle.", "Reviens en contractant les pectoraux."], mistakes: ["Ne tends pas complètement les coudes.", "Ne descends pas trop bas (épaules).", "N'utilise pas l'élan."], images: exUrl("Decline_Dumbbell_Flyes") },
+  { id: "Cable_Crossover", name: "Écarté à la poulie", muscle: "Pectoraux", equipment: "Poulie", level: "Débutant", targets: ["Pectoraux"], steps: ["Poulies hautes, un pas en avant, léger buste penché.", "Amène les mains devant toi en arc de cercle.", "Contracte puis reviens en contrôle."], mistakes: ["N'arrondis pas le dos.", "Ne plie pas trop les coudes.", "Ne tire pas avec les épaules."], images: exUrl("Cable_Crossover") },
+  { id: "Dips_-_Chest_Version", name: "Dips (pectoraux)", muscle: "Pectoraux", equipment: "Poids du corps", level: "Intermédiaire", targets: ["Pectoraux", "Triceps"], steps: ["Bras tendus, buste penché en avant.", "Descends en écartant légèrement les coudes.", "Pousse jusqu'à extension."], mistakes: ["Ne descends pas trop bas (épaules).", "Ne hausse pas les épaules.", "Ne fais pas d'à-coups."], images: exUrl("Dips_-_Chest_Version") },
+  { id: "Pullups", name: "Tractions", muscle: "Dos", equipment: "Poids du corps", level: "Débutant", targets: ["Grand dorsal", "Biceps"], steps: ["Prise pronation un peu plus large que les épaules.", "Tire les coudes vers le bas, menton au-dessus de la barre.", "Descends en contrôle."], mistakes: ["Ne te balance pas.", "Ne raccourcis pas l'amplitude.", "Ne néglige pas l'engagement des épaules."], images: exUrl("Pullups") },
+  { id: "Bent_Over_Barbell_Row", name: "Rowing barre buste penché", muscle: "Dos", equipment: "Barre", level: "Débutant", targets: ["Dos", "Biceps"], steps: ["Buste penché ~45°, dos plat.", "Tire la barre vers le bas-ventre.", "Contracte le dos puis redescends."], mistakes: ["N'arrondis pas le dos.", "Ne tire pas en à-coups.", "Ne te redresse pas à chaque répétition."], images: exUrl("Bent_Over_Barbell_Row") },
+  { id: "One-Arm_Dumbbell_Row", name: "Rowing haltère un bras", muscle: "Dos", equipment: "Haltères", level: "Débutant", targets: ["Dos", "Biceps"], steps: ["Un genou et une main sur le banc, dos plat.", "Tire le coude vers la hanche.", "Redescends contrôlé."], mistakes: ["Ne tourne pas le buste.", "Ne tire pas avec le bras seul (engage le dos).", "N'arrondis pas le dos."], images: exUrl("One-Arm_Dumbbell_Row") },
+  { id: "Wide-Grip_Lat_Pulldown", name: "Tirage vertical prise large", muscle: "Dos", equipment: "Poulie", level: "Débutant", targets: ["Grand dorsal", "Biceps"], steps: ["Prise large, buste légèrement incliné.", "Tire la barre vers le haut de la poitrine.", "Reviens en contrôlant."], mistakes: ["Ne tire pas derrière la nuque.", "Ne te balance pas avec le buste.", "Ne raccourcis pas l'amplitude."], images: exUrl("Wide-Grip_Lat_Pulldown") },
+  { id: "Barbell_Deadlift", name: "Soulevé de terre (barre)", muscle: "Dos", equipment: "Barre", level: "Intermédiaire", targets: ["Ischios", "Fessiers", "Dos"], steps: ["Pieds largeur hanches, dos plat, barre près des tibias.", "Pousse dans le sol et tire la barre le long des jambes.", "Verrouille hanches et genoux en haut."], mistakes: ["N'arrondis pas le dos.", "Ne laisse pas la barre s'éloigner du corps.", "Ne pars pas en hyperextension en haut."], images: exUrl("Barbell_Deadlift") },
+  { id: "Seated_Cable_Rows", name: "Rowing assis à la poulie", muscle: "Dos", equipment: "Poulie", level: "Débutant", targets: ["Dos", "Biceps"], steps: ["Assis, dos droit, légère flexion des genoux.", "Tire la poignée vers le nombril.", "Serre les omoplates puis reviens."], mistakes: ["N'arrondis pas le dos.", "Ne te balance pas en arrière.", "Ne tire pas avec les bras seuls (engage le dos)."], images: exUrl("Seated_Cable_Rows") },
+  { id: "Hyperextensions_Back_Extensions", name: "Extensions lombaires", muscle: "Dos", equipment: "Poids du corps", level: "Débutant", targets: ["Bas du dos", "Fessiers"], steps: ["Hanches calées sur le banc à lombaires.", "Descends le buste en contrôle.", "Remonte jusqu'à l'alignement (sans hyperextension)."], mistakes: ["Ne pars pas en hyperextension lombaire.", "Ne fais pas d'à-coups.", "Ne descends pas trop vite."], images: exUrl("Hyperextensions_Back_Extensions") },
+  { id: "Barbell_Full_Squat", name: "Squat complet (barre)", muscle: "Jambes", equipment: "Barre", level: "Intermédiaire", targets: ["Quadriceps", "Fessiers"], steps: ["Barre sur le haut du dos, pieds largeur épaules.", "Descends hanches en arrière jusqu'à cuisses parallèles.", "Remonte en poussant dans les talons."], mistakes: ["Ne laisse pas les genoux rentrer vers l'intérieur.", "N'arrondis pas le dos.", "Ne laisse pas les talons décoller."], images: exUrl("Barbell_Full_Squat") },
+  { id: "Calf_Press_On_The_Leg_Press_Machine", name: "Mollets à la presse", muscle: "Jambes", equipment: "Machine", level: "Débutant", targets: ["Mollets"], steps: ["Pieds en bas de la plateforme, talons dans le vide.", "Pousse avec la pointe des pieds.", "Reviens en étirant le mollet."], mistakes: ["Ne plie pas les genoux.", "Ne raccourcis pas l'amplitude.", "Ne fais pas un mouvement rapide non contrôlé."], images: exUrl("Calf_Press_On_The_Leg_Press_Machine") },
+  { id: "Leg_Extensions", name: "Leg extension", muscle: "Jambes", equipment: "Machine", level: "Débutant", targets: ["Quadriceps"], steps: ["Assis, chevilles sous le coussin.", "Tends les jambes en contractant les quadriceps.", "Redescends en contrôle."], mistakes: ["Ne donne pas d'à-coups.", "Ne décolle pas le bassin du siège.", "Ne verrouille pas brutalement les genoux."], images: exUrl("Leg_Extensions") },
+  { id: "Lying_Leg_Curls", name: "Leg curl allongé", muscle: "Jambes", equipment: "Machine", level: "Débutant", targets: ["Ischios"], steps: ["Allongé, chevilles sous le coussin.", "Amène les talons vers les fessiers.", "Redescends lentement."], mistakes: ["Ne décolle pas le bassin.", "Ne fais pas d'à-coups.", "Ne raccourcis pas l'amplitude."], images: exUrl("Lying_Leg_Curls") },
+  { id: "Romanian_Deadlift", name: "Soulevé de terre roumain", muscle: "Jambes", equipment: "Barre", level: "Intermédiaire", targets: ["Ischios", "Fessiers"], steps: ["Barre devant les cuisses, légère flexion des genoux.", "Descends la barre en poussant les hanches en arrière, dos plat.", "Remonte en contractant fessiers et ischios."], mistakes: ["N'arrondis pas le dos.", "Ne plie pas trop les genoux.", "Ne laisse pas la barre s'éloigner des jambes."], images: exUrl("Romanian_Deadlift") },
+  { id: "Dumbbell_Lunges", name: "Fentes haltères", muscle: "Jambes", equipment: "Haltères", level: "Débutant", targets: ["Quadriceps", "Fessiers"], steps: ["Un haltère dans chaque main, buste droit.", "Avance d'un grand pas et descends le genou arrière.", "Pousse sur la jambe avant pour revenir."], mistakes: ["Ne laisse pas le genou avant dépasser la pointe du pied.", "Ne penche pas le buste en avant.", "Ne fais pas un pas trop court."], images: exUrl("Dumbbell_Lunges") },
+  { id: "Standing_Calf_Raises", name: "Mollets debout", muscle: "Jambes", equipment: "Machine", level: "Débutant", targets: ["Mollets"], steps: ["Épaules sous les coussins, pointes de pieds sur la marche.", "Monte sur la pointe des pieds.", "Redescends en étirant."], mistakes: ["Ne plie pas les genoux.", "Ne raccourcis pas l'amplitude.", "Ne rebondis pas en bas."], images: exUrl("Standing_Calf_Raises") },
+  { id: "Barbell_Hip_Thrust", name: "Hip thrust (barre)", muscle: "Jambes", equipment: "Barre", level: "Intermédiaire", targets: ["Fessiers", "Ischios"], steps: ["Haut du dos sur le banc, barre sur les hanches (coussin).", "Pousse les hanches vers le haut.", "Contracte les fessiers en haut puis redescends."], mistakes: ["Ne pars pas en hyperextension lombaire.", "Ne pousse pas avec les pointes de pied.", "Ne fais pas une amplitude trop courte."], images: exUrl("Barbell_Hip_Thrust") },
+  { id: "Goblet_Squat", name: "Goblet squat", muscle: "Jambes", equipment: "Haltères", level: "Débutant", targets: ["Quadriceps", "Fessiers"], steps: ["Tiens un haltère contre la poitrine.", "Descends en squat, buste droit.", "Remonte en poussant dans les talons."], mistakes: ["Ne laisse pas les talons décoller.", "N'arrondis pas le dos.", "Ne penche pas le buste en avant."], images: exUrl("Goblet_Squat") },
+  { id: "Standing_Military_Press", name: "Développé militaire debout", muscle: "Épaules", equipment: "Barre", level: "Débutant", targets: ["Épaules", "Triceps"], steps: ["Barre aux clavicules, gaine abdos et fessiers.", "Pousse la barre au-dessus de la tête.", "Redescends contrôlé aux clavicules."], mistakes: ["Ne cambre pas excessivement.", "Ne pousse pas la barre vers l'avant.", "Ne verrouille pas brutalement."], images: exUrl("Standing_Military_Press") },
+  { id: "Seated_Side_Lateral_Raise", name: "Élévations latérales assis", muscle: "Épaules", equipment: "Haltères", level: "Débutant", targets: ["Deltoïdes latéraux"], steps: ["Assis, haltères le long du corps, coudes légèrement fléchis.", "Monte les bras jusqu'à l'horizontale.", "Redescends lentement."], mistakes: ["N'utilise pas l'élan.", "Ne monte pas au-dessus des épaules.", "Ne mets pas une charge trop lourde."], images: exUrl("Seated_Side_Lateral_Raise") },
+  { id: "Front_Dumbbell_Raise", name: "Élévations frontales", muscle: "Épaules", equipment: "Haltères", level: "Débutant", targets: ["Deltoïdes antérieurs"], steps: ["Haltères devant les cuisses.", "Monte un bras jusqu'à l'horizontale.", "Redescends en contrôle, alterne."], mistakes: ["Ne te balance pas avec le buste.", "Ne monte pas au-dessus de l'horizontale.", "Ne mets pas une charge trop lourde."], images: exUrl("Front_Dumbbell_Raise") },
+  { id: "Face_Pull", name: "Face pull (tirage visage)", muscle: "Épaules", equipment: "Poulie", level: "Intermédiaire", targets: ["Arrière d'épaule", "Trapèzes"], steps: ["Corde à hauteur du visage, recule pour tendre.", "Tire la corde vers le front en écartant les mains.", "Reviens en contrôle."], mistakes: ["Ne hausse pas les épaules.", "N'utilise pas l'élan.", "Ne tire pas trop bas (vise le visage)."], images: exUrl("Face_Pull") },
+  { id: "Arnold_Dumbbell_Press", name: "Développé Arnold", muscle: "Épaules", equipment: "Haltères", level: "Intermédiaire", targets: ["Épaules", "Triceps"], steps: ["Assis, haltères devant, paumes vers toi.", "Pousse en tournant les paumes vers l'avant.", "Redescends en inversant la rotation."], mistakes: ["Ne cambre pas le bas du dos.", "Ne verrouille pas brutalement.", "Ne descends pas trop bas (épaules)."], images: exUrl("Arnold_Dumbbell_Press") },
+  { id: "Upright_Barbell_Row", name: "Rowing menton (barre)", muscle: "Épaules", equipment: "Barre", level: "Débutant", targets: ["Épaules", "Trapèzes"], steps: ["Barre prise serrée devant les cuisses.", "Tire la barre vers le menton, coudes hauts.", "Redescends en contrôle."], mistakes: ["Ne monte pas les coudes trop haut (épaules).", "Ne te balance pas.", "Ne mets pas une charge trop lourde."], images: exUrl("Upright_Barbell_Row") },
+  { id: "Barbell_Curl", name: "Curl barre", muscle: "Bras", equipment: "Barre", level: "Débutant", targets: ["Biceps"], steps: ["Barre en supination, coudes près du corps.", "Fléchis les avant-bras.", "Redescends en contrôle."], mistakes: ["Ne balance pas le buste.", "Ne bouge pas les coudes.", "Ne raccourcis pas l'amplitude."], images: exUrl("Barbell_Curl") },
+  { id: "Dumbbell_Alternate_Bicep_Curl", name: "Curl haltères alterné", muscle: "Bras", equipment: "Haltères", level: "Débutant", targets: ["Biceps"], steps: ["Un haltère dans chaque main, paumes vers l'avant.", "Fléchis un bras puis l'autre.", "Contrôle la descente."], mistakes: ["Ne balance pas les épaules.", "Ne bouge pas les coudes.", "Ne lâche pas la descente."], images: exUrl("Dumbbell_Alternate_Bicep_Curl") },
+  { id: "Cable_Hammer_Curls_-_Rope_Attachment", name: "Curl marteau à la corde", muscle: "Bras", equipment: "Poulie", level: "Débutant", targets: ["Biceps", "Avant-bras"], steps: ["Corde sur poulie basse, prise neutre.", "Fléchis les avant-bras vers le haut.", "Redescends lentement."], mistakes: ["Ne bouge pas les coudes.", "Ne te balance pas.", "Ne raccourcis pas l'amplitude."], images: exUrl("Cable_Hammer_Curls_-_Rope_Attachment") },
+  { id: "Concentration_Curls", name: "Curl concentration", muscle: "Bras", equipment: "Haltères", level: "Débutant", targets: ["Biceps"], steps: ["Assis, coude calé sur l'intérieur de la cuisse.", "Fléchis l'avant-bras en contractant le biceps.", "Redescends en contrôle."], mistakes: ["Ne balance pas le bras.", "N'utilise pas l'élan.", "Ne lâche pas la descente."], images: exUrl("Concentration_Curls") },
+  { id: "Reverse_Grip_Triceps_Pushdown", name: "Extension triceps poulie", muscle: "Bras", equipment: "Poulie", level: "Débutant", targets: ["Triceps"], steps: ["Prise supination à la poulie haute, coudes au corps.", "Tends les bras vers le bas.", "Reviens en contrôle."], mistakes: ["Ne bouge pas les coudes.", "Ne te penche pas en avant pour tricher.", "Ne raccourcis pas l'amplitude."], images: exUrl("Reverse_Grip_Triceps_Pushdown") },
+  { id: "Lying_Triceps_Press", name: "Barre au front (skull crusher)", muscle: "Bras", equipment: "Barre", level: "Intermédiaire", targets: ["Triceps"], steps: ["Allongé, barre au-dessus du front, coudes fixes.", "Descends la barre vers le front.", "Tends les bras sans bouger les coudes."], mistakes: ["Ne bouge pas les coudes.", "Ne descends pas la barre trop vite.", "N'écarte pas les coudes."], images: exUrl("Lying_Triceps_Press") },
+  { id: "Close-Grip_Barbell_Bench_Press", name: "Développé couché prise serrée", muscle: "Bras", equipment: "Barre", level: "Débutant", targets: ["Triceps", "Pectoraux"], steps: ["Mains largeur des épaules, coudes près du corps.", "Descends la barre vers le bas de la poitrine.", "Pousse en contractant les triceps."], mistakes: ["N'écarte pas les coudes.", "Ne fais pas rebondir la barre.", "Ne décolle pas les fessiers du banc."], images: exUrl("Close-Grip_Barbell_Bench_Press") },
+  { id: "Standing_Dumbbell_Triceps_Extension", name: "Extension triceps haltère", muscle: "Bras", equipment: "Haltères", level: "Débutant", targets: ["Triceps"], steps: ["Haltère à deux mains au-dessus de la tête.", "Descends derrière la nuque, coudes fixes.", "Tends les bras vers le haut."], mistakes: ["Ne bouge pas les coudes.", "Ne cambre pas le bas du dos.", "Ne descends pas trop vite."], images: exUrl("Standing_Dumbbell_Triceps_Extension") },
+  { id: "Dips_-_Triceps_Version", name: "Dips (triceps)", muscle: "Bras", equipment: "Poids du corps", level: "Débutant", targets: ["Triceps"], steps: ["Bras tendus, buste droit.", "Descends en pliant les coudes vers l'arrière.", "Pousse jusqu'à extension."], mistakes: ["Ne descends pas trop bas (épaules).", "Ne penche pas trop le buste en avant.", "Ne fais pas d'à-coups."], images: exUrl("Dips_-_Triceps_Version") },
+  { id: "Crunches", name: "Crunch", muscle: "Abdos", equipment: "Poids du corps", level: "Débutant", targets: ["Grand droit"], steps: ["Allongé, genoux fléchis, mains aux tempes.", "Enroule le buste vers les genoux.", "Redescends sans relâcher totalement."], mistakes: ["Ne tire pas sur la nuque.", "Ne monte pas avec l'élan.", "Ne décolle pas tout le dos."], images: exUrl("Crunches") },
+  { id: "Plank", name: "Gainage planche", muscle: "Abdos", equipment: "Poids du corps", level: "Débutant", targets: ["Abdos", "Gainage"], steps: ["Appuis sur les avant-bras, corps aligné.", "Serre abdos et fessiers.", "Maintiens en respirant calmement."], mistakes: ["Ne laisse pas le bassin s'affaisser.", "Ne relève pas la tête.", "Ne bloque pas ta respiration."], images: exUrl("Plank") },
+  { id: "Hanging_Leg_Raise", name: "Relevé de jambes suspendu", muscle: "Abdos", equipment: "Poids du corps", level: "Avancé", targets: ["Abdos"], steps: ["Suspendu à la barre, gainé.", "Monte les jambes (tendues ou genoux fléchis).", "Redescends sans balancer."], mistakes: ["Ne te balance pas.", "Ne tire pas avec les bras.", "Ne creuse pas le bas du dos."], images: exUrl("Hanging_Leg_Raise") },
+  { id: "Cable_Russian_Twists", name: "Russian twist à la poulie", muscle: "Abdos", equipment: "Poulie", level: "Débutant", targets: ["Obliques"], steps: ["Debout de profil à la poulie, bras tendus.", "Pivote le buste loin de la poulie.", "Reviens en contrôle, change de côté."], mistakes: ["Ne bouge pas les bras seuls (tourne le buste).", "Ne va pas trop vite sans contrôle.", "N'arrondis pas le dos."], images: exUrl("Cable_Russian_Twists") },
+  { id: "Bosu_Ball_Cable_Crunch_With_Side_Bends", name: "Crunch poulie (Bosu)", muscle: "Abdos", equipment: "Poulie", level: "Débutant", targets: ["Abdos", "Obliques"], steps: ["À genoux face à la poulie haute, corde derrière la nuque.", "Enroule le buste vers le sol.", "Ajoute une légère flexion latérale puis reviens."], mistakes: ["Ne tire pas sur la nuque.", "Ne fais pas d'à-coups.", "Ne perds pas l'équilibre."], images: exUrl("Bosu_Ball_Cable_Crunch_With_Side_Bends") },
+  { id: "Mountain_Climbers", name: "Mountain climbers", muscle: "Abdos", equipment: "Poids du corps", level: "Débutant", targets: ["Abdos", "Cardio"], steps: ["Position de planche bras tendus.", "Ramène alternativement les genoux vers la poitrine.", "Garde le bassin stable, rythme régulier."], mistakes: ["Ne laisse pas les fessiers monter.", "Ne creuse pas le bas du dos.", "Ne va pas trop vite sans contrôle."], images: exUrl("Mountain_Climbers") },
+  { id: "Rope_Jumping", name: "Corde à sauter", muscle: "Jambes", equipment: "Poids du corps", level: "Intermédiaire", targets: ["Mollets", "Cardio"], steps: ["Coudes près du corps, saut léger sur la pointe des pieds.", "Fais tourner la corde avec les poignets.", "Garde un rythme régulier."], mistakes: ["Ne saute pas trop haut.", "Ne fais pas tourner la corde avec les bras (poignets).", "Ne réceptionne pas talons raides."], images: exUrl("Rope_Jumping") },
+  { id: "One-Arm_Kettlebell_Swings", name: "Kettlebell swing un bras", muscle: "Jambes", equipment: "Kettlebell", level: "Intermédiaire", targets: ["Fessiers", "Ischios", "Dos"], steps: ["Kettlebell entre les jambes, dos plat.", "Propulse les hanches vers l'avant pour balancer la kettlebell.", "Contrôle la redescente entre les jambes."], mistakes: ["N'arrondis pas le dos.", "Ne soulève pas avec les bras (pousse les hanches).", "Ne fais pas un simple demi-squat."], images: exUrl("One-Arm_Kettlebell_Swings") },
+  { id: "Cable_Wrist_Curl", name: "Curl poignets à la poulie", muscle: "Avant-bras", equipment: "Poulie", level: "Débutant", targets: ["Avant-bras"], steps: ["Assis, avant-bras posés sur les cuisses, poignets dans le vide.", "Enroule les poignets vers le haut.", "Redescends lentement en contrôle."], mistakes: ["Ne bouge pas les avant-bras.", "Ne raccourcis pas l'amplitude.", "Ne lâche pas la descente."], images: exUrl("Cable_Wrist_Curl") },
+  { id: "Dumbbell_Lying_Supination", name: "Supination haltère allongé", muscle: "Avant-bras", equipment: "Haltères", level: "Intermédiaire", targets: ["Avant-bras"], steps: ["Allongé sur le côté, avant-bras posé, haltère chargé d'un seul côté.", "Tourne le poignet en supination.", "Reviens lentement."], mistakes: ["Ne bouge pas l'avant-bras.", "Ne va pas trop vite.", "Ne mets pas une charge trop lourde."], images: exUrl("Dumbbell_Lying_Supination") },
+  { id: "Adductor", name: "Machine adducteurs", muscle: "Adducteurs", equipment: "Machine", level: "Intermédiaire", targets: ["Adducteurs"], steps: ["Assis sur la machine, cuisses écartées contre les coussins.", "Resserre les cuisses en contractant l'intérieur.", "Reviens en contrôle."], mistakes: ["Ne donne pas d'à-coups.", "Ne te penche pas en arrière pour tricher.", "Ne force pas l'amplitude (aine)."], images: exUrl("Adductor") },
+  { id: "Band_Hip_Adductions", name: "Adduction de hanche à l'élastique", muscle: "Adducteurs", equipment: "Élastique", level: "Débutant", targets: ["Adducteurs"], steps: ["Élastique à la cheville, fixé sur le côté.", "Ramène la jambe vers l'intérieur, devant l'autre.", "Reviens lentement."], mistakes: ["Ne donne pas d'à-coups.", "Ne tourne pas le buste.", "Ne lâche pas le retour."], images: exUrl("Band_Hip_Adductions") },
+  { id: "Hip_Circles_prone", name: "Cercles de hanche (abducteurs)", muscle: "Abducteurs", equipment: "Poids du corps", level: "Débutant", targets: ["Abducteurs"], steps: ["À quatre pattes, gaine le tronc.", "Ouvre la hanche sur le côté en cercle.", "Contrôle le mouvement, change de côté."], mistakes: ["Ne cambre pas le bas du dos.", "Ne fais pas d'à-coups.", "Ne perds pas le gainage."], images: exUrl("Hip_Circles_prone") },
+  { id: "Isometric_Neck_Exercise_-_Front_And_Back", name: "Cou isométrique (avant/arrière)", muscle: "Cou", equipment: "Poids du corps", level: "Débutant", targets: ["Cou"], steps: ["Main sur le front, pousse la tête contre la main sans bouger.", "Maintiens quelques secondes.", "Répète à l'arrière de la tête."], mistakes: ["Ne pousse pas trop fort (reste progressif).", "Ne bloque pas ta respiration.", "Ne bouge pas la tête (isométrie)."], images: exUrl("Isometric_Neck_Exercise_-_Front_And_Back") },
+  { id: "Isometric_Neck_Exercise_-_Sides", name: "Cou isométrique (côtés)", muscle: "Cou", equipment: "Poids du corps", level: "Débutant", targets: ["Cou"], steps: ["Main sur le côté de la tête.", "Pousse la tête contre la main sans bouger.", "Maintiens puis change de côté."], mistakes: ["Ne pousse pas trop fort (reste progressif).", "Ne bloque pas ta respiration.", "Ne bouge pas la tête (isométrie)."], images: exUrl("Isometric_Neck_Exercise_-_Sides") },
+  { id: "Anterior_Tibialis-SMR", name: "Tibial antérieur au rouleau (automassage)", muscle: "Tibial antérieur", equipment: "Poids du corps", level: "Intermédiaire", type: "Mobilité", targets: ["Tibial antérieur"], steps: ["Place un rouleau sous l'avant du tibia, en appui à quatre pattes.", "Fais rouler lentement de la cheville vers le genou.", "Insiste 20-30 s sur les zones sensibles, puis change de jambe."], mistakes: ["Ne roule pas sur l'os (reste sur le muscle).", "Ne bloque pas ta respiration.", "Ne va pas trop vite."], images: exUrl("Anterior_Tibialis-SMR") },
+  // Corps complet
+  { id: "Kettlebell_Thruster", name: "Thruster kettlebell", muscle: "Épaules", equipment: "Kettlebell", level: "Intermédiaire", targets: ["Jambes", "Épaules", "Full body"], steps: ["Kettlebell(s) au niveau des épaules, pieds largeur des hanches.", "Descends en squat.", "Remonte en poussant la kettlebell au-dessus de la tête."], mistakes: ["N'arrondis pas le dos.", "Ne pousse pas la charge vers l'avant.", "Ne verrouille pas brutalement."], images: exUrl("Kettlebell_Thruster") },
+  { id: "Clean_and_Press", name: "Épaulé-jeté (clean & press)", muscle: "Épaules", equipment: "Barre", level: "Avancé", targets: ["Full body", "Épaules"], steps: ["Barre au sol, dos plat.", "Tire-la explosivement jusqu'aux épaules (épaulé).", "Pousse au-dessus de la tête puis redescends contrôlé."], mistakes: ["N'arrondis pas le dos.", "Ne tire pas avec les bras (explose des hanches).", "Ne pars pas en hyperextension en haut."], images: exUrl("Clean_and_Press") },
+  { id: "Power_Clean", name: "Épaulé (power clean)", muscle: "Ischio-jambiers", equipment: "Barre", level: "Avancé", targets: ["Full body", "Ischios", "Trapèzes"], steps: ["Barre au sol, dos plat, hanches basses.", "Tire explosivement la barre le long du corps.", "Réceptionne aux épaules en fléchissant les jambes."], mistakes: ["N'arrondis pas le dos.", "Ne laisse pas la barre s'éloigner du corps.", "Ne tire pas trop tôt avec les bras."], images: exUrl("Power_Clean") },
+  { id: "Star_Jump", name: "Sauts étoile (star jumps)", muscle: "Quadriceps", equipment: "Poids du corps", level: "Débutant", type: "Cardio", targets: ["Full body", "Cardio"], steps: ["Debout, descends légèrement en demi-squat.", "Saute en écartant bras et jambes en étoile.", "Réceptionne souplement et enchaîne le saut suivant."], mistakes: ["Ne réceptionne pas genoux raides.", "Ne creuse pas le bas du dos.", "Ne perds pas le rythme."], images: exUrl("Star_Jump") },
+  { id: "Rocket_Jump", name: "Squat sauté (rocket jump)", muscle: "Quadriceps", equipment: "Poids du corps", level: "Intermédiaire", type: "Cardio", targets: ["Quadriceps", "Fessiers", "Cardio"], steps: ["Descends en squat, mains au corps.", "Pousse explosivement pour sauter le plus haut possible.", "Réceptionne en fléchissant les genoux et enchaîne."], mistakes: ["Ne réceptionne pas genoux raides.", "N'arrondis pas le dos.", "Ne néglige pas l'amorti à la réception."], images: exUrl("Rocket_Jump") },
+  // Mobilité / Étirement
+  { id: "Arm_Circles", name: "Cercles de bras (échauffement)", muscle: "Épaules", equipment: "Poids du corps", level: "Débutant", targets: ["Épaules"], steps: ["Bras tendus sur les côtés.", "Fais de petits cercles vers l'avant.", "Puis vers l'arrière, en augmentant l'amplitude."], mistakes: ["Ne hausse pas les épaules.", "Ne fais pas de trop grands cercles d'un coup.", "Ne bloque pas ta respiration."], images: exUrl("Arm_Circles") },
+  { id: "All_Fours_Quad_Stretch", name: "Étirement quadriceps", muscle: "Quadriceps", equipment: "Poids du corps", level: "Débutant", targets: ["Quadriceps"], steps: ["À genoux, attrape une cheville derrière toi.", "Ramène le talon vers le fessier.", "Maintiens l'étirement sans cambrer."], mistakes: ["Ne cambre pas le bas du dos.", "Ne force pas l'étirement (douleur).", "Ne bloque pas ta respiration."], images: exUrl("All_Fours_Quad_Stretch") },
+  { id: "90_90_Hamstring", name: "Étirement ischios 90/90", muscle: "Ischio-jambiers", equipment: "Poids du corps", level: "Débutant", targets: ["Ischios"], steps: ["Allongé, hanche et genou à 90°.", "Tends doucement la jambe vers le plafond.", "Maintiens l'étirement à l'arrière de la cuisse."], mistakes: ["Ne force pas l'étirement (douleur).", "Ne décolle pas le bas du dos.", "Ne bloque pas ta respiration."], images: exUrl("90_90_Hamstring") },
+  { id: "Decline_Barbell_Bench_Press", name: "Développé décliné (barre)", muscle: "Pectoraux", equipment: "Barre", level: "Débutant", targets: ["Bas des pectoraux", "Triceps"], steps: ["Allongé sur banc décliné, prise un peu plus large que les épaules.", "Descends la barre vers le bas de la poitrine.", "Pousse jusqu'à l'extension."], mistakes: ["Ne décolle pas le bassin du banc.", "Ne fais pas rebondir la barre sur la poitrine."], images: exUrl("Decline_Barbell_Bench_Press") },
+  { id: "Butterfly", name: "Pec deck (butterfly)", muscle: "Pectoraux", equipment: "Machine", level: "Débutant", targets: ["Pectoraux"], steps: ["Assis, dos plaqué, avant-bras sur les coussins.", "Rapproche les coudes devant toi en contractant les pectoraux.", "Reviens lentement sans relâcher complètement."], mistakes: ["Ne hausse pas les épaules.", "Ne va pas trop loin en arrière (tu forces l'épaule)."], images: exUrl("Butterfly") },
+  { id: "Lying_T-Bar_Row", name: "Rowing T-bar allongé", muscle: "Dos", equipment: "Barre", level: "Intermédiaire", targets: ["Dos", "Biceps"], steps: ["Allongé face contre le banc incliné, saisis les poignées.", "Tire la charge vers toi en serrant les omoplates.", "Redescends en contrôle."], mistakes: ["Ne décolle pas la poitrine du banc.", "Ne tire pas en à-coups."], images: exUrl("Lying_T-Bar_Row") },
+  { id: "Close-Grip_Front_Lat_Pulldown", name: "Tirage vertical prise serrée", muscle: "Dos", equipment: "Poulie", level: "Débutant", targets: ["Grand dorsal", "Biceps"], steps: ["Prise serrée à la poulie haute, buste légèrement incliné.", "Tire la barre vers le haut de la poitrine.", "Reviens en contrôlant."], mistakes: ["Ne te balance pas avec le buste.", "Ne tire pas derrière la nuque."], images: exUrl("Close-Grip_Front_Lat_Pulldown") },
+  { id: "Chin-Up", name: "Tractions supination", muscle: "Dos", equipment: "Poids du corps", level: "Débutant", targets: ["Grand dorsal", "Biceps"], steps: ["Prise supination (paumes vers toi), largeur épaules.", "Tire jusqu'à ce que le menton dépasse la barre.", "Descends en contrôle."], mistakes: ["Ne raccourcis pas l'amplitude.", "Ne te balance pas."], images: exUrl("Chin-Up") },
+  { id: "Rope_Straight-Arm_Pulldown", name: "Tirage bras tendus à la corde", muscle: "Dos", equipment: "Poulie", level: "Débutant", targets: ["Grand dorsal"], steps: ["Debout face à la poulie haute, bras quasi tendus.", "Abaisse la corde vers les cuisses sans plier les coudes.", "Reviens en contrôle."], mistakes: ["Ne plie pas les coudes.", "N'arrondis pas le dos."], images: exUrl("Rope_Straight-Arm_Pulldown") },
+  { id: "Reverse_Machine_Flyes", name: "Oiseau machine (arrière d'épaule)", muscle: "Épaules", equipment: "Machine", level: "Débutant", targets: ["Arrière d'épaule", "Trapèzes"], steps: ["Assis face au dossier, saisis les poignées.", "Écarte les bras vers l'arrière en serrant les omoplates.", "Reviens lentement."], mistakes: ["N'utilise pas l'élan.", "Ne hausse pas les épaules."], images: exUrl("Reverse_Machine_Flyes") },
+  { id: "Seated_Dumbbell_Press", name: "Développé épaules haltères assis", muscle: "Épaules", equipment: "Haltères", level: "Débutant", targets: ["Épaules", "Triceps"], steps: ["Assis, dos calé, haltères au niveau des oreilles.", "Pousse au-dessus de la tête sans verrouiller brutalement.", "Redescends contrôlé."], mistakes: ["Ne cambre pas le bas du dos.", "Ne descends pas trop bas."], images: exUrl("Seated_Dumbbell_Press") },
+  { id: "Cable_Preacher_Curl", name: "Curl pupitre à la poulie", muscle: "Biceps", equipment: "Poulie", level: "Débutant", targets: ["Biceps"], steps: ["Bras posés sur le pupitre, poulie basse.", "Fléchis les avant-bras en contractant les biceps.", "Redescends lentement."], mistakes: ["Ne décolle pas les coudes.", "Ne lâche pas la descente."], images: exUrl("Cable_Preacher_Curl") },
+  { id: "Alternate_Incline_Dumbbell_Curl", name: "Curl incliné alterné", muscle: "Biceps", equipment: "Haltères", level: "Débutant", targets: ["Biceps"], steps: ["Assis sur banc incliné, bras le long du corps.", "Fléchis un bras puis l'autre.", "Contrôle la descente, bras bien étirés."], mistakes: ["Ne balance pas les épaules.", "Ne raccourcis pas l'amplitude."], images: exUrl("Alternate_Incline_Dumbbell_Curl") },
+  { id: "Bench_Dips", name: "Dips sur banc", muscle: "Triceps", equipment: "Poids du corps", level: "Débutant", targets: ["Triceps"], steps: ["Mains sur le banc derrière toi, jambes devant.", "Descends en pliant les coudes vers l'arrière.", "Pousse jusqu'à extension."], mistakes: ["Ne descends pas trop bas (épaules).", "N'écarte pas les coudes."], images: exUrl("Bench_Dips") },
+  { id: "Cable_One_Arm_Tricep_Extension", name: "Extension triceps poulie un bras", muscle: "Triceps", equipment: "Poulie", level: "Débutant", targets: ["Triceps"], steps: ["Poulie haute, coude collé au corps.", "Tends le bras vers le bas.", "Reviens lentement."], mistakes: ["Ne bouge pas le coude.", "N'utilise pas l'épaule."], images: exUrl("Cable_One_Arm_Tricep_Extension") },
+  { id: "Decline_Crunch", name: "Crunch décliné", muscle: "Abdominaux", equipment: "Poids du corps", level: "Intermédiaire", targets: ["Grand droit"], steps: ["Allongé sur banc décliné, mains aux tempes.", "Enroule le buste vers les genoux.", "Redescends sans relâcher totalement."], mistakes: ["Ne tire pas sur la nuque.", "Ne bloque pas ta respiration."], images: exUrl("Decline_Crunch") },
+  { id: "Ab_Roller", name: "Roue abdominale (ab wheel)", muscle: "Abdominaux", equipment: "Poids du corps", level: "Intermédiaire", targets: ["Abdos", "Gainage"], steps: ["À genoux, mains sur la roue.", "Déroule vers l'avant en gardant le dos gainé.", "Reviens en contractant les abdos."], mistakes: ["Ne creuse pas le bas du dos.", "Ne va pas trop loin sans contrôle."], images: exUrl("Ab_Roller") },
+  { id: "Side_Bridge", name: "Gainage latéral (planche côté)", muscle: "Obliques", equipment: "Poids du corps", level: "Débutant", targets: ["Obliques", "Gainage"], steps: ["Sur le côté, en appui sur l'avant-bras.", "Décolle le bassin, corps aligné.", "Maintiens puis change de côté."], mistakes: ["Ne laisse pas le bassin s'affaisser.", "Ne laisse pas la tête se désaligner."], images: exUrl("Side_Bridge") },
+  { id: "Dumbbell_Side_Bend", name: "Flexion latérale haltère", muscle: "Obliques", equipment: "Haltères", level: "Débutant", targets: ["Obliques"], steps: ["Debout, un haltère dans une main.", "Penche le buste sur le côté chargé.", "Reviens en contractant les obliques opposés."], mistakes: ["Ne penche pas en avant ni en arrière.", "Ne mets pas une charge trop lourde."], images: exUrl("Dumbbell_Side_Bend") },
+  { id: "Superman", name: "Superman (extension lombaire)", muscle: "Lombaires", equipment: "Poids du corps", level: "Débutant", targets: ["Bas du dos", "Fessiers"], steps: ["Allongé sur le ventre, bras tendus devant.", "Décolle bras et jambes simultanément.", "Maintiens 1-2 s puis redescends."], mistakes: ["Ne fais pas d'hyperextension brutale de la nuque.", "Ne fais pas de mouvement en à-coups."], images: exUrl("Superman") },
+  { id: "Band_Good_Morning", name: "Good morning à l'élastique", muscle: "Lombaires", equipment: "Élastique", level: "Débutant", targets: ["Bas du dos", "Ischios"], steps: ["Élastique sur la nuque/épaules, pieds largeur hanches.", "Penche le buste en poussant les hanches en arrière, dos plat.", "Reviens en contractant fessiers et lombaires."], mistakes: ["N'arrondis pas le dos.", "Ne plie pas les genoux comme un squat."], images: exUrl("Band_Good_Morning") },
+  { id: "Butt_Lift_Bridge", name: "Pont fessier au sol", muscle: "Fessiers", equipment: "Poids du corps", level: "Débutant", targets: ["Fessiers", "Ischios"], steps: ["Allongé, genoux fléchis, pieds à plat.", "Pousse les hanches vers le haut en serrant les fessiers.", "Redescends sans poser complètement."], mistakes: ["Ne cambre pas le bas du dos.", "Ne pousse pas avec les pointes de pied."], images: exUrl("Butt_Lift_Bridge") },
+  { id: "Glute_Kickback", name: "Kickback fessier", muscle: "Fessiers", equipment: "Poids du corps", level: "Débutant", targets: ["Fessiers"], steps: ["À quatre pattes, dos gainé.", "Pousse un talon vers l'arrière/haut, jambe fléchie.", "Contracte le fessier puis reviens en contrôle."], mistakes: ["Ne cambre pas le bas du dos.", "Ne monte pas trop haut avec élan."], images: exUrl("Glute_Kickback") },
+  { id: "Front_Barbell_Squat", name: "Squat avant (front squat)", muscle: "Quadriceps", equipment: "Barre", level: "Avancé", targets: ["Quadriceps", "Fessiers"], steps: ["Barre posée sur l'avant des épaules, coudes hauts.", "Descends en gardant le buste vertical.", "Remonte en poussant dans les talons."], mistakes: ["Ne laisse pas les coudes tomber.", "Ne laisse pas les talons décoller."], images: exUrl("Front_Barbell_Squat") },
+  { id: "Barbell_Hack_Squat", name: "Hack squat (barre derrière)", muscle: "Quadriceps", equipment: "Barre", level: "Intermédiaire", targets: ["Quadriceps"], steps: ["Barre derrière les jambes, prise mains arrière.", "Descends en squat, buste droit.", "Remonte en poussant dans les talons."], mistakes: ["N'arrondis pas le dos.", "Ne laisse pas les talons décoller."], images: exUrl("Barbell_Hack_Squat") },
+  { id: "Seated_Leg_Curl", name: "Leg curl assis", muscle: "Ischio-jambiers", equipment: "Machine", level: "Débutant", targets: ["Ischios"], steps: ["Assis, chevilles sur le coussin, cuisses bloquées.", "Fléchis les genoux en ramenant les talons sous le siège.", "Redescends lentement."], mistakes: ["Ne décolle pas le bassin.", "Ne fais pas d'à-coups."], images: exUrl("Seated_Leg_Curl") },
+  { id: "Stiff-Legged_Barbell_Deadlift", name: "Soulevé jambes tendues", muscle: "Ischio-jambiers", equipment: "Barre", level: "Intermédiaire", targets: ["Ischios", "Fessiers"], steps: ["Barre devant les cuisses, jambes quasi tendues.", "Descends la barre en poussant les hanches en arrière, dos plat.", "Remonte en contractant les ischios."], mistakes: ["N'arrondis pas le dos.", "Ne descends pas plus bas que ta souplesse ne le permet."], images: exUrl("Stiff-Legged_Barbell_Deadlift") },
+  { id: "Barbell_Seated_Calf_Raise", name: "Mollets assis (barre)", muscle: "Mollets", equipment: "Barre", level: "Débutant", targets: ["Mollets (soléaire)"], steps: ["Assis, barre sur les genoux, pointes sur une cale.", "Monte sur la pointe des pieds.", "Redescends en étirant le mollet."], mistakes: ["Ne fais pas une amplitude trop courte.", "Ne fais pas un mouvement rapide non contrôlé."], images: exUrl("Barbell_Seated_Calf_Raise") },
+  { id: "Donkey_Calf_Raises", name: "Mollets âne (donkey)", muscle: "Mollets", equipment: "Poids du corps", level: "Intermédiaire", targets: ["Mollets"], steps: ["Buste penché en avant, pointes sur une marche.", "Monte sur la pointe des pieds.", "Redescends en étirant."], mistakes: ["Ne plie pas les genoux.", "Ne raccourcis pas l'amplitude."], images: exUrl("Donkey_Calf_Raises") },
+  { id: "Thigh_Abductor", name: "Machine abducteurs", muscle: "Abducteurs", equipment: "Machine", level: "Débutant", targets: ["Abducteurs"], steps: ["Assis, genoux contre les coussins extérieurs.", "Écarte les cuisses contre la résistance.", "Reviens en contrôle."], mistakes: ["Ne te penche pas en arrière pour tricher.", "Ne fais pas de mouvement saccadé."], images: exUrl("Thigh_Abductor") },
+  { id: "Thigh_Adductor", name: "Machine adducteurs (assis)", muscle: "Adducteurs", equipment: "Machine", level: "Débutant", targets: ["Adducteurs"], steps: ["Assis, cuisses écartées contre les coussins intérieurs.", "Resserre les cuisses contre la résistance.", "Reviens en contrôle."], mistakes: ["Ne fais pas d'à-coups.", "Ne force pas l'amplitude (tu tires sur l'aine)."], images: exUrl("Thigh_Adductor") },
+].map((e) => {
+  const muscle = exMuscleOverride[e.id] || (e.muscle === "Abdos" ? "Abdominaux" : e.muscle);
+  return { ...e, muscle, type: e.type || exTypeOverride[e.id] || "Musculation", emoji: exGroupEmoji[muscle] || "🤸" };
+});
+
+// Normalise le matériel vers les choix du filtre (regroupe les variantes).
+const exEquipNormalize = { "Barre EZ": "Barre", "Smith": "Machine" };
+// Base complète (~870 exercices) avec photos réelles + filtres FR.
+const exImportedFr = exercisesFrData.map((e) => ({
+  id: e.id,
+  name: e.name,
+  muscle: e.muscle,
+  type: e.type,
+  equipment: exEquipNormalize[e.equipment] || e.equipment,
+  level: e.level,
+  targets: e.targets || [],
+  steps: exGenericSteps(e.type, exEquipNormalize[e.equipment] || e.equipment, e.muscle),
+  mistakes: exMistakesFor({ name: e.name, muscle: e.muscle, type: e.type, equipment: exEquipNormalize[e.equipment] || e.equipment }),
+  images: exUrl(e.f),
+  emoji: exGroupEmoji[e.muscle] || "🤸",
+}));
+// Fusion : mes 89 exercices rédigés en FR (instructions + À éviter) sont prioritaires ; le reste complète.
+const exCuratedIds = new Set(exerciseLibraryFr.map((e) => e.id));
+const exAllFr = [...exerciseLibraryFr, ...exImportedFr.filter((e) => !exCuratedIds.has(e.id))]
+  .sort((a, b) => a.name.localeCompare(b.name, "fr"));
+
+function ExercisesPage({ onBack, onGoToShop }) {
+  const [tab, setTab] = useState("library");
+  const [search, setSearch] = useState("");
+  const [muscle, setMuscle] = useState("Tous");
+  const [exType, setExType] = useState("Tous");
+  const [equipment, setEquipment] = useState("Tous");
+  const [level, setLevel] = useState("Tous");
+  const [favOnly, setFavOnly] = useState(false);
+  const [favorites, setFavorites] = useState(() => loadJSON("hm-exercise-favorites", []));
+  const [session, setSession] = useState(() => loadJSON("hm-exercise-session", []));
+  const [detail, setDetail] = useState(null);
+  const [frame, setFrame] = useState(0);
+  const [coachNotice, setCoachNotice] = useState(false);
+  const [soundOn, setSoundOn] = useState(true);
+  const audioCtxRef = useRef(null);
+  const prevPhaseRef = useRef("idle");
+  const [library] = useState(exAllFr);
+  const loadingLib = false;
+  const libError = false;
+  const [visibleCount, setVisibleCount] = useState(48);
+
+  const [log, setLog] = useState(() => loadJSON("hm-exercise-log", []));
+  const [logExercise, setLogExercise] = useState("");
+  const [logWeight, setLogWeight] = useState("");
+  const [logReps, setLogReps] = useState("");
+
+  const [timerCfg, setTimerCfg] = useState({ work: 20, rest: 10, rounds: 8, label: "Tabata" });
+  const [timer, setTimer] = useState({ phase: "idle", remaining: 20, round: 1, running: false });
+  const [doneSession, setDoneSession] = useState([]);
+
+  const persist = (key, val) => {
+    if (typeof window !== "undefined") {
+      try { window.localStorage.setItem(key, JSON.stringify(val)); } catch { /* ignore */ }
+    }
+  };
+
+  // Séance en cours : les « tours » suivent les exercices de Ma séance (sinon le nombre du preset).
+  const sessionExercises = session.map((id) => library.find((e) => e.id === id)).filter(Boolean);
+  const runCfg = { work: timerCfg.work, rest: timerCfg.rest, rounds: sessionExercises.length || timerCfg.rounds, label: timerCfg.label };
+
+  const playBeep = (freq = 880, dur = 0.18) => {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      if (!audioCtxRef.current) audioCtxRef.current = new Ctx();
+      const ctx = audioCtxRef.current;
+      if (ctx.state === "suspended") ctx.resume();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sine";
+      o.frequency.value = freq;
+      o.connect(g); g.connect(ctx.destination);
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+      o.start();
+      o.stop(ctx.currentTime + dur);
+    } catch { /* ignore */ }
+  };
+
+  useEffect(() => {
+    if (!timer.running) return undefined;
+    const id = setInterval(() => setTimer((t) => tickTimer(t, runCfg)), 1000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timer.running, runCfg.work, runCfg.rest, runCfg.rounds]);
+
+  // Son au changement de phase : début travail / repos / fin de séance.
+  useEffect(() => {
+    if (timer.phase !== prevPhaseRef.current) {
+      if (soundOn) {
+        if (timer.phase === "work") playBeep(880, 0.18);
+        else if (timer.phase === "rest") playBeep(440, 0.18);
+        else if (timer.phase === "done") { playBeep(660, 0.25); setTimeout(() => playBeep(880, 0.4), 220); }
+      }
+      prevPhaseRef.current = timer.phase;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timer.phase, soundOn]);
+
+  // Réinitialise la pagination quand les filtres changent.
+  useEffect(() => { setVisibleCount(48); }, [search, muscle, exType, equipment, level, favOnly]);
+
+  // Exercice par défaut du journal une fois la bibliothèque chargée.
+  useEffect(() => { if (!logExercise && library.length) setLogExercise(library[0].id); }, [library, logExercise]);
+
+  // Anime la démo (alterne photo de départ / photo finale) quand une fiche est ouverte.
+  useEffect(() => {
+    setFrame(0);
+    setCoachNotice(false);
+    if (!detail || !(detail.images && detail.images.length > 1)) return undefined;
+    const id = setInterval(() => setFrame((f) => (f + 1) % detail.images.length), 800);
+    return () => clearInterval(id);
+  }, [detail]);
+
+  const exerciseById = (id) => library.find((ex) => ex.id === id);
+  // Lien de démonstration : la vidéo/GIF propre du coach si défini (champ `video`), sinon une
+  // recherche YouTube ciblée pour voir les gestes corrects de l'exercice.
+  const demoMediaUrl = (ex) => ex?.video || `https://www.youtube.com/results?search_query=${encodeURIComponent(`${ex?.name || ""} exercice technique exécution`)}`;
+  // Recherche YouTube (plusieurs vidéos) de l'exercice + vidéo perso du coach Hicham (si fournie).
+  const youtubeUrl = (ex) => `https://www.youtube.com/results?search_query=${encodeURIComponent(`${ex?.name || ""} exercice technique`)}`;
+  const coachVid = (ex) => ex?.coachVideo || ex?.video || "";
+  // Recommandation séries/répétitions/repos (réglage propre de l'exercice, sinon selon type/niveau).
+  const recoFor = (ex) => {
+    if (ex?.reco) return ex.reco;
+    if (ex?.type === "Mobilité") return { volume: "2 à 3 séries × 30 secondes", repos: "Repos : 15 à 30 secondes" };
+    if (ex?.type === "Cardio") return { volume: "4 à 6 tours × 30 à 45 sec d'effort", repos: "Repos : 15 à 30 secondes" };
+    if (ex?.type === "Corps complet") return { volume: "4 séries × 8 à 10 répétitions", repos: "Repos : 90 à 120 secondes" };
+    if (ex?.level === "Débutant") return { volume: "3 séries × 10 à 12 répétitions", repos: "Repos : 60 à 90 secondes" };
+    if (ex?.level === "Avancé") return { volume: "4 à 5 séries × 6 à 10 répétitions", repos: "Repos : 90 à 120 secondes" };
+    return { volume: "4 séries × 8 à 12 répétitions", repos: "Repos : 90 secondes" };
+  };
+  const isDirectMedia = (url) => /\.(gif|mp4|webm)(\?|$)/i.test(url || "");
+  const levelBadgeCls = (lvl) =>
+    lvl === "Débutant" ? "bg-emerald-100 text-emerald-700"
+      : lvl === "Intermédiaire" ? "bg-amber-100 text-amber-700"
+        : "bg-rose-100 text-rose-700";
+
+  const toggleFavorite = (id) => {
+    setFavorites((cur) => {
+      const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+      persist("hm-exercise-favorites", next);
+      return next;
+    });
+  };
+  const toggleSession = (id) => {
+    setSession((cur) => {
+      const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+      persist("hm-exercise-session", next);
+      return next;
+    });
+  };
+  const clearSession = () => { setSession([]); persist("hm-exercise-session", []); setDoneSession([]); };
+
+  const addLogEntry = () => {
+    const w = Number(logWeight);
+    const r = Number(logReps);
+    if (!logExercise || !(w >= 0) || !(r > 0)) return;
+    const entry = { id: `${Date.now()}`, exerciseId: logExercise, weight: w, reps: r, date: new Date().toISOString() };
+    setLog((cur) => {
+      const next = [entry, ...cur];
+      persist("hm-exercise-log", next);
+      return next;
+    });
+    setLogWeight("");
+    setLogReps("");
+  };
+  const deleteLogEntry = (id) => {
+    setLog((cur) => {
+      const next = cur.filter((e) => e.id !== id);
+      persist("hm-exercise-log", next);
+      return next;
+    });
+  };
+
+  const applyPreset = (cfg) => {
+    setTimerCfg(cfg);
+    setTimer({ phase: "idle", remaining: cfg.work, round: 1, running: false });
+    setDoneSession([]);
+  };
+  const startOrResume = () => {
+    if (audioCtxRef.current?.state === "suspended") audioCtxRef.current.resume();
+    setTimer((t) => (t.phase === "idle" || t.phase === "done")
+      ? { phase: "work", remaining: runCfg.work, round: 1, running: true }
+      : { ...t, running: true });
+  };
+  const pauseTimer = () => setTimer((t) => ({ ...t, running: false }));
+  const resetTimer = () => setTimer({ phase: "idle", remaining: runCfg.work, round: 1, running: false });
+  const endSession = () => { setTimer({ phase: "idle", remaining: runCfg.work, round: 1, running: false }); clearSession(); };
+  const formatTime = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+
+  const muscleOptions = ["Tous", ...exMuscleGroupsFr];
+  const equipmentOptions = exEquipmentOptions;
+  const levelOptions = ["Tous", ...["Débutant", "Intermédiaire", "Avancé"].filter((l) => library.some((e) => e.level === l))];
+
+  const filteredExercises = library.filter((ex) => {
+    // Favoris + tous les autres filtres s'appliquent ensemble (on peut affiner ses favoris).
+    if (favOnly && !favorites.includes(ex.id)) return false;
+    if (muscle !== "Tous" && ex.muscle !== muscle) return false;
+    if (exType !== "Tous" && ex.type !== exType) return false;
+    if (equipment !== "Tous" && ex.equipment !== equipment) return false;
+    if (level !== "Tous" && ex.level !== level) return false;
+    const q = search.trim().toLowerCase();
+    if (q) {
+      const hay = [ex.name, ex.muscle, ex.equipment, ex.level, ...ex.targets].join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  // Défilement infini : charge plus d'exercices en approchant du bas de la liste.
+  const handleExScroll = (e) => {
+    const el = e.currentTarget;
+    if (el.scrollHeight - el.scrollTop - el.clientHeight < 600 && visibleCount < filteredExercises.length) {
+      setVisibleCount((c) => c + 36);
+    }
+  };
+
+  // Records (PR) : meilleure charge par exercice.
+  const maxByExercise = {};
+  log.forEach((e) => { maxByExercise[e.exerciseId] = Math.max(maxByExercise[e.exerciseId] || 0, Number(e.weight) || 0); });
+  const isPR = (e) => Number(e.weight) > 0 && Number(e.weight) === maxByExercise[e.exerciseId];
+
+  const phaseLabel = timer.phase === "work" ? "💪 Travail"
+    : timer.phase === "rest" ? "😮‍💨 Repos"
+      : timer.phase === "done" ? "✅ Terminé"
+        : "Prêt ?";
+  const phaseColor = timer.phase === "work" ? "text-brand-300"
+    : timer.phase === "rest" ? "text-sky-300"
+      : timer.phase === "done" ? "text-emerald-300"
+        : "text-slate-300";
+
+  const chipBtn = (active) =>
+    `rounded-xl px-3 py-1.5 text-xs font-black transition ${active ? "border-2 border-brand-300 bg-brand-400 text-slate-950" : "border border-slate-600/65 bg-slate-950/35 text-slate-200 hover:border-brand-300/70 hover:text-brand-100"}`;
+
+  const cartCount = (() => {
+    if (typeof window === "undefined") return 0;
+    try {
+      const saved = window.localStorage.getItem("hm-shop-cart");
+      const parsed = saved ? JSON.parse(saved) : [];
+      return Array.isArray(parsed) ? parsed.length : 0;
+    } catch {
+      return 0;
+    }
+  })();
+
+  return (
+    <section className="settings-page flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="settings-hero shrink-0">
+        <div className="settings-hero__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8" aria-hidden="true">
+            <path d="M6.5 6.5 17.5 17.5M4 9l2-2M20 15l-2 2M9 4 7 6M17 20l-2-2M3 14l4 4M21 10l-4-4" />
+          </svg>
+        </div>
+        <div className="min-w-0 flex-1">
+          <h1 className="settings-hero__title">Exercices</h1>
+          <p className="settings-hero__subtitle">Bibliothèque, minuteur d'entraînement et journal de progression du coach Hicham.</p>
+        </div>
+        <div className="settings-hero__actions" aria-label="Actions rapides">
+          {onBack ? (
+            <button type="button" onClick={onBack} className="settings-hero__back" aria-label="Revenir en arrière" title="Revenir en arrière">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M15 18 9 12l6-6" />
+                <path d="M9 12h11" />
+              </svg>
+              <span>Retour</span>
+            </button>
+          ) : null}
+          <button type="button" onClick={onGoToShop} className="settings-hero__action" aria-label="Panier" title="Voir le panier (boutique)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="9" cy="21" r="1" />
+              <circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+            </svg>
+            {cartCount > 0 ? (
+              <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-brand-500 px-1 text-[10px] font-black text-white">{cartCount}</span>
+            ) : null}
+          </button>
+          <CoachInbox />
+        </div>
+      </div>
+
+      {/* Onglets */}
+      <div className="mt-2 flex shrink-0 gap-1">
+        {[["library", "📚 Bibliothèque"], ["timer", "⏱️ Minuteur"], ["journal", "📈 Journal"]].map(([value, label]) => (
+          <button key={value} type="button" onClick={() => setTab(value)} className={`flex-1 rounded-xl px-3 py-2 text-xs font-black transition ${tab === value ? "border-2 border-brand-300 bg-brand-400 text-slate-950" : "border border-slate-600/65 bg-slate-950/35 text-slate-200 hover:border-brand-300/70 hover:text-brand-100"}`}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div onScroll={handleExScroll} className="settings-scroll mt-2 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
+        {tab === "library" ? (
+          <div className="settings-card shrink-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative min-w-[180px] flex-1">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher un exercice…" className="w-full rounded-xl border border-slate-600/65 bg-slate-950/45 py-2 pl-9 pr-3 text-sm font-bold text-white outline-none focus:border-brand-300" />
+              </div>
+              <button type="button" onClick={() => setFavOnly((v) => !v)} className={chipBtn(favOnly)}>❤️ Favoris{favorites.length ? ` (${favorites.length})` : ""}</button>
+            </div>
+            <div className="mt-2 flex flex-col gap-2">
+              <div>
+                <p className="mb-1 text-[10px] font-black uppercase tracking-[0.14em] text-brand-200">Parties du corps</p>
+                <div className="flex flex-wrap gap-1">{muscleOptions.map((m) => (<button key={m} type="button" onClick={() => setMuscle(m)} className={chipBtn(muscle === m)}>{m}</button>))}</div>
+              </div>
+              <div>
+                <p className="mb-1 text-[10px] font-black uppercase tracking-[0.14em] text-brand-200">Type</p>
+                <div className="flex flex-wrap gap-1">{exTypeOptions.map((m) => (<button key={m} type="button" onClick={() => setExType(m)} className={chipBtn(exType === m)}>{m}</button>))}</div>
+              </div>
+              <div>
+                <p className="mb-1 text-[10px] font-black uppercase tracking-[0.14em] text-brand-200">Matériel</p>
+                <div className="flex flex-wrap gap-1">{equipmentOptions.map((m) => (<button key={m} type="button" onClick={() => setEquipment(m)} className={chipBtn(equipment === m)}>{m}</button>))}</div>
+              </div>
+              <div>
+                <p className="mb-1 text-[10px] font-black uppercase tracking-[0.14em] text-brand-200">Niveau</p>
+                <div className="flex flex-wrap gap-1">{levelOptions.map((m) => (<button key={m} type="button" onClick={() => setLevel(m)} className={chipBtn(level === m)}>{m}</button>))}</div>
+              </div>
+            </div>
+
+            {session.length ? (
+              <div className="mt-3 flex items-center justify-between gap-2 rounded-2xl border border-brand-400/45 bg-brand-500/10 px-4 py-2.5">
+                <span className="text-sm font-black text-white">🏋️ Ma séance · {session.length} exercice(s)</span>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => setTab("timer")} className="rounded-xl border-2 border-brand-300 bg-brand-400 px-3 py-1.5 text-xs font-black text-slate-950 transition hover:bg-brand-300">Démarrer</button>
+                  <button type="button" onClick={clearSession} className="rounded-xl border border-slate-600/65 bg-slate-950/35 px-3 py-1.5 text-xs font-black text-slate-200 transition hover:border-rose-400 hover:text-rose-300">Vider</button>
+                </div>
+              </div>
+            ) : null}
+
+            {loadingLib ? (
+              <div className="mt-8 flex flex-col items-center gap-3 py-8 text-center">
+                <span className="h-10 w-10 animate-spin rounded-full border-4 border-slate-600/40 border-t-brand-400" />
+                <p className="text-sm font-bold text-slate-300">Chargement de la bibliothèque d'exercices…</p>
+              </div>
+            ) : filteredExercises.length ? (
+              <>
+                <p className="mt-3 text-xs font-bold text-slate-400">{filteredExercises.length} exercice(s){libError ? " · mode hors-ligne" : ""}</p>
+                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+                  {filteredExercises.slice(0, visibleCount).map((ex) => {
+                    const fav = favorites.includes(ex.id);
+                    const inSession = session.includes(ex.id);
+                    return (
+                      <div key={ex.id} onClick={() => setDetail(ex)} className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-600/50 bg-slate-950/40 transition hover:border-brand-300/70">
+                        <button type="button" onClick={(e) => { e.stopPropagation(); toggleFavorite(ex.id); }} aria-label="Favori" className={`absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-lg border text-sm transition ${fav ? "border-rose-300 bg-rose-100 text-rose-600" : "border-white/40 bg-black/30 text-white hover:text-rose-300"}`}>{fav ? "❤️" : "🤍"}</button>
+                        <div className="relative h-28 w-full shrink-0 bg-white">
+                          {ex.images && ex.images[0] ? (
+                            <img src={ex.images[0]} alt={ex.name} loading="lazy" className="h-full w-full object-contain" />
+                          ) : (
+                            <span className="flex h-full w-full items-center justify-center text-4xl">{ex.emoji}</span>
+                          )}
+                          <span className="absolute bottom-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-brand-400 text-slate-950 shadow" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="currentColor" className="ml-0.5 h-3.5 w-3.5"><path d="M8 5v14l11-7z" /></svg>
+                          </span>
+                        </div>
+                        <div className="flex flex-1 flex-col p-3">
+                          <h3 className="line-clamp-2 min-h-[2.5rem] font-display text-sm font-black leading-tight text-white">{ex.name}</h3>
+                          <div className="mt-1.5 flex flex-wrap gap-1">
+                            <span className="rounded-lg border border-brand-300/40 bg-brand-400/15 px-1.5 py-0.5 text-[9px] font-black text-brand-200">{ex.muscle}</span>
+                            <span className={`rounded-lg px-1.5 py-0.5 text-[9px] font-black ${levelBadgeCls(ex.level)}`}>{ex.level}</span>
+                          </div>
+                          <p className="mt-1.5 text-[11px] font-semibold text-slate-400">{ex.equipment}{ex.sets ? ` · ${ex.sets}` : ""}</p>
+                          <button type="button" onClick={(e) => { e.stopPropagation(); toggleSession(ex.id); }} className={`mt-auto w-full rounded-lg px-2 py-1.5 text-[10px] font-black transition ${inSession ? "border border-brand-300/60 bg-brand-400/20 text-brand-100" : "border border-slate-600/65 bg-slate-950/35 text-slate-300 hover:border-brand-300/70 hover:text-brand-100"}`}>{inSession ? "✓ Dans la séance" : "+ Séance"}</button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {filteredExercises.length > visibleCount ? (
+                  <div className="mt-3 flex justify-center">
+                    <button type="button" onClick={() => setVisibleCount((c) => c + 48)} className="rounded-xl border border-slate-600/65 bg-slate-950/35 px-5 py-2 text-sm font-black text-slate-200 transition hover:border-brand-300/70 hover:text-brand-100">Charger plus</button>
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <p className="mt-4 text-sm text-slate-300">{favOnly && !favorites.length ? "Aucun favori pour l'instant. Appuie sur ❤️ sur une carte (ou dans une fiche) pour l'ajouter ici." : favOnly ? "Aucun favori ne correspond à ces filtres." : "Aucun exercice ne correspond à ces filtres."}</p>
+            )}
+          </div>
+        ) : null}
+
+        {tab === "timer" ? (
+          <div className="settings-card flex flex-col items-center shrink-0">
+            <div className="flex flex-wrap justify-center gap-1.5">
+              <button type="button" onClick={() => applyPreset({ work: 20, rest: 10, rounds: 8, label: "Tabata" })} className={chipBtn(timerCfg.label === "Tabata")}>Tabata (20/10 ×8)</button>
+              <button type="button" onClick={() => applyPreset({ work: 60, rest: 0, rounds: 10, label: "EMOM" })} className={chipBtn(timerCfg.label === "EMOM")}>EMOM (60s ×10)</button>
+              <button type="button" onClick={() => applyPreset({ work: 40, rest: 20, rounds: 6, label: "Perso" })} className={chipBtn(timerCfg.label === "Perso")}>Personnalisé</button>
+            </div>
+
+            {timerCfg.label === "Perso" ? (
+              <div className="mt-3 flex flex-wrap justify-center gap-3 text-xs font-semibold text-slate-300">
+                {[["Travail (s)", "work"], ["Repos (s)", "rest"], ["Tours", "rounds"]].map(([lbl, field]) => (
+                  <label key={field} className="flex flex-col items-center">
+                    <span>{lbl}</span>
+                    <input type="number" min={field === "rest" ? 0 : 1} value={timerCfg[field]} onChange={(e) => { const v = Math.max(field === "rest" ? 0 : 1, Number(e.target.value) || 0); const next = { ...timerCfg, [field]: v }; setTimerCfg(next); setTimer({ phase: "idle", remaining: next.work, round: 1, running: false }); }} className="mt-1 w-20 rounded-xl border border-slate-600/65 bg-slate-950/45 px-3 py-2 text-center text-sm font-bold text-white outline-none focus:border-brand-300" />
+                  </label>
+                ))}
+              </div>
+            ) : null}
+
+            {sessionExercises.length ? (
+              <div className="mt-4 w-full max-w-md rounded-2xl border border-brand-400/40 bg-brand-500/10 p-4 text-center">
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-brand-200">Exercice actuel</p>
+                <p className="font-display text-lg font-black leading-tight text-white">{(sessionExercises[Math.min(timer.round, sessionExercises.length) - 1] || sessionExercises[0]).name}</p>
+                <p className="mt-2 text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">Prochain exercice</p>
+                <p className="text-sm font-bold text-slate-200">{sessionExercises[timer.round] ? sessionExercises[timer.round].name : "— Dernier exercice 💪"}</p>
+              </div>
+            ) : null}
+
+            <div className="relative mt-5 flex h-52 w-52 items-center justify-center rounded-full border-4 border-slate-600/40">
+              <div className={`absolute inset-2 rounded-full ${timer.phase === "work" ? "bg-brand-400/10" : timer.phase === "rest" ? "bg-sky-400/10" : "bg-slate-500/10"} ${timer.running ? "animate-pulse" : ""}`} />
+              <div className="relative text-center">
+                <p className={`text-sm font-black uppercase tracking-wide ${phaseColor}`}>{phaseLabel}</p>
+                <p className="font-display text-5xl font-black text-white">{formatTime(timer.remaining)}</p>
+                <p className="mt-1 text-xs font-bold text-slate-400">Tour {timer.round} / {runCfg.rounds}</p>
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm font-bold text-slate-300">
+              <span>Travail : <span className="text-brand-200">{runCfg.work} sec</span></span>
+              <span>Repos : <span className="text-sky-300">{runCfg.rest} sec</span></span>
+              <span>Tour : <span className="text-white">{timer.round} / {runCfg.rounds}</span></span>
+            </div>
+
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              {timer.running ? (
+                <button type="button" onClick={pauseTimer} className="rounded-2xl border-2 border-amber-300 bg-amber-100 px-5 py-2.5 text-sm font-black text-amber-800 transition hover:bg-amber-200">⏸ Pause</button>
+              ) : (
+                <button type="button" onClick={startOrResume} className="rounded-2xl border-2 border-brand-300 bg-brand-400 px-5 py-2.5 text-sm font-black text-slate-950 transition hover:bg-brand-300">▶ {timer.phase === "idle" || timer.phase === "done" ? "Démarrer" : "Reprendre"}</button>
+              )}
+              <button type="button" onClick={resetTimer} className="rounded-2xl border border-slate-600/65 bg-slate-950/35 px-5 py-2.5 text-sm font-black text-slate-200 transition hover:border-brand-300/70 hover:text-brand-100">↺ Réinitialiser</button>
+              <button type="button" onClick={() => setSoundOn((v) => !v)} className={`rounded-2xl border-2 px-5 py-2.5 text-sm font-black transition ${soundOn ? "border-brand-300 bg-brand-400/15 text-brand-100" : "border-slate-600/65 bg-slate-950/35 text-slate-300"}`}>{soundOn ? "🔊 Son" : "🔇 Son"}</button>
+              {sessionExercises.length ? (
+                <button type="button" onClick={endSession} className="rounded-2xl border-2 border-rose-300 bg-rose-100 px-5 py-2.5 text-sm font-black text-rose-700 transition hover:bg-rose-200">⏹ Terminer la séance</button>
+              ) : null}
+            </div>
+
+            {session.length ? (
+              <div className="mt-6 w-full max-w-md">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-brand-200">Ma séance</p>
+                <ul className="mt-2 space-y-1.5">
+                  {session.map((id, idx) => {
+                    const ex = exerciseById(id);
+                    if (!ex) return null;
+                    const done = doneSession.includes(id);
+                    const isCurrent = timer.running && idx === timer.round - 1;
+                    return (
+                      <li key={id}>
+                        <button type="button" onClick={() => setDoneSession((cur) => cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id])} className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left text-sm font-bold transition ${done ? "border-emerald-300/50 bg-emerald-500/10 text-slate-400 line-through" : isCurrent ? "border-brand-300 bg-brand-400/15 text-white ring-2 ring-brand-300/60" : "border-slate-600/55 bg-slate-950/35 text-white hover:border-brand-300/70"}`}>
+                          <span className={`flex h-5 w-5 items-center justify-center rounded-md border ${done ? "border-emerald-300 bg-emerald-400 text-slate-950" : "border-slate-500"}`}>{done ? "✓" : ""}</span>
+                          {ex.images && ex.images[0] ? (
+                            <img src={ex.images[0]} alt="" className="h-8 w-8 shrink-0 rounded-lg bg-white object-cover" />
+                          ) : (
+                            <span className="text-xl">{ex.emoji}</span>
+                          )}
+                          <span className="flex-1">{ex.name}{isCurrent ? <span className="ml-2 text-[10px] font-black text-brand-200">● EN COURS</span> : null}</span>
+                          <span className="text-xs text-slate-400">{ex.muscle}</span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ) : (
+              <p className="mt-6 text-center text-xs text-slate-400">Ajoute des exercices à « Ma séance » depuis la bibliothèque pour les cocher ici.</p>
+            )}
+          </div>
+        ) : null}
+
+        {tab === "journal" ? (
+          <div className="settings-card shrink-0">
+            <div className="flex flex-wrap items-end gap-2">
+              <label className="min-w-[150px] flex-1 text-xs font-semibold text-slate-300">
+                <span>Exercice</span>
+                <select value={logExercise} onChange={(e) => setLogExercise(e.target.value)} className="mt-1 block w-full rounded-xl border border-slate-600/65 bg-slate-950/45 px-3 py-2 text-sm font-bold text-white outline-none focus:border-brand-300">
+                  {library.map((ex) => (<option key={ex.id} value={ex.id}>{ex.name}</option>))}
+                </select>
+              </label>
+              <label className="text-xs font-semibold text-slate-300">
+                <span>Charge (kg)</span>
+                <input type="number" min="0" value={logWeight} onChange={(e) => setLogWeight(e.target.value)} placeholder="60" className="mt-1 block w-24 rounded-xl border border-slate-600/65 bg-slate-950/45 px-3 py-2 text-sm font-bold text-white outline-none focus:border-brand-300" />
+              </label>
+              <label className="text-xs font-semibold text-slate-300">
+                <span>Répétitions</span>
+                <input type="number" min="1" value={logReps} onChange={(e) => setLogReps(e.target.value)} placeholder="8" className="mt-1 block w-24 rounded-xl border border-slate-600/65 bg-slate-950/45 px-3 py-2 text-sm font-bold text-white outline-none focus:border-brand-300" />
+              </label>
+              <button type="button" onClick={addLogEntry} className="rounded-xl border-2 border-brand-300 bg-brand-400 px-4 py-2 text-sm font-black text-slate-950 transition hover:bg-brand-300">Ajouter</button>
+            </div>
+
+            {log.length ? (
+              <ul className="mt-4 space-y-1.5">
+                {log.map((e) => {
+                  const ex = exerciseById(e.exerciseId);
+                  return (
+                    <li key={e.id} className="flex items-center gap-3 rounded-xl border border-slate-600/55 bg-slate-950/35 px-3 py-2">
+                      {ex && ex.images && ex.images[0] ? (
+                        <img src={ex.images[0]} alt="" className="h-8 w-8 shrink-0 rounded-lg bg-white object-cover" />
+                      ) : (
+                        <span className="text-xl">{ex?.emoji || "🏋️"}</span>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-black text-white">{ex?.name || "Exercice"}{isPR(e) ? <span className="ml-2 rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-black text-amber-700">🏆 Record</span> : null}</p>
+                        <p className="text-xs text-slate-400">{new Date(e.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })}</p>
+                      </div>
+                      <span className="shrink-0 font-display text-sm font-black text-brand-200">{e.weight} kg × {e.reps}</span>
+                      <button type="button" onClick={() => deleteLogEntry(e.id)} aria-label="Supprimer" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-600/65 bg-slate-950/45 text-slate-400 transition hover:border-rose-400 hover:text-rose-300">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <div className="mt-6 text-center">
+                <p className="font-display text-base font-black text-white">Ton journal est vide</p>
+                <p className="mt-1 text-sm text-slate-300">Enregistre tes charges et répétitions pour suivre ta progression et battre tes records 🏆.</p>
+              </div>
+            )}
+          </div>
+        ) : null}
+      </div>
+
+      {detail && typeof document !== "undefined"
+        ? createPortal(
+          <div className="fixed inset-0 z-[95] grid place-items-center p-4" style={{ background: "rgba(2,6,23,0.6)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }} role="dialog" aria-modal="true" aria-label={detail.name} onClick={() => setDetail(null)}>
+            <div className="flex max-h-[88vh] w-[min(100%,34rem)] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(2,6,23,0.25)]" onClick={(e) => e.stopPropagation()}>
+              <div className="flex shrink-0 items-center gap-3 border-b border-slate-200 px-5 py-4">
+                {detail.images && detail.images[0] ? (
+                  <img src={detail.images[0]} alt={detail.name} className="h-12 w-12 shrink-0 rounded-2xl bg-white object-cover" />
+                ) : (
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-400/30 to-emerald-500/15 text-3xl">{detail.emoji}</span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <h2 className="font-display text-lg font-black text-slate-900">{detail.name}</h2>
+                  <div className="mt-0.5 flex flex-wrap gap-1">
+                    <span className="rounded-lg border border-brand-300/50 bg-brand-50 px-1.5 py-0.5 text-[10px] font-black text-brand-600">{detail.muscle}</span>
+                    <span className={`rounded-lg px-1.5 py-0.5 text-[10px] font-black ${levelBadgeCls(detail.level)}`}>{detail.level}</span>
+                    <span className="rounded-lg bg-slate-100 px-1.5 py-0.5 text-[10px] font-black text-slate-600">{detail.equipment}</span>
+                  </div>
+                </div>
+                <button type="button" onClick={() => setDetail(null)} aria-label="Fermer" className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-500 transition hover:border-brand-400 hover:text-slate-900">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                </button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+                {/* Démonstration : photos RÉELLES du mouvement animées (début ↔ fin) + vidéo complète */}
+                <div className="relative mb-4 h-56 w-full overflow-hidden rounded-2xl bg-white">
+                  {detail.video && isDirectMedia(detail.video) ? (
+                    /\.(mp4|webm)(\?|$)/i.test(detail.video)
+                      ? <video src={detail.video} className="h-full w-full bg-slate-900 object-contain" controls autoPlay loop muted playsInline />
+                      : <img src={detail.video} alt={`Démonstration ${detail.name}`} className="h-full w-full object-contain" />
+                  ) : detail.images && detail.images.length ? (
+                    <img src={detail.images[frame] || detail.images[0]} alt={`Démonstration ${detail.name}`} className="h-full w-full object-contain transition-opacity" />
+                  ) : (
+                    <span className="flex h-full w-full items-center justify-center text-7xl">{detail.emoji}</span>
+                  )}
+                  {detail.images && detail.images.length > 1 ? (
+                    <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-black/65 px-2 py-0.5 text-[10px] font-black text-white">
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brand-300" /> Démo animée
+                    </span>
+                  ) : null}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => window.open(youtubeUrl(detail), "_blank", "noopener,noreferrer")} className="flex items-center justify-center gap-1.5 rounded-xl border-2 border-rose-200 bg-rose-50 px-3 py-2 text-xs font-black text-rose-600 transition hover:bg-rose-100">
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden="true"><path d="M23 12s0-3.8-.5-5.6a2.9 2.9 0 0 0-2-2C18.7 4 12 4 12 4s-6.7 0-8.5.4a2.9 2.9 0 0 0-2 2C1 8.2 1 12 1 12s0 3.8.5 5.6a2.9 2.9 0 0 0 2 2C5.3 20 12 20 12 20s6.7 0 8.5-.4a2.9 2.9 0 0 0 2-2C23 15.8 23 12 23 12ZM10 15.5v-7l6 3.5-6 3.5Z" /></svg>
+                    Vidéos YouTube
+                  </button>
+                  <button type="button" onClick={() => { const c = coachVid(detail); if (c) { window.open(c, "_blank", "noopener,noreferrer"); } else { setCoachNotice(true); } }} className="flex items-center justify-center gap-1.5 rounded-xl border-2 border-brand-300 bg-brand-400 px-3 py-2 text-xs font-black text-slate-950 transition hover:bg-brand-300">
+                    🎥 Vidéo du coach
+                  </button>
+                </div>
+                {coachNotice && !coachVid(detail) ? (
+                  <p className="mt-2 rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-500">🎥 Le coach Hicham n'a pas encore ajouté sa vidéo démonstrative pour cet exercice.</p>
+                ) : null}
+
+                <div className="mt-4 rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3">
+                  <p className="text-[11px] font-black uppercase tracking-wide text-brand-600">Recommandation</p>
+                  <p className="mt-0.5 font-display text-base font-black text-slate-900">{recoFor(detail).volume}</p>
+                  <p className="text-sm font-semibold text-slate-600">{recoFor(detail).repos}</p>
+                </div>
+
+                {detail.targets && detail.targets.length ? (
+                  <>
+                    <p className="mt-4 text-[11px] font-black uppercase tracking-wide text-slate-400">Muscles sollicités</p>
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {detail.targets.map((t) => (<span key={t} className="rounded-lg bg-slate-100 px-2 py-1 text-xs font-bold text-slate-700">{t}</span>))}
+                    </div>
+                  </>
+                ) : null}
+
+                {detail.steps && detail.steps.length ? (
+                  <>
+                    <p className="mt-4 text-[11px] font-black uppercase tracking-wide text-slate-400">Comment faire</p>
+                    <ol className="mt-1.5 list-decimal space-y-1 pl-5 text-sm text-slate-700">
+                      {detail.steps.map((s, i) => (<li key={i}>{s}</li>))}
+                    </ol>
+                  </>
+                ) : null}
+
+                <p className="mt-4 text-[11px] font-black uppercase tracking-wide text-rose-400">À éviter</p>
+                <ul className="mt-1.5 list-disc space-y-1 pl-5 text-sm text-slate-700">
+                  {(detail.mistakes && detail.mistakes.length ? detail.mistakes : exMistakesFor(detail)).map((s, i) => (<li key={i}>{s}</li>))}
+                </ul>
+
+                {detail.variants ? (
+                  <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2.5">
+                      <p className="text-[11px] font-black uppercase tracking-wide text-emerald-600">Plus facile</p>
+                      <p className="mt-0.5 text-sm text-slate-700">{detail.variants.easier}</p>
+                    </div>
+                    <div className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2.5">
+                      <p className="text-[11px] font-black uppercase tracking-wide text-rose-600">Plus difficile</p>
+                      <p className="mt-0.5 text-sm text-slate-700">{detail.variants.harder}</p>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+              <div className="flex shrink-0 flex-wrap gap-2 border-t border-slate-200 px-5 py-3">
+                <button type="button" onClick={() => toggleFavorite(detail.id)} className={`flex-1 rounded-xl border-2 px-3 py-2 text-sm font-black transition ${favorites.includes(detail.id) ? "border-rose-300 bg-rose-100 text-rose-700" : "border-slate-300 bg-white text-slate-700 hover:border-rose-300"}`}>{favorites.includes(detail.id) ? "❤️ Favori" : "🤍 Favori"}</button>
+                <button type="button" onClick={() => toggleSession(detail.id)} className={`flex-1 rounded-xl border-2 px-3 py-2 text-sm font-black transition ${session.includes(detail.id) ? "border-brand-300 bg-brand-100 text-brand-700" : "border-slate-300 bg-white text-slate-700 hover:border-brand-300"}`}>{session.includes(detail.id) ? "✓ Séance" : "+ Séance"}</button>
+                <button type="button" onClick={() => { setLogExercise(detail.id); setTab("journal"); setDetail(null); }} className="flex-1 rounded-xl border-2 border-brand-300 bg-brand-400 px-3 py-2 text-sm font-black text-slate-950 transition hover:bg-brand-300">📈 Journal</button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        ) : null}
+    </section>
+  );
+}
+
 function AppointmentsPage({ onBack, onGoToShop, customerEmail }) {
   const [now, setNow] = useState(() => new Date());
   const todayKey = toDateKey(now);
@@ -4694,6 +5773,21 @@ function AppointmentsPage({ onBack, onGoToShop, customerEmail }) {
                     </button>
                   </div>
                 </div>
+                <div className="text-xs font-semibold text-slate-300">
+                  <span>Statut</span>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {[["all", "Tous"], ["upcoming", "À venir"], ["confirmed", "Confirmé"], ["cancelled", "Annulé auto"]].map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setApptStatusFilter(value)}
+                        className={`rounded-xl px-3 py-2 text-xs font-black transition ${apptStatusFilter === value ? "border-2 border-brand-300 bg-brand-400 text-slate-950" : "border border-slate-600/65 bg-slate-950/35 text-slate-200 hover:border-brand-300/70 hover:text-brand-100"}`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 {apptDateFrom || apptDateTo ? (
                   <button
                     type="button"
@@ -4703,21 +5797,6 @@ function AppointmentsPage({ onBack, onGoToShop, customerEmail }) {
                     Effacer les dates
                   </button>
                 ) : null}
-              </div>
-              <div className="mt-3 text-xs font-semibold text-slate-300">
-                <span>Statut</span>
-                <div className="mt-1 flex flex-wrap gap-1">
-                  {[["all", "Tous"], ["upcoming", "À venir"], ["confirmed", "Confirmé"], ["cancelled", "Annulé auto"]].map(([value, label]) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setApptStatusFilter(value)}
-                      className={`rounded-xl px-3 py-2 text-xs font-black transition ${apptStatusFilter === value ? "border-2 border-brand-300 bg-brand-400 text-slate-950" : "border border-slate-600/65 bg-slate-950/35 text-slate-200 hover:border-brand-300/70 hover:text-brand-100"}`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
               </div>
           </>
           {tableAppointments.length ? (
@@ -4775,12 +5854,24 @@ function AppointmentsPage({ onBack, onGoToShop, customerEmail }) {
                 </tbody>
               </table>
             </div>
-          ) : (
+          ) : appointments.length ? (
             <p className="mt-3 text-sm text-slate-300">
-              {appointments.length
-                ? "Aucun rendez-vous ne correspond à ces filtres."
-                : "Aucun rendez-vous réservé. Choisissez un créneau vert pour réserver."}
+              Aucun rendez-vous ne correspond à ces filtres.
             </p>
+          ) : (
+            <div className="mt-3 flex flex-col items-center justify-center rounded-2xl border border-dashed border-brand-300/40 bg-slate-950/30 px-6 py-9 text-center">
+              <img
+                src={noAppointmentsGif}
+                alt="Aucun rendez-vous"
+                className="mb-3 h-28 w-28 object-contain"
+                loading="lazy"
+              />
+              <h3 className="font-display text-lg font-black text-white">Aucun rendez-vous pour le moment</h3>
+              <p className="mt-1.5 max-w-sm text-sm text-slate-300">
+                Réserve ta première séance avec le coach Hicham 💪 — choisis un{" "}
+                <span className="font-black text-brand-200">créneau vert</span> dans le calendrier ci-dessus.
+              </p>
+            </div>
           )}
         </div>
       </div>
@@ -4892,7 +5983,7 @@ function AppointmentsPage({ onBack, onGoToShop, customerEmail }) {
   );
 }
 
-function MyProgramsPage({ onBack, onGoToShop, refreshSession, onInvoiceSent }) {
+function MyProgramsPage({ onBack, onGoToShop, refreshSession, onInvoiceSent, onPaidCheckout }) {
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -4916,49 +6007,73 @@ function MyProgramsPage({ onBack, onGoToShop, refreshSession, onInvoiceSent }) {
     if (typeof window === "undefined" || programsCheckoutRef.current) return;
     const params = new URLSearchParams(window.location.search);
     const checkout = params.get("checkout");
+    const chargily = params.get("chargily");
     const sessionId = params.get("session_id");
-    if (!checkout) return;
+    if (!checkout && !chargily) return;
     programsCheckoutRef.current = true;
     const cleanUrl = () => {
       try {
         const u = new URL(window.location.href);
         u.searchParams.delete("checkout");
         u.searchParams.delete("session_id");
+        u.searchParams.delete("chargily");
         window.history.replaceState({}, "", u.toString());
       } catch {
         /* ignore */
       }
     };
-    if (checkout === "cancel") {
+    // Applique le déblocage à partir du résultat de vérification (Stripe ou Chargily).
+    const applyResult = (result) => {
+      const ids = Array.isArray(result?.productIds) ? result.productIds : [];
+      if (result?.paid && ids.length) {
+        setPurchased((current) => {
+          const next = Array.from(new Set([...current, ...ids]));
+          try {
+            window.localStorage.setItem("hm-shop-purchased", JSON.stringify(next));
+          } catch {
+            /* ignore */
+          }
+          return next;
+        });
+        setStatusFilter("Acheté");
+        addShopNotification("Paiement confirmé ✓ Programme(s) débloqué(s) dans Mes programmes.");
+        if (result.invoiceSent && typeof onInvoiceSent === "function") onInvoiceSent();
+      }
+    };
+    if (checkout === "cancel" || chargily === "cancel") {
       cleanUrl();
       return;
     }
+    const token = (typeof window !== "undefined" ? window.sessionStorage.getItem("hm-access-token") : "") || "";
     if (checkout === "success" && sessionId) {
-      const token = (typeof window !== "undefined" ? window.sessionStorage.getItem("hm-access-token") : "") || "";
       if (!token) {
         cleanUrl();
         return;
       }
+      // Filtre « Acheté » appliqué INSTANTANÉMENT (avant la vérif serveur) pour la rapidité.
+      setStatusFilter("Acheté");
       callSupabaseFunctionWithAuth("verify-checkout-session", { sessionId }, token)
-        .then((result) => {
-          const ids = Array.isArray(result?.productIds) ? result.productIds : [];
-          if (result?.paid && ids.length) {
-            setPurchased((current) => {
-              const next = Array.from(new Set([...current, ...ids]));
-              try {
-                window.localStorage.setItem("hm-shop-purchased", JSON.stringify(next));
-              } catch {
-                /* ignore */
-              }
-              return next;
-            });
-            setStatusFilter("Acheté");
-            addShopNotification("Paiement confirmé ✓ Programme(s) débloqué(s) dans Mes programmes.");
-            if (result.invoiceSent && typeof onInvoiceSent === "function") onInvoiceSent();
-          }
-        })
+        .then(applyResult)
         .catch((error) => console.error("verify-checkout-session (programs) error", error))
         .finally(cleanUrl);
+    } else if (chargily === "success") {
+      let checkoutId = "";
+      try {
+        const pending = JSON.parse(window.localStorage.getItem("hm-chargily-pending") || "{}");
+        checkoutId = pending?.checkoutId || "";
+      } catch { /* ignore */ }
+      if (!token || !checkoutId) {
+        cleanUrl();
+        return;
+      }
+      setStatusFilter("Acheté");
+      callSupabaseFunctionWithAuth("verify-chargily-checkout", { checkoutId }, token)
+        .then(applyResult)
+        .catch((error) => console.error("verify-chargily-checkout (programs) error", error))
+        .finally(() => {
+          try { window.localStorage.removeItem("hm-chargily-pending"); } catch { /* ignore */ }
+          cleanUrl();
+        });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -4980,34 +6095,10 @@ function MyProgramsPage({ onBack, onGoToShop, refreshSession, onInvoiceSent }) {
       addShopNotification(`« ${program.name} » est débloqué dans Mes programmes.`);
       return;
     }
-    // Programme payant : paiement RÉEL via Stripe. Au retour, le déblocage est vérifié côté serveur
-    // (sur la page Boutique) puis appliqué à tout l'app.
-    let token = "";
-    try {
-      if (typeof refreshSession === "function") {
-        const fresh = await refreshSession();
-        token = fresh?.accessToken || "";
-      }
-    } catch {
-      /* fallback ci-dessous */
-    }
-    if (!token) {
-      token = typeof window !== "undefined" ? window.sessionStorage.getItem("hm-access-token") || "" : "";
-    }
-    if (!token) {
-      addShopNotification("Session expirée — reconnecte-toi pour procéder au paiement.");
-      return;
-    }
-    try {
-      const result = await callSupabaseFunctionWithAuth("create-checkout-session", { items: [id], returnTo: "programs" }, token);
-      if (result?.url) {
-        window.location.href = result.url;
-      } else {
-        addShopNotification("Impossible de démarrer le paiement. Réessaie dans un instant.");
-      }
-    } catch (error) {
-      console.error("create-checkout-session error", error);
-      addShopNotification(`Impossible de démarrer le paiement : ${error?.message || error?.code || "erreur inconnue"}`);
+    // Programme payant : paiement RÉEL. En Algérie, choix Stripe / Chargily ; sinon Stripe direct.
+    // Au retour, le déblocage est vérifié côté serveur puis appliqué à tout l'app.
+    if (typeof onPaidCheckout === "function") {
+      onPaidCheckout([id], "programs");
     }
   };
 
@@ -5178,6 +6269,24 @@ function MyProgramsPage({ onBack, onGoToShop, refreshSession, onInvoiceSent }) {
                 </button>
               </div>
             </div>
+            <div className="text-xs font-semibold text-slate-300">
+              <span>Type</span>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {[["all", "Tous"], ["Gratuit", "Gratuit"], ["Payant", "Payant"], ["Acheté", "Acheté"]].map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setStatusFilter(value)}
+                    className={`rounded-xl px-3 py-2 text-xs font-black transition ${statusFilter === value
+                        ? "border-2 border-brand-300 bg-brand-400 text-slate-950"
+                        : "border border-slate-600/65 bg-slate-950/35 text-slate-200 hover:border-brand-300/70 hover:text-brand-100"
+                      }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
             {dateFrom || dateTo ? (
               <button
                 type="button"
@@ -5190,25 +6299,6 @@ function MyProgramsPage({ onBack, onGoToShop, refreshSession, onInvoiceSent }) {
                 Effacer les dates
               </button>
             ) : null}
-          </div>
-
-          <div className="mt-3 text-xs font-semibold text-slate-300">
-            <span>Type</span>
-            <div className="mt-1 flex flex-wrap gap-1">
-              {[["all", "Tous"], ["Gratuit", "Gratuit"], ["Payant", "Payant"], ["Acheté", "Acheté"]].map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setStatusFilter(value)}
-                  className={`rounded-xl px-3 py-2 text-xs font-black transition ${statusFilter === value
-                      ? "border-2 border-brand-300 bg-brand-400 text-slate-950"
-                      : "border border-slate-600/65 bg-slate-950/35 text-slate-200 hover:border-brand-300/70 hover:text-brand-100"
-                    }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
           </div>
         </div>
 
@@ -5330,6 +6420,8 @@ function ShopPage({
   accessToken,
   refreshSession,
   onInvoiceSent,
+  onPaidCheckout,
+  isAlgeria,
 }) {
   const normalizedSearch = searchValue.trim().toLowerCase();
   const filteredProducts = shopProducts.filter((product) => {
@@ -5754,8 +6846,9 @@ function ShopPage({
     if (typeof window === "undefined" || checkoutHandledRef.current) return;
     const params = new URLSearchParams(window.location.search);
     const checkout = params.get("checkout");
+    const chargily = params.get("chargily");
     const sessionId = params.get("session_id");
-    if (!checkout) return;
+    if (!checkout && !chargily) return;
     checkoutHandledRef.current = true;
 
     const cleanCheckoutUrl = () => {
@@ -5763,62 +6856,93 @@ function ShopPage({
         const url = new URL(window.location.href);
         url.searchParams.delete("checkout");
         url.searchParams.delete("session_id");
+        url.searchParams.delete("chargily");
         window.history.replaceState({}, "", url.toString());
       } catch {
         /* ignore */
       }
     };
 
-    if (checkout === "cancel") {
+    // Applique le déblocage à partir du résultat de vérification (Stripe ou Chargily).
+    const applyResult = (result) => {
+      const ids = Array.isArray(result?.productIds) ? result.productIds : [];
+      if (result?.paid && ids.length) {
+        setPurchased((current) => persistPurchased(Array.from(new Set([...current, ...ids]))));
+        setCart(persistCart([]));
+        setView("purchased");
+        const titles = ids
+          .map((id) => shopProducts.find((product) => product.id === id)?.title)
+          .filter(Boolean)
+          .join(", ");
+        const invoiceNote = result.invoiceSent
+          ? " La facture Hicham Fit App a été envoyée à ton adresse email."
+          : "";
+        addNotification(
+          ids.length > 1
+            ? `Paiement confirmé : ${ids.length} programmes débloqués (${titles}). Retrouvez-les dans « Mes programmes ».${invoiceNote}`
+            : `Paiement confirmé : « ${titles} » débloqué. Retrouvez-le dans « Mes programmes ».${invoiceNote}`
+        );
+        setCheckoutMessage("Paiement confirmé ✓ Tes programmes sont débloqués dans « Mes programmes »." + (invoiceNote ? ` ${invoiceNote.trim()}` : ""));
+        if (result.invoiceSent && typeof onInvoiceSent === "function") {
+          onInvoiceSent();
+        }
+      } else {
+        setCheckoutMessage("Le paiement n'a pas été confirmé. Si tu as été débité, contacte le support.");
+      }
+    };
+
+    if (checkout === "cancel" || chargily === "cancel") {
       setCheckoutMessage("Paiement annulé. Ton panier a été conservé.");
       setIsCartOpen(true);
       cleanCheckoutUrl();
       return;
     }
 
+    const token =
+      accessToken ||
+      (typeof window !== "undefined" ? window.sessionStorage.getItem("hm-access-token") : "") ||
+      "";
+
     if (checkout === "success" && sessionId) {
-      const token =
-        accessToken ||
-        (typeof window !== "undefined" ? window.sessionStorage.getItem("hm-access-token") : "") ||
-        "";
       if (!token) {
         setCheckoutMessage("Paiement effectué, mais session expirée : reconnecte-toi pour débloquer tes achats.");
         cleanCheckoutUrl();
         return;
       }
+      // Redirection INSTANTANÉE vers « Achetés » (avant même la vérif serveur) pour la rapidité.
+      setView("purchased");
       setCheckoutMessage("Vérification du paiement…");
       callSupabaseFunctionWithAuth("verify-checkout-session", { sessionId }, token)
-        .then((result) => {
-          const ids = Array.isArray(result?.productIds) ? result.productIds : [];
-          if (result?.paid && ids.length) {
-            setPurchased((current) => persistPurchased(Array.from(new Set([...current, ...ids]))));
-            setCart(persistCart([]));
-            setView("purchased");
-            const titles = ids
-              .map((id) => shopProducts.find((product) => product.id === id)?.title)
-              .filter(Boolean)
-              .join(", ");
-            const invoiceNote = result.invoiceSent
-              ? " La facture Hicham Fit App a été envoyée à ton adresse email."
-              : "";
-            addNotification(
-              ids.length > 1
-                ? `Paiement confirmé : ${ids.length} programmes débloqués (${titles}). Retrouvez-les dans « Mes programmes ».${invoiceNote}`
-                : `Paiement confirmé : « ${titles} » débloqué. Retrouvez-le dans « Mes programmes ».${invoiceNote}`
-            );
-            setCheckoutMessage("Paiement confirmé ✓ Tes programmes sont débloqués dans « Mes programmes »." + (invoiceNote ? ` ${invoiceNote.trim()}` : ""));
-            if (result.invoiceSent && typeof onInvoiceSent === "function") {
-              onInvoiceSent();
-            }
-          } else {
-            setCheckoutMessage("Le paiement n'a pas été confirmé. Si tu as été débité, contacte le support.");
-          }
-        })
+        .then(applyResult)
         .catch((error) => {
           console.error("verify-checkout-session error", error);
           setCheckoutMessage(`Vérification du paiement échouée : ${error?.message || error?.code || "erreur inconnue"}`);
         })
         .finally(() => {
+          cleanCheckoutUrl();
+        });
+    } else if (chargily === "success") {
+      let checkoutId = "";
+      try {
+        const pending = JSON.parse(window.localStorage.getItem("hm-chargily-pending") || "{}");
+        checkoutId = pending?.checkoutId || "";
+      } catch { /* ignore */ }
+      if (!token || !checkoutId) {
+        setCheckoutMessage("Paiement effectué, mais session expirée : reconnecte-toi pour débloquer tes achats.");
+        cleanCheckoutUrl();
+        return;
+      }
+      // Redirection INSTANTANÉE vers « Achetés » pour la rapidité.
+      setView("purchased");
+      setCheckoutMessage("Vérification du paiement…");
+      callSupabaseFunctionWithAuth("verify-chargily-checkout", { checkoutId }, token)
+        .then(applyResult)
+        .catch((error) => {
+          console.error("verify-chargily-checkout error", error);
+          setCheckoutMessage(`Vérification du paiement échouée : ${error?.message || error?.code || "erreur inconnue"}`);
+        })
+        .finally(() => {
+          try { window.localStorage.removeItem("hm-chargily-pending"); } catch { /* ignore */ }
           cleanCheckoutUrl();
         });
     }
@@ -5845,44 +6969,10 @@ function ShopPage({
       return;
     }
 
-    // Jeton FRAIS : on rafraîchit la session juste avant de payer (évite « Session requise » si le
-    // jeton stocké est vide/expiré).
-    let sessionToken = "";
-    try {
-      if (typeof refreshSession === "function") {
-        const fresh = await refreshSession();
-        sessionToken = fresh?.accessToken || "";
-      }
-    } catch {
-      /* on tente le fallback ci-dessous */
-    }
-    if (!sessionToken) {
-      sessionToken =
-        accessToken ||
-        (typeof window !== "undefined" ? window.sessionStorage.getItem("hm-access-token") : "") ||
-        "";
-    }
-    if (!sessionToken) {
-      setCheckoutMessage("Session expirée — reconnecte-toi pour procéder au paiement.");
-      return;
-    }
-
-    setCheckoutMessage("Redirection vers le paiement sécurisé Stripe…");
-    try {
-      const result = await callSupabaseFunctionWithAuth(
-        "create-checkout-session",
-        { items: paidIds },
-        sessionToken
-      );
-      if (result?.url) {
-        window.location.href = result.url;
-      } else {
-        setCheckoutMessage("Impossible de démarrer le paiement. Réessaie dans un instant.");
-      }
-    } catch (error) {
-      console.error("create-checkout-session error", error);
-      const reason = error?.message || error?.code || "erreur inconnue";
-      setCheckoutMessage(`Impossible de démarrer le paiement : ${reason}`);
+    // Paiement RÉEL. En Algérie, on ouvre le choix Stripe / Chargily (CCP) ; sinon Stripe direct.
+    setCheckoutMessage("Redirection vers le paiement sécurisé…");
+    if (typeof onPaidCheckout === "function") {
+      onPaidCheckout(paidIds, "shop");
     }
   };
 
@@ -6140,7 +7230,7 @@ function ShopPage({
                         {product.priceType === "Gratuit" || isPurchased ? (
                           <span />
                         ) : (
-                          <span className="text-sm font-black text-white">{product.price}</span>
+                          <span className="text-sm font-black text-white">{formatRegionalPrice(parseProductPrice(product.price), isAlgeria)}</span>
                         )}
                         <div className="flex items-center gap-2">
                           {product.priceType === "Payant" && !isPurchased ? (
@@ -6361,7 +7451,7 @@ function ShopPage({
                           <p className="text-xs text-slate-500">{item.badge}</p>
                         </div>
                         <span className="shrink-0 text-sm font-black text-slate-900">
-                          {item.priceValue != null ? `${item.priceValue} €` : "Sur demande"}
+                          {item.priceValue != null ? formatRegionalPrice(item.priceValue, isAlgeria) : "Sur demande"}
                         </span>
                         <button
                           type="button"
@@ -6388,7 +7478,7 @@ function ShopPage({
                 <div className="shrink-0 border-t border-slate-200 px-5 py-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-bold text-slate-500">Total</span>
-                    <span className="font-display text-2xl font-black text-slate-900">{cartTotal} €</span>
+                    <span className="font-display text-2xl font-black text-slate-900">{formatRegionalPrice(cartTotal, isAlgeria)}</span>
                   </div>
                   {hasQuoteItems ? (
                     <p className="mt-1 text-xs text-orange-600">
@@ -6400,7 +7490,7 @@ function ShopPage({
                     onClick={handleCheckout}
                     className="mt-3 w-full rounded-2xl border-2 border-brand-300 bg-brand-400 px-4 py-3 text-sm font-black text-slate-950 transition hover:bg-brand-300"
                   >
-                    Payer {cartTotal} €
+                    Payer {formatRegionalPrice(cartTotal, isAlgeria)}
                   </button>
                 </div>
               ) : null}
@@ -6495,7 +7585,7 @@ function ShopPage({
                 {detailProduct.priceType === "Gratuit" || purchased.includes(detailProduct.id) ? null : (
                   <div className="mb-3 flex items-center justify-between">
                     <span className="text-sm font-bold text-slate-300">Prix</span>
-                    <span className="font-display text-xl font-black text-white">{detailProduct.price}</span>
+                    <span className="font-display text-xl font-black text-white">{detailProduct.priceType === "Gratuit" ? detailProduct.price : formatRegionalPrice(parseProductPrice(detailProduct.price), isAlgeria)}</span>
                   </div>
                 )}
                 {detailCanAccess ? (
@@ -9088,6 +10178,74 @@ export default function App() {
     } catch { /* ignore */ }
   };
   // Paiement DIRECT depuis le panier global (sans passer par la page Boutique).
+  // L'utilisateur réside-t-il en Algérie ? (code pays ISO « DZ »). Si oui, on lui propose le choix
+  // entre le paiement carte (Stripe/PayPal) et le paiement local CCP / EDAHABIA (Chargily).
+  const isAlgeriaResident = String(currentUser?.country || "").toUpperCase() === "DZ";
+  // État de la fenêtre de choix du moyen de paiement (Algérie uniquement).
+  const [paymentChoice, setPaymentChoice] = useState({ open: false, items: [], returnTo: "shop" });
+
+  // Récupère un jeton FRAIS juste avant de payer (évite « Session requise » si le jeton est expiré).
+  const getPaymentToken = async () => {
+    let token = "";
+    try { const fresh = await refreshCurrentUserSession(); token = fresh?.accessToken || ""; } catch { /* fallback */ }
+    if (!token) token = (typeof window !== "undefined" ? window.sessionStorage.getItem("hm-access-token") : "") || "";
+    return token;
+  };
+
+  // Paiement carte/PayPal via Stripe (hosted Checkout).
+  const runStripeCheckout = async (paidIds, returnTo = "shop") => {
+    if (!paidIds?.length) return;
+    const token = await getPaymentToken();
+    if (!token) {
+      setAppToast({ type: "error", text: "Session expirée — reconnecte-toi pour payer." });
+      return;
+    }
+    try {
+      const result = await callSupabaseFunctionWithAuth("create-checkout-session", { items: paidIds, returnTo }, token);
+      if (result?.url) {
+        window.location.href = result.url;
+      } else {
+        setAppToast({ type: "error", text: "Impossible de démarrer le paiement. Réessaie." });
+      }
+    } catch (error) {
+      setAppToast({ type: "error", text: `Impossible de démarrer le paiement : ${error?.message || error?.code || "erreur inconnue"}` });
+    }
+  };
+
+  // Paiement local CCP / EDAHABIA via Chargily (Algérie).
+  const runChargilyCheckout = async (paidIds, returnTo = "shop") => {
+    if (!paidIds?.length) return;
+    const token = await getPaymentToken();
+    if (!token) {
+      setAppToast({ type: "error", text: "Session expirée — reconnecte-toi pour payer." });
+      return;
+    }
+    try {
+      const result = await callSupabaseFunctionWithAuth("create-chargily-checkout", { items: paidIds, returnTo }, token);
+      if (result?.url) {
+        // On mémorise l'id du paiement pour le vérifier au retour.
+        try {
+          window.localStorage.setItem("hm-chargily-pending", JSON.stringify({ checkoutId: result.checkoutId, returnTo }));
+        } catch { /* ignore */ }
+        window.location.href = result.url;
+      } else {
+        setAppToast({ type: "error", text: "Impossible de démarrer le paiement CCP. Réessaie." });
+      }
+    } catch (error) {
+      setAppToast({ type: "error", text: `Impossible de démarrer le paiement CCP : ${error?.message || error?.code || "erreur inconnue"}` });
+    }
+  };
+
+  // Point d'entrée unique du paiement : en Algérie, on ouvre le choix Stripe/Chargily ; sinon Stripe direct.
+  const startPaidCheckout = (paidIds, returnTo = "shop") => {
+    if (!paidIds?.length) return;
+    if (isAlgeriaResident) {
+      setPaymentChoice({ open: true, items: paidIds, returnTo });
+    } else {
+      runStripeCheckout(paidIds, returnTo);
+    }
+  };
+
   const handleGlobalCheckout = async () => {
     const paidIds = globalCartItems.filter((i) => i.priceValue != null && i.priceValue > 0).map((i) => i.id);
     const freeIds = globalCartItems.filter((i) => i.priceValue == null || i.priceValue <= 0).map((i) => i.id);
@@ -9105,23 +10263,8 @@ export default function App() {
       setAppToast({ type: "success", text: "Produits gratuits débloqués." });
       return;
     }
-    let token = "";
-    try { const fresh = await refreshCurrentUserSession(); token = fresh?.accessToken || ""; } catch { /* fallback */ }
-    if (!token) token = (typeof window !== "undefined" ? window.sessionStorage.getItem("hm-access-token") : "") || "";
-    if (!token) {
-      setAppToast({ type: "error", text: "Session expirée — reconnecte-toi pour payer." });
-      return;
-    }
-    try {
-      const result = await callSupabaseFunctionWithAuth("create-checkout-session", { items: paidIds, returnTo: "shop" }, token);
-      if (result?.url) {
-        window.location.href = result.url;
-      } else {
-        setAppToast({ type: "error", text: "Impossible de démarrer le paiement. Réessaie." });
-      }
-    } catch (error) {
-      setAppToast({ type: "error", text: `Impossible de démarrer le paiement : ${error?.message || error?.code || "erreur inconnue"}` });
-    }
+    setIsGlobalCartOpen(false);
+    startPaidCheckout(paidIds, "shop");
   };
   const [currentRoute, setCurrentRoute] = useState(() => {
     try {
@@ -11913,7 +13056,7 @@ export default function App() {
                       <p className="truncate text-sm font-black text-slate-900">{item.title}</p>
                       <p className="text-xs text-slate-500">{item.badge}</p>
                     </div>
-                    <span className="shrink-0 text-sm font-black text-slate-900">{item.priceValue != null ? `${item.priceValue} €` : "Sur demande"}</span>
+                    <span className="shrink-0 text-sm font-black text-slate-900">{item.priceValue != null ? formatRegionalPrice(item.priceValue, isAlgeriaResident) : "Sur demande"}</span>
                     <button type="button" onClick={() => { removeFromGlobalCart(item.id); setIsGlobalCartOpen(false); setTimeout(() => setIsGlobalCartOpen(true), 50); }} aria-label="Retirer du panier" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-400 transition hover:border-rose-400 hover:text-rose-500">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
                     </button>
@@ -11931,11 +13074,74 @@ export default function App() {
             <div className="shrink-0 border-t border-slate-200 px-5 py-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-bold text-slate-500">Total</span>
-                <span className="font-display text-2xl font-black text-slate-900">{globalCartTotal} €</span>
+                <span className="font-display text-2xl font-black text-slate-900">{formatRegionalPrice(globalCartTotal, isAlgeriaResident)}</span>
               </div>
-              <button type="button" onClick={handleGlobalCheckout} className="mt-3 w-full rounded-2xl border-2 border-brand-300 bg-brand-400 px-4 py-3 text-sm font-black text-slate-950 transition hover:bg-brand-300">Payer {globalCartTotal} €</button>
+              <button type="button" onClick={handleGlobalCheckout} className="mt-3 w-full rounded-2xl border-2 border-brand-300 bg-brand-400 px-4 py-3 text-sm font-black text-slate-950 transition hover:bg-brand-300">Payer {formatRegionalPrice(globalCartTotal, isAlgeriaResident)}</button>
             </div>
           ) : null}
+        </div>
+      </div>,
+      document.body
+    ) : null;
+
+  const paymentChoiceEurTotal = paymentChoice.items.reduce((sum, id) => {
+    const product = shopProducts.find((x) => x.id === id);
+    const value = product ? parseProductPrice(product.price) : 0;
+    return sum + (value || 0);
+  }, 0);
+  const paymentChoiceDzdTotal = Math.round(paymentChoiceEurTotal * 28);
+  const closePaymentChoice = () => setPaymentChoice({ open: false, items: [], returnTo: "shop" });
+  const paymentChoiceNode = paymentChoice.open && typeof document !== "undefined"
+    ? createPortal(
+      <div
+        className="fixed inset-0 z-[95] grid place-items-center p-4"
+        style={{ background: "rgba(2,6,23,0.6)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Choix du moyen de paiement"
+        onClick={closePaymentChoice}
+      >
+        <div
+          className="flex w-[min(100%,30rem)] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(2,6,23,0.25)]"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
+            <h2 className="font-display text-lg font-black text-slate-900">Choisis ton moyen de paiement</h2>
+            <button type="button" onClick={closePaymentChoice} aria-label="Fermer" className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-500 transition hover:border-brand-400 hover:text-slate-900">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+            </button>
+          </div>
+          <div className="flex flex-col gap-3 px-5 py-5">
+            <p className="text-sm text-slate-500">Résidence Algérie 🇩🇿 — paie par carte internationale ou par la poste locale (CCP).</p>
+            <button
+              type="button"
+              onClick={() => { const items = paymentChoice.items; const returnTo = paymentChoice.returnTo; closePaymentChoice(); runStripeCheckout(items, returnTo); }}
+              className="flex items-center justify-between gap-3 rounded-2xl border-2 border-slate-200 bg-white px-4 py-4 text-left transition hover:border-brand-400 hover:bg-brand-50"
+            >
+              <span className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-600"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2" /><path d="M2 10h20" /></svg></span>
+                <span>
+                  <span className="block text-sm font-black text-slate-900">Carte bancaire / PayPal</span>
+                  <span className="block text-xs text-slate-500">Paiement international sécurisé (Stripe)</span>
+                </span>
+              </span>
+              <span className="shrink-0 text-sm font-black text-slate-900">{paymentChoiceEurTotal} €</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { const items = paymentChoice.items; const returnTo = paymentChoice.returnTo; closePaymentChoice(); runChargilyCheckout(items, returnTo); }}
+              className="flex items-center justify-between gap-3 rounded-2xl border-2 border-slate-200 bg-white px-4 py-4 text-left transition hover:border-emerald-400 hover:bg-emerald-50"
+            >
+              <span className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true"><path d="M3 21h18M5 21V7l8-4 8 4v14M9 9h.01M15 9h.01M9 13h.01M15 13h.01" /></svg></span>
+                <span>
+                  <span className="block text-sm font-black text-slate-900">CCP / EDAHABIA — Algérie Poste</span>
+                  <span className="block text-xs text-slate-500">Paiement local en dinars (Chargily)</span>
+                </span>
+              </span>
+              <span className="shrink-0 text-sm font-black text-slate-900">{paymentChoiceDzdTotal} DZD</span>
+            </button>
+          </div>
         </div>
       </div>,
       document.body
@@ -12493,6 +13699,7 @@ export default function App() {
       >
         {appToastNode}
         {globalCartNode}
+        {paymentChoiceNode}
         <DashboardSidebar
           language={language}
           isOpen={sidebarOpen}
@@ -12585,12 +13792,18 @@ export default function App() {
               sanitizePositiveNumberInput={sanitizePositiveNumberInput}
               settingsPasswordChecks={settingsPasswordChecks}
             />
+          ) : activeNavKey === "exercises" ? (
+            <ExercisesPage
+              onBack={() => navigateTo("/")}
+              onGoToShop={() => setIsGlobalCartOpen(true)}
+            />
           ) : activeNavKey === "programs" ? (
             <MyProgramsPage
               onBack={() => navigateTo("/")}
               refreshSession={refreshCurrentUserSession}
               onInvoiceSent={() => setAppToast({ type: "success", text: "Votre facture a été envoyée à votre boîte email" })}
               onGoToShop={() => setIsGlobalCartOpen(true)}
+              onPaidCheckout={startPaidCheckout}
             />
           ) : activeNavKey === "appointments" ? (
             <AppointmentsPage
@@ -12612,6 +13825,8 @@ export default function App() {
               accessToken={currentUser.accessToken || ""}
               refreshSession={refreshCurrentUserSession}
               onInvoiceSent={() => setAppToast({ type: "success", text: "Votre facture a été envoyée à votre boîte email" })}
+              onPaidCheckout={startPaidCheckout}
+              isAlgeria={isAlgeriaResident}
             />
           ) : (
             <section className="settings-page grid min-h-0 grid-rows-[auto_auto_minmax(0,1fr)_auto] gap-1 overflow-hidden">
