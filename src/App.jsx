@@ -2519,6 +2519,83 @@ function ProgressChart({ title, unit, values, action, compact }) {
 
 const athleteCardDecorUrl = "/decor de la carte athlete.png";
 
+// Carrousel publicitaire du tableau de bord (6 slides, rotation automatique toutes les 5 s).
+function DashboardAdCarousel({ firstName, go }) {
+  const slides = [
+    { tag: "Bienvenue", emoji: "👋", hero: "/image_Slide0.png", title: `Bienvenue ${firstName || ""} sur Hicham Fit App`.trim(), desc: "Progressez avec un meilleur suivi, accédez à vos programmes personnalisés, découvrez vos exercices et avancez à votre rythme avec l'accompagnement de Coach Hicham." },
+    { tag: "Boutique", emoji: "🛍️", title: "Découvrez notre boutique sportive", desc: "Retrouvez des produits sélectionnés pour accompagner vos entraînements et améliorer vos performances.", btn: "Voir la boutique", view: "shop" },
+    { tag: "Programme", emoji: "📋", title: "Programme personnalisé disponible", desc: "Suivez un programme adapté à votre objectif et progressez étape par étape avec Coach Hicham.", btn: "Voir mes programmes", view: "programs" },
+    { tag: "Exercices", emoji: "🏋️", title: "Explorez la bibliothèque d'exercices", desc: "Accédez à une bibliothèque complète d'exercices avec démonstrations, conseils et filtres pour construire vos séances plus facilement.", btn: "Voir les exercices", view: "exercises" },
+    { tag: "Paiement sécurisé", emoji: "🔒", title: "Paiement sécurisé et flexible", desc: "Réglez vos programmes, produits ou abonnements en toute simplicité : carte bancaire, PayPal, Revolut Pay et autres méthodes via Stripe." },
+    { tag: "Rendez-vous", emoji: "📅", title: "Prenez rendez-vous avec Coach Hicham", desc: "Réservez un rendez-vous en visio ou en appel audio pour poser vos questions, ajuster votre programme, suivre votre progression et recevoir des conseils personnalisés.", btn: "Prendre rendez-vous", view: "appointments" },
+  ];
+  const [i, setI] = useState(0);
+  const [paused, setPaused] = useState(false);
+  useEffect(() => {
+    if (paused) return undefined;
+    const id = setInterval(() => setI((v) => (v + 1) % slides.length), 5000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paused]);
+  const s = slides[i];
+  const nav = (
+    <div className="absolute inset-x-0 bottom-2 z-20 flex items-center justify-center gap-1.5">
+      {slides.map((_, idx) => (
+        <button key={idx} type="button" onClick={() => setI(idx)} aria-label={`Diapo ${idx + 1}`} className={`h-1.5 rounded-full transition-all ${idx === i ? "w-5 bg-emerald-500" : `w-1.5 ${s.hero ? "bg-slate-300 hover:bg-slate-400" : "bg-slate-600 hover:bg-slate-400"}`}`} />
+      ))}
+    </div>
+  );
+
+  // Slide 0 (Bienvenue) : carte compacte — texte à gauche + photo fondue à droite (cadrage tête visible).
+  if (s.hero) {
+    return (
+      <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} className="relative flex min-h-[210px] shrink-0 flex-col justify-center overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-white via-emerald-50/70 to-slate-100 shadow-inner md:min-h-[250px]">
+        <img
+          src={s.hero}
+          alt="Hicham Fit App"
+          onError={(e) => { e.currentTarget.style.display = "none"; }}
+          className="pointer-events-none absolute right-0 top-0 hidden h-full w-[62%] object-cover object-[42%_18%] sm:block"
+          style={{ maskImage: "linear-gradient(to right, transparent 0%, #000 24%)", WebkitMaskImage: "linear-gradient(to right, transparent 0%, #000 24%)" }}
+        />
+        <div className="relative z-10 flex flex-1 flex-col justify-start px-5 py-4 md:px-7 md:py-5">
+          <h3 className="max-w-[64%] font-display font-black leading-tight text-slate-900 sm:max-w-[54%]">
+            <span className="block text-2xl leading-none sm:text-3xl md:text-[36px]">Bienvenue</span>
+            <span className="mt-1 block text-xl sm:text-2xl md:text-[28px]">
+              <span className="capitalize text-emerald-500">{firstName || ""}</span> sur Hicham Fit App
+            </span>
+          </h3>
+          <p className="mt-2 max-w-[62%] text-xs leading-snug text-slate-600 sm:max-w-[52%] sm:text-sm">
+            Progressez avec un meilleur suivi, accédez à vos programmes personnalisés, découvrez vos exercices et avancez à votre rythme avec l'accompagnement de <span className="font-semibold text-emerald-600">Coach Hicham</span>.
+          </p>
+        </div>
+        {nav}
+      </div>
+    );
+  }
+
+  return (
+    <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} className="relative flex min-h-[210px] shrink-0 flex-col justify-center overflow-hidden rounded-2xl border border-brand-300/25 bg-gradient-to-br from-slate-900 via-slate-950 to-emerald-950/50 p-4 md:min-h-[250px] md:p-6">
+      <div className="pointer-events-none absolute -left-10 -top-10 h-40 w-40 rounded-full bg-brand-500/25 blur-3xl" aria-hidden />
+      <div className="pointer-events-none absolute -bottom-16 right-0 h-40 w-40 rounded-full bg-emerald-500/15 blur-3xl" aria-hidden />
+      <div className="relative z-10 flex flex-1 items-center gap-4 md:gap-5">
+        <span className="hidden h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-gradient-to-br from-brand-400/40 to-emerald-500/25 text-5xl shadow-lg sm:flex md:h-24 md:w-24" aria-hidden>{s.emoji}</span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-200">{s.tag}</p>
+          <h3 className="mt-1 font-display text-lg font-black leading-tight text-white sm:text-xl md:text-2xl">{s.title}</h3>
+          <p className="mt-1.5 line-clamp-3 text-xs leading-snug text-slate-300 sm:text-sm">{s.desc}</p>
+          {s.btn ? (
+            <button type="button" onClick={() => go(s.view)} className="mt-3 inline-flex items-center gap-2 rounded-xl border-2 border-brand-300 bg-brand-400 px-4 py-2 text-xs font-black text-slate-950 transition hover:bg-brand-300 sm:text-sm">
+              {s.btn}
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+            </button>
+          ) : null}
+        </div>
+      </div>
+      {nav}
+    </div>
+  );
+}
+
 function AthleteLuxuryCard({ language, fullName, matricule, email, birthDate, country, registrationDate, initials, photoUrl }) {
   const ekgGradId = useId().replace(/:/g, "");
   const [isFlipped, setIsFlipped] = useState(false);
@@ -4723,6 +4800,8 @@ function ExercisesPage({ onBack, onGoToShop }) {
 
   const [log, setLog] = useState(() => loadJSON("hm-exercise-log", []));
   const [logExercise, setLogExercise] = useState("");
+  const [logSearch, setLogSearch] = useState("");
+  const [logOpen, setLogOpen] = useState(false);
   const [logWeight, setLogWeight] = useState("");
   const [logReps, setLogReps] = useState("");
 
@@ -4740,7 +4819,7 @@ function ExercisesPage({ onBack, onGoToShop }) {
   const sessionExercises = session.map((id) => library.find((e) => e.id === id)).filter(Boolean);
   const runCfg = { work: timerCfg.work, rest: timerCfg.rest, rounds: sessionExercises.length || timerCfg.rounds, label: timerCfg.label };
 
-  const playBeep = (freq = 880, dur = 0.18) => {
+  const playBeep = (freq = 880, dur = 0.18, vol = 0.3, type = "sine") => {
     try {
       const Ctx = window.AudioContext || window.webkitAudioContext;
       if (!Ctx) return;
@@ -4749,15 +4828,27 @@ function ExercisesPage({ onBack, onGoToShop }) {
       if (ctx.state === "suspended") ctx.resume();
       const o = ctx.createOscillator();
       const g = ctx.createGain();
-      o.type = "sine";
+      o.type = type;
       o.frequency.value = freq;
       o.connect(g); g.connect(ctx.destination);
       g.gain.setValueAtTime(0.0001, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.02);
+      g.gain.exponentialRampToValueAtTime(vol, ctx.currentTime + 0.03);
       g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
       o.start();
       o.stop(ctx.currentTime + dur);
     } catch { /* ignore */ }
+  };
+  // Carillon doux et réconfortant pour le début du repos (notes descendantes).
+  const playRestChime = () => {
+    playBeep(659.25, 0.32, 0.22, "sine");
+    setTimeout(() => playBeep(523.25, 0.38, 0.22, "sine"), 170);
+    setTimeout(() => playBeep(392.0, 0.55, 0.20, "sine"), 360);
+  };
+  // Signal énergique et motivant pour le début du travail (notes montantes « GO »).
+  const playWorkSignal = () => {
+    playBeep(659.25, 0.12, 0.30, "triangle");
+    setTimeout(() => playBeep(880.0, 0.12, 0.32, "triangle"), 130);
+    setTimeout(() => playBeep(1046.5, 0.24, 0.34, "triangle"), 260);
   };
 
   useEffect(() => {
@@ -4771,8 +4862,8 @@ function ExercisesPage({ onBack, onGoToShop }) {
   useEffect(() => {
     if (timer.phase !== prevPhaseRef.current) {
       if (soundOn) {
-        if (timer.phase === "work") playBeep(880, 0.18);
-        else if (timer.phase === "rest") playBeep(440, 0.18);
+        if (timer.phase === "work") playWorkSignal();
+        else if (timer.phase === "rest") playRestChime();
         else if (timer.phase === "done") { playBeep(660, 0.25); setTimeout(() => playBeep(880, 0.4), 220); }
       }
       prevPhaseRef.current = timer.phase;
@@ -4784,7 +4875,7 @@ function ExercisesPage({ onBack, onGoToShop }) {
   useEffect(() => { setVisibleCount(48); }, [search, muscle, exType, equipment, level, favOnly]);
 
   // Exercice par défaut du journal une fois la bibliothèque chargée.
-  useEffect(() => { if (!logExercise && library.length) setLogExercise(library[0].id); }, [library, logExercise]);
+  // (Le Journal utilise un champ de recherche : pas de sélection par défaut.)
 
   // Anime la démo (alterne photo de départ / photo finale) quand une fiche est ouverte.
   useEffect(() => {
@@ -4833,6 +4924,22 @@ function ExercisesPage({ onBack, onGoToShop }) {
     });
   };
   const clearSession = () => { setSession([]); persist("hm-exercise-session", []); setDoneSession([]); };
+  const removeFromSession = (id) => {
+    setSession((cur) => { const next = cur.filter((x) => x !== id); persist("hm-exercise-session", next); return next; });
+    setDoneSession((cur) => cur.filter((x) => x !== id));
+  };
+  // Réordonne un exercice dans la séance (dir = -1 monter, +1 descendre).
+  const moveInSession = (id, dir) => {
+    setSession((cur) => {
+      const idx = cur.indexOf(id);
+      const to = idx + dir;
+      if (idx < 0 || to < 0 || to >= cur.length) return cur;
+      const next = [...cur];
+      [next[idx], next[to]] = [next[to], next[idx]];
+      persist("hm-exercise-session", next);
+      return next;
+    });
+  };
 
   const addLogEntry = () => {
     const w = Number(logWeight);
@@ -4936,7 +5043,7 @@ function ExercisesPage({ onBack, onGoToShop }) {
         </div>
         <div className="min-w-0 flex-1">
           <h1 className="settings-hero__title">Exercices</h1>
-          <p className="settings-hero__subtitle">Bibliothèque, minuteur d'entraînement et journal de progression du coach Hicham.</p>
+          <p className="settings-hero__subtitle">Explorez les exercices sélectionnés par Coach Hicham, lancez vos séances et suivez vos progrès jour après jour.</p>
         </div>
         <div className="settings-hero__actions" aria-label="Actions rapides">
           {onBack ? (
@@ -4964,9 +5071,20 @@ function ExercisesPage({ onBack, onGoToShop }) {
 
       {/* Onglets */}
       <div className="mt-2 flex shrink-0 gap-1">
-        {[["library", "📚 Bibliothèque"], ["timer", "⏱️ Minuteur"], ["journal", "📈 Journal"]].map(([value, label]) => (
-          <button key={value} type="button" onClick={() => setTab(value)} className={`flex-1 rounded-xl px-3 py-2 text-xs font-black transition ${tab === value ? "border-2 border-brand-300 bg-brand-400 text-slate-950" : "border border-slate-600/65 bg-slate-950/35 text-slate-200 hover:border-brand-300/70 hover:text-brand-100"}`}>
-            {label}
+        {[
+          ["library", "Bibliothèque", (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0" aria-hidden="true"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v15H6.5A2.5 2.5 0 0 0 4 19.5v-15Z" /><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20v5H6.5A2.5 2.5 0 0 1 4 19.5Z" /><path d="M9 6h7M9 9.5h7" /></svg>
+          )],
+          ["timer", "Minuteur", (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0" aria-hidden="true"><path d="M9 2h6" /><path d="M12 5v3" /><circle cx="12" cy="14" r="8" /><path d="M12 14l3-2" /><path d="m18.5 7.5 1.5-1.5" /></svg>
+          )],
+          ["journal", "Journal", (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="m7 14 3.5-3.5 3 3L21 7" /><path d="M21 11V7h-4" /></svg>
+          )],
+        ].map(([value, label, icon]) => (
+          <button key={value} type="button" onClick={() => setTab(value)} className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-black transition ${tab === value ? "border-2 border-brand-300 bg-brand-400 text-slate-950" : "border border-slate-600/65 bg-slate-950/35 text-slate-200 hover:border-brand-300/70 hover:text-brand-100"}`}>
+            {icon}
+            <span>{label}</span>
           </button>
         ))}
       </div>
@@ -5118,7 +5236,10 @@ function ExercisesPage({ onBack, onGoToShop }) {
 
             {session.length ? (
               <div className="mt-6 w-full max-w-md">
-                <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-brand-200">Ma séance</p>
+                <div className="flex flex-wrap items-center justify-between gap-1">
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-brand-200">Ma séance</p>
+                  <p className="text-[10px] text-slate-400">Réordonne avec ⬆⬇ · touche pour la fiche · coche « Fait »</p>
+                </div>
                 <ul className="mt-2 space-y-1.5">
                   {session.map((id, idx) => {
                     const ex = exerciseById(id);
@@ -5126,16 +5247,30 @@ function ExercisesPage({ onBack, onGoToShop }) {
                     const done = doneSession.includes(id);
                     const isCurrent = timer.running && idx === timer.round - 1;
                     return (
-                      <li key={id}>
-                        <button type="button" onClick={() => setDoneSession((cur) => cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id])} className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left text-sm font-bold transition ${done ? "border-emerald-300/50 bg-emerald-500/10 text-slate-400 line-through" : isCurrent ? "border-brand-300 bg-brand-400/15 text-white ring-2 ring-brand-300/60" : "border-slate-600/55 bg-slate-950/35 text-white hover:border-brand-300/70"}`}>
-                          <span className={`flex h-5 w-5 items-center justify-center rounded-md border ${done ? "border-emerald-300 bg-emerald-400 text-slate-950" : "border-slate-500"}`}>{done ? "✓" : ""}</span>
+                      <li key={id} className={`flex items-center gap-2 rounded-xl border px-2 py-1.5 transition ${done ? "border-emerald-300/50 bg-emerald-500/10" : isCurrent ? "border-brand-300 bg-brand-400/15 ring-2 ring-brand-300/60" : "border-slate-600/55 bg-slate-950/35"}`}>
+                        <div className="flex shrink-0 flex-col">
+                          <button type="button" onClick={() => moveInSession(id, -1)} disabled={idx === 0} aria-label="Monter" className="flex h-4 w-5 items-center justify-center rounded text-slate-400 transition hover:text-brand-200 disabled:opacity-25">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3" aria-hidden="true"><path d="m18 15-6-6-6 6" /></svg>
+                          </button>
+                          <button type="button" onClick={() => moveInSession(id, 1)} disabled={idx === session.length - 1} aria-label="Descendre" className="flex h-4 w-5 items-center justify-center rounded text-slate-400 transition hover:text-brand-200 disabled:opacity-25">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+                          </button>
+                        </div>
+                        <span className="w-4 shrink-0 text-center text-xs font-black text-slate-500">{idx + 1}</span>
+                        <button type="button" onClick={() => setDetail(ex)} className="flex min-w-0 flex-1 items-center gap-3 text-left" aria-label={`Voir ${ex.name}`}>
                           {ex.images && ex.images[0] ? (
                             <img src={ex.images[0]} alt="" className="h-8 w-8 shrink-0 rounded-lg bg-white object-cover" />
                           ) : (
                             <span className="text-xl">{ex.emoji}</span>
                           )}
-                          <span className="flex-1">{ex.name}{isCurrent ? <span className="ml-2 text-[10px] font-black text-brand-200">● EN COURS</span> : null}</span>
-                          <span className="text-xs text-slate-400">{ex.muscle}</span>
+                          <span className={`min-w-0 flex-1 truncate text-sm font-bold ${done ? "text-slate-400 line-through" : "text-white"}`}>{ex.name}{isCurrent ? <span className="ml-2 text-[10px] font-black text-brand-200">● EN COURS</span> : null}</span>
+                        </button>
+                        <button type="button" onClick={() => setDoneSession((cur) => cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id])} aria-label={done ? "Marquer comme non fait" : "Marquer comme fait"} className={`flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-black transition ${done ? "border-emerald-300 bg-emerald-400 text-slate-950" : "border-slate-500 bg-slate-950/40 text-slate-300 hover:border-emerald-300 hover:text-emerald-200"}`}>
+                          <span className="flex h-4 w-4 items-center justify-center rounded border border-current text-[10px]">{done ? "✓" : ""}</span>
+                          {done ? "Fait" : "Fait ?"}
+                        </button>
+                        <button type="button" onClick={() => removeFromSession(id)} aria-label={`Supprimer ${ex.name} de la séance`} title="Supprimer de la séance" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-600/65 bg-slate-950/40 text-slate-400 transition hover:border-rose-400 hover:text-rose-300">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
                         </button>
                       </li>
                     );
@@ -5143,7 +5278,7 @@ function ExercisesPage({ onBack, onGoToShop }) {
                 </ul>
               </div>
             ) : (
-              <p className="mt-6 text-center text-xs text-slate-400">Ajoute des exercices à « Ma séance » depuis la bibliothèque pour les cocher ici.</p>
+              <p className="mt-6 text-center text-xs text-slate-400">Ajoutez vos exercices depuis la bibliothèque, lancez le minuteur et suivez votre progression pendant la séance.</p>
             )}
           </div>
         ) : null}
@@ -5151,12 +5286,34 @@ function ExercisesPage({ onBack, onGoToShop }) {
         {tab === "journal" ? (
           <div className="settings-card shrink-0">
             <div className="flex flex-wrap items-end gap-2">
-              <label className="min-w-[150px] flex-1 text-xs font-semibold text-slate-300">
+              <div className="relative min-w-[180px] flex-1 text-xs font-semibold text-slate-300">
                 <span>Exercice</span>
-                <select value={logExercise} onChange={(e) => setLogExercise(e.target.value)} className="mt-1 block w-full rounded-xl border border-slate-600/65 bg-slate-950/45 px-3 py-2 text-sm font-bold text-white outline-none focus:border-brand-300">
-                  {library.map((ex) => (<option key={ex.id} value={ex.id}>{ex.name}</option>))}
-                </select>
-              </label>
+                <input
+                  value={logSearch}
+                  onChange={(e) => { setLogSearch(e.target.value); setLogOpen(true); }}
+                  onFocus={() => setLogOpen(true)}
+                  onBlur={() => setTimeout(() => setLogOpen(false), 150)}
+                  placeholder="🔎 Tape le nom de l'exercice…"
+                  className="mt-1 block w-full rounded-xl border border-slate-600/65 bg-slate-950/45 px-3 py-2 text-sm font-bold text-white outline-none focus:border-brand-300"
+                />
+                {logOpen ? (
+                  <div className="absolute z-30 mt-1 max-h-64 w-full overflow-auto rounded-xl border border-slate-600/65 bg-slate-950 shadow-[0_20px_50px_rgba(2,6,23,0.6)]">
+                    {(() => {
+                      const q = logSearch.trim().toLowerCase();
+                      if (!q) return <p className="px-3 py-3 text-xs text-slate-400">Tape le nom d'un exercice pour le trouver…</p>;
+                      const list = library.filter((ex) => ex.name.toLowerCase().includes(q)).slice(0, 40);
+                      if (!list.length) return <p className="px-3 py-3 text-xs text-slate-400">Aucun exercice trouvé.</p>;
+                      return list.map((ex) => (
+                        <button key={ex.id} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => { setLogExercise(ex.id); setLogSearch(ex.name); setLogOpen(false); }} className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-bold transition hover:bg-slate-800 ${logExercise === ex.id ? "text-brand-200" : "text-white"}`}>
+                          {ex.images && ex.images[0] ? <img src={ex.images[0]} alt="" className="h-6 w-6 shrink-0 rounded bg-white object-cover" /> : <span className="text-base">{ex.emoji}</span>}
+                          <span className="min-w-0 flex-1 truncate">{ex.name}</span>
+                          <span className="shrink-0 text-[10px] text-slate-400">{ex.muscle}</span>
+                        </button>
+                      ));
+                    })()}
+                  </div>
+                ) : null}
+              </div>
               <label className="text-xs font-semibold text-slate-300">
                 <span>Charge (kg)</span>
                 <input type="number" min="0" value={logWeight} onChange={(e) => setLogWeight(e.target.value)} placeholder="60" className="mt-1 block w-24 rounded-xl border border-slate-600/65 bg-slate-950/45 px-3 py-2 text-sm font-bold text-white outline-none focus:border-brand-300" />
@@ -5300,7 +5457,7 @@ function ExercisesPage({ onBack, onGoToShop }) {
               <div className="flex shrink-0 flex-wrap gap-2 border-t border-slate-200 px-5 py-3">
                 <button type="button" onClick={() => toggleFavorite(detail.id)} className={`flex-1 rounded-xl border-2 px-3 py-2 text-sm font-black transition ${favorites.includes(detail.id) ? "border-rose-300 bg-rose-100 text-rose-700" : "border-slate-300 bg-white text-slate-700 hover:border-rose-300"}`}>{favorites.includes(detail.id) ? "❤️ Favori" : "🤍 Favori"}</button>
                 <button type="button" onClick={() => toggleSession(detail.id)} className={`flex-1 rounded-xl border-2 px-3 py-2 text-sm font-black transition ${session.includes(detail.id) ? "border-brand-300 bg-brand-100 text-brand-700" : "border-slate-300 bg-white text-slate-700 hover:border-brand-300"}`}>{session.includes(detail.id) ? "✓ Séance" : "+ Séance"}</button>
-                <button type="button" onClick={() => { setLogExercise(detail.id); setTab("journal"); setDetail(null); }} className="flex-1 rounded-xl border-2 border-brand-300 bg-brand-400 px-3 py-2 text-sm font-black text-slate-950 transition hover:bg-brand-300">📈 Journal</button>
+                <button type="button" onClick={() => { setLogExercise(detail.id); setLogSearch(detail.name); setTab("journal"); setDetail(null); }} className="flex-1 rounded-xl border-2 border-brand-300 bg-brand-400 px-3 py-2 text-sm font-black text-slate-950 transition hover:bg-brand-300">📈 Journal</button>
               </div>
             </div>
           </div>,
@@ -13674,11 +13831,9 @@ export default function App() {
             : "Good evening"
         : language === "ar"
           ? "مرحباً"
-          : dashHour < 12
+          : (dashHour >= 5 && dashHour < 18)
             ? "Bonjour"
-            : dashHour < 18
-              ? "Bon après-midi"
-              : "Bonsoir";
+            : "Bonsoir";
     const welcomeName = currentUser.firstName || currentUser.fullName;
     const dashboardCartCount = (() => {
       if (typeof window === "undefined") return 0;
@@ -13829,7 +13984,7 @@ export default function App() {
               isAlgeria={isAlgeriaResident}
             />
           ) : (
-            <section className="settings-page grid min-h-0 grid-rows-[auto_auto_minmax(0,1fr)_auto] gap-1 overflow-hidden">
+            <section className="settings-page flex min-h-0 flex-1 flex-col overflow-hidden">
               <div className="settings-hero shrink-0">
                 <div className="settings-hero__icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8" aria-hidden="true">
@@ -13842,7 +13997,7 @@ export default function App() {
                 <div className="min-w-0 flex-1">
                   <h1 className="settings-hero__title">Tableau de bord</h1>
                   <p className="settings-hero__subtitle">
-                    <span className="font-bold">{welcomeGreeting} {welcomeName}</span> 👋{" "}
+                    <span className="font-bold">{welcomeGreeting} <span className="capitalize">{welcomeName}</span></span> 👋{" "}
                     {language === "en"
                       ? "Here's your fitness tracking space."
                       : language === "ar"
@@ -13886,7 +14041,9 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="mt-1 flex shrink-0 flex-col gap-1 lg:flex-row lg:items-stretch">
+              <div className="mt-1 flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto pr-1">
+                <DashboardAdCarousel firstName={welcomeName} go={(view) => { setActiveNavKey(view); navigateTo(`/dashboard?view=${view}`); }} />
+                <div className="flex shrink-0 flex-col gap-1 lg:flex-row lg:items-stretch">
                 <div className="athlete-card-stage flex min-w-0 shrink-0 justify-center lg:justify-start">
                   <AthleteLuxuryCard
                     language={language}
@@ -13960,8 +14117,8 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="flex min-h-0 flex-1 gap-1 overflow-hidden lg:flex-row flex-col">
-                <article className="auth-glass-card flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-2">
+              <div className="flex shrink-0 gap-1 lg:flex-row flex-col">
+                <article className="auth-glass-card flex min-h-[240px] min-w-0 flex-1 flex-col overflow-hidden p-2">
                   <div className="flex shrink-0 flex-wrap items-center justify-between gap-1">
                     <div>
                       <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-brand-200">Suivi athlète</p>
@@ -14006,8 +14163,10 @@ export default function App() {
               </div>
 
               <div className="dashboard-row-appo-program grid shrink-0 gap-1 lg:grid-cols-2">
-                <article className="auth-glass-card p-2 md:p-2.5">
-                  <div className="flex flex-wrap items-end justify-between gap-1">
+                <article className="auth-glass-card group relative overflow-hidden p-2 md:p-2.5">
+                  <div className="pointer-events-none absolute -left-12 -top-12 h-28 w-28 rounded-full bg-brand-500/20 blur-2xl" aria-hidden />
+                  <div className="pointer-events-none absolute -bottom-14 -right-10 h-28 w-28 rounded-full bg-emerald-500/15 blur-2xl" aria-hidden />
+                  <div className="relative z-10 flex flex-wrap items-end justify-between gap-1">
                     <div>
                       <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-brand-200">
                         {language === "en" ? "Coach Hicham" : language === "ar" ? "المدرب هشام" : "Coach Hicham"}
@@ -14020,7 +14179,7 @@ export default function App() {
                       {language === "en" ? "1:1" : language === "ar" ? "1:1" : "1:1"}
                     </div>
                   </div>
-                  <div className="dashboard-meet-card relative mt-1.5 pl-3.5 pr-2 py-2 sm:pl-4">
+                  <div className="dashboard-meet-card relative z-10 mt-1.5 pl-3.5 pr-2 py-2 sm:pl-4">
                     <div className="grid grid-cols-2 gap-1">
                       {[
                         [
@@ -14047,10 +14206,10 @@ export default function App() {
                       ].map(([label, value]) => (
                         <div
                           key={String(label)}
-                          className="rounded-lg border border-white/10 bg-slate-950/35 px-2 py-1.5 backdrop-blur-sm"
+                          className="rounded-xl border border-brand-300/20 bg-gradient-to-br from-slate-900/60 to-slate-950/30 px-2 py-1.5 backdrop-blur-sm transition group-hover:border-brand-300/40"
                         >
-                          <p className="text-[8px] font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p>
-                          <p className="mt-0.5 truncate text-[10px] font-black text-white">{value}</p>
+                          <p className="text-[8px] font-bold uppercase tracking-[0.12em] text-brand-200/80">{label}</p>
+                          <p className="mt-0.5 truncate text-[11px] font-black text-brand-50">{value}</p>
                         </div>
                       ))}
                     </div>
@@ -14071,7 +14230,7 @@ export default function App() {
                       setActiveNavKey("appointments");
                       navigateTo("/dashboard?view=appointments");
                     }}
-                    className={`mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-lg border px-2 py-1.5 text-[11px] font-black transition ${canJoinAppointment
+                    className={`relative z-10 mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-lg border px-2 py-1.5 text-[11px] font-black transition ${canJoinAppointment
                         ? "dashboard-join-btn-active"
                         : "cursor-not-allowed border-slate-600/50 bg-slate-950/35 text-slate-500"
                       }`}
@@ -14081,7 +14240,7 @@ export default function App() {
                     </svg>
                     {language === "en" ? "Join call" : language === "ar" ? "انضم للمكالمة" : "Rejoindre l'appel"}
                   </button>
-                  <p className="mt-1 hidden text-center text-[9px] text-slate-400 sm:block">
+                  <p className="relative z-10 mt-1 hidden text-center text-[9px] text-slate-400 sm:block">
                     {language === "en"
                       ? "Active 10 min before."
                       : language === "ar"
@@ -14101,7 +14260,7 @@ export default function App() {
                         {language === "en" ? "Last program sent" : language === "ar" ? "آخر برنامج مُرسَل" : "Dernier programme envoyé"}
                       </h2>
                     </div>
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-brand-300/40 bg-brand-500/15 text-brand-200">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-brand-300/50 bg-gradient-to-br from-brand-400/40 to-emerald-500/25 text-white shadow-[0_6px_18px_-6px_rgba(20,184,111,0.7)]">
                       <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                         <path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H18a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6.5A2.5 2.5 0 0 1 4 19.5v-15Z" />
                         <path d="M8 7h8M8 11h8M8 15h5" />
@@ -14187,6 +14346,7 @@ export default function App() {
                     </div>
                   )}
                 </article>
+              </div>
               </div>
             </section>
           )}
