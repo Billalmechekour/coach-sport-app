@@ -1,28 +1,153 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <!doctype html>
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Portfolio Coach Sportif</title>
+    <meta name="theme-color" content="#04070d" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/logo-trident.png" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <title>Hicham-Fit App</title>
+    <style>
+      html, body { margin: 0; background: #04070d; }
+
+      /* ===== Écran de chargement (logo animé) ===== */
+      #hf-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 26px;
+        background:
+          radial-gradient(circle at 50% 34%, rgba(20, 184, 111, 0.14), transparent 46%),
+          radial-gradient(circle at 50% 40%, #0b1220 0%, #070b13 58%, #04070d 100%);
+        transition: opacity 0.55s ease, visibility 0.55s ease;
+      }
+      #hf-splash.hf-splash--hide {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      .hf-splash__stage {
+        position: relative;
+        width: 132px;
+        height: 132px;
+        display: grid;
+        place-items: center;
+      }
+      .hf-splash__ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: conic-gradient(
+          from 0deg,
+          rgba(34, 197, 94, 0) 0deg,
+          rgba(34, 197, 94, 0) 190deg,
+          rgba(20, 184, 111, 0.75) 300deg,
+          #4ade80 360deg
+        );
+        -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+        mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+        animation: hf-spin 1.05s linear infinite;
+      }
+      .hf-splash__ring--soft {
+        inset: 12px;
+        opacity: 0.4;
+        animation-duration: 1.7s;
+        animation-direction: reverse;
+      }
+      .hf-splash__glow {
+        position: absolute;
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(34, 197, 94, 0.42), transparent 68%);
+        filter: blur(6px);
+        animation: hf-breathe 1.9s ease-in-out infinite;
+      }
+      .hf-splash__logo {
+        position: relative;
+        width: 60px;
+        height: auto;
+        filter:
+          brightness(0) invert(1)
+          drop-shadow(0 0 10px rgba(74, 222, 128, 0.9))
+          drop-shadow(0 0 24px rgba(34, 197, 94, 0.55));
+        animation: hf-breathe 1.9s ease-in-out infinite;
+      }
+
+      .hf-splash__brand {
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+        font-weight: 900;
+        letter-spacing: 0.3em;
+        font-size: 13px;
+        text-indent: 0.3em;
+        color: #eafaf1;
+        animation: hf-fadepulse 1.9s ease-in-out infinite;
+      }
+      .hf-splash__brand b { color: #4ade80; }
+
+      .hf-splash__bar {
+        position: relative;
+        width: 148px;
+        height: 4px;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.16);
+        overflow: hidden;
+      }
+      .hf-splash__bar::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 42%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(20, 184, 111, 0.2), #14b86f, #4ade80);
+        animation: hf-slide 1.25s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+      }
+
+      @keyframes hf-spin { to { transform: rotate(360deg); } }
+      @keyframes hf-breathe {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.09); }
+      }
+      @keyframes hf-fadepulse {
+        0%, 100% { opacity: 0.5; }
+        50% { opacity: 1; }
+      }
+      @keyframes hf-slide {
+        0% { transform: translateX(-120%); }
+        100% { transform: translateX(360%); }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .hf-splash__ring, .hf-splash__ring--soft, .hf-splash__glow,
+        .hf-splash__logo, .hf-splash__brand, .hf-splash__bar::after {
+          animation-duration: 0.001ms;
+          animation-iteration-count: 1;
+        }
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+
+    <!-- Écran de chargement affiché immédiatement, retiré au montage de l'app -->
+    <div id="hf-splash" role="status" aria-label="Chargement">
+      <div class="hf-splash__stage">
+        <div class="hf-splash__glow"></div>
+        <div class="hf-splash__ring"></div>
+        <div class="hf-splash__ring hf-splash__ring--soft"></div>
+        <img class="hf-splash__logo" src="/logo-trident.png" alt="" />
+      </div>
+      <div class="hf-splash__brand">HICHAM&#8209;FIT <b>APP</b></div>
+    </div>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

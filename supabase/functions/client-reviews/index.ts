@@ -21,9 +21,17 @@ const reviewFields = `
   )
 `;
 
+const COACH_EMAIL = "noreply.hicham.fit@gmail.com";
+
+function isCoachUser(user: { email?: string | null; app_metadata?: Record<string, unknown>; user_metadata?: Record<string, unknown> }) {
+  const email = String(user.email || "").trim().toLowerCase();
+  if (email === COACH_EMAIL) return true;
+  return Boolean(user.app_metadata?.is_coach || user.user_metadata?.is_coach);
+}
+
 function normalizeAction(value: unknown) {
   const action = String(value || "list").trim().toLowerCase();
-  return ["list", "save", "delete"].includes(action) ? action : "list";
+  return ["list", "save", "delete", "coach-delete"].includes(action) ? action : "list";
 }
 
 function normalizeMessage(value: unknown) {
@@ -116,6 +124,35 @@ Deno.serve(async (request) => {
       }
 
       return jsonResponse({ success: true, deleted: true });
+    }
+
+    // Suppression par le coach : un/plusieurs avis (reviewIds) ou tous (all: true).
+    if (action === "coach-delete") {
+      if (!isCoachUser(user)) {
+        return errorResponse(403, "FORBIDDEN", "Action réservée au coach.");
+      }
+
+      const ids = Array.isArray(payload.reviewIds)
+        ? payload.reviewIds.map((id: unknown) => String(id || "").trim()).filter(Boolean)
+        : [];
+      const deleteAll = payload.all === true;
+
+      if (!ids.length && !deleteAll) {
+        return errorResponse(400, "NO_REVIEWS", "Aucun avis à supprimer.");
+      }
+
+      let query = supabase.from("client_reviews").delete();
+      query = ids.length
+        ? query.in("id", ids)
+        : query.neq("id", "00000000-0000-0000-0000-000000000000");
+
+      const { error } = await query;
+      if (error) {
+        console.error("coach review delete error", error);
+        return errorResponse(500, "REVIEW_DELETE_FAILED", "Impossible de supprimer les avis.");
+      }
+
+      return jsonResponse({ success: true, deleted: true, deletedCount: ids.length || null });
     }
 
     const message = normalizeMessage(payload.message);

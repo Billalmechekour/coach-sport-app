@@ -28,6 +28,12 @@ verify_jwt = false
 [functions.client-reviews]
 verify_jwt = false
 
+[functions.site-contacts]
+verify_jwt = false
+
+[functions.messages]
+verify_jwt = false
+
 [functions.send-invoice]
 verify_jwt = false
 

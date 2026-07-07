@@ -359,7 +359,7 @@ body {
   min-height: 100vh;
   background-color: #020817;
   background-image:
-    linear-gradient(112deg, rgba(2, 6, 23, 0.58) 0%, rgba(2, 6, 23, 0.26) 43%, rgba(4, 120, 87, 0.2) 100%),
+    linear-gradient(112deg, rgba(2, 6, 23, 0.42) 0%, rgba(2, 6, 23, 0.14) 43%, rgba(4, 120, 87, 0.16) 100%),
     radial-gradient(circle at 12% 14%, rgba(52, 199, 89, 0.36), transparent 27%),
     radial-gradient(circle at 86% 9%, rgba(52, 211, 153, 0.22), transparent 28%),
     url("/image background creer compte et connexion.png");
@@ -374,7 +374,7 @@ body {
   inset: 0;
   z-index: -2;
   background:
-    linear-gradient(180deg, rgba(2, 6, 23, 0.2), rgba(2, 6, 23, 0.76)),
+    linear-gradient(180deg, rgba(2, 6, 23, 0.1), rgba(2, 6, 23, 0.55)),
     radial-gradient(circle at 50% 100%, rgba(52, 199, 89, 0.2), transparent 42%);
 }
 
@@ -395,16 +395,16 @@ body {
 .auth-page.theme-light {
   background-color: #f8fafc;
   background-image:
-    linear-gradient(112deg, rgba(248, 250, 252, 0.52) 0%, rgba(236, 253, 245, 0.2) 46%, rgba(187, 247, 208, 0.24) 100%),
-    radial-gradient(circle at 13% 15%, rgba(52, 199, 89, 0.26), transparent 28%),
-    radial-gradient(circle at 86% 9%, rgba(14, 165, 233, 0.14), transparent 26%),
+    linear-gradient(112deg, rgba(248, 250, 252, 0.1) 0%, rgba(236, 253, 245, 0.02) 46%, rgba(187, 247, 208, 0.05) 100%),
+    radial-gradient(circle at 13% 15%, rgba(52, 199, 89, 0.14), transparent 28%),
+    radial-gradient(circle at 86% 9%, rgba(14, 165, 233, 0.1), transparent 26%),
     url("/image background creer compte et connexion.png");
 }
 
 .auth-page.theme-light::before {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(248, 250, 252, 0.6)),
-    radial-gradient(circle at 50% 100%, rgba(52, 199, 89, 0.16), transparent 42%);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(248, 250, 252, 0.16)),
+    radial-gradient(circle at 50% 100%, rgba(52, 199, 89, 0.12), transparent 42%);
 }
 
 .auth-nav {
@@ -965,9 +965,75 @@ body {
 }
 
 .auth-page--dashboard-wrap .dashboard-stat-icon {
-  width: 1.75rem !important;
-  min-width: 1.75rem !important;
-  height: 1.75rem !important;
+  width: 3.75rem !important;
+  min-width: 3.75rem !important;
+  height: 3.75rem !important;
+  overflow: hidden;
+  border: 1.5px solid rgba(16, 185, 129, 0.3) !important;
+  background: radial-gradient(circle at 50% 40%, #f4fdf8, #e6f8ef 78%) !important;
+  box-shadow:
+    0 4px 10px rgba(16, 185, 129, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+.auth-page--dashboard-wrap .dashboard-stat-icon img {
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  transform: none;
+}
+
+@media (min-width: 1024px) {
+  .auth-page--dashboard-wrap .dashboard-stat-icon {
+    width: 4.25rem !important;
+    min-width: 4.25rem !important;
+    height: 4.25rem !important;
+  }
+
+  .auth-page--dashboard-wrap .dashboard-stat-icon img {
+    width: 2.65rem !important;
+    height: 2.65rem !important;
+    transform: none;
+  }
+}
+
+/* Tailles individuelles par icône (poids plus petit, objectif plus grand) */
+/* Poids : badge recadré en CSS depuis le PNG original (l'anneau intégré est coupé) */
+.auth-page--dashboard-wrap .dashboard-stat-icon .stat-icon--poids-crop {
+  display: block;
+  width: 2.25rem;
+  height: 2.25rem;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 147%;
+}
+
+@media (min-width: 1024px) {
+  .auth-page--dashboard-wrap .dashboard-stat-icon .stat-icon--poids-crop {
+    width: 2.65rem;
+    height: 2.65rem;
+  }
+}
+
+.auth-page--dashboard-wrap .dashboard-stat-icon img.stat-icon--poids {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+}
+
+.auth-page--dashboard-wrap .dashboard-stat-icon img.stat-icon--objectif {
+  width: 2.8rem !important;
+  height: 2.8rem !important;
+}
+
+@media (min-width: 1024px) {
+  .auth-page--dashboard-wrap .dashboard-stat-icon img.stat-icon--poids {
+    width: 1.75rem !important;
+    height: 1.75rem !important;
+  }
+
+  .auth-page--dashboard-wrap .dashboard-stat-icon img.stat-icon--objectif {
+    width: 3.15rem !important;
+    height: 3.15rem !important;
+  }
 }
 
 .auth-page--dashboard-wrap .dashboard-program-card__day {
@@ -1070,46 +1136,138 @@ body {
 .dashboard-stat-card {
   position: relative;
   overflow: hidden;
-  border-radius: 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: linear-gradient(165deg, rgba(255, 255, 255, 0.1), rgba(2, 8, 23, 0.42));
+  border-radius: 0.8rem;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  background:
+    radial-gradient(circle at calc(100% - 2.2rem) 50%, rgba(148, 163, 184, 0.16) 0 1px, transparent 1.4px) 0 0 / 8px 8px,
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94));
   box-shadow:
-    0 22px 56px rgba(2, 8, 23, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    0 10px 28px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
   transition:
     transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1),
     box-shadow 220ms ease,
     border-color 220ms ease;
 }
 
+.dashboard-stat-card--profile {
+  display: flex;
+  min-height: 5.15rem;
+  align-items: center;
+  gap: 0.95rem;
+  padding: 0.45rem 0.95rem;
+}
+
 .dashboard-stat-card::before {
   content: "";
   position: absolute;
-  inset: 0 0 auto 0;
-  height: 3px;
-  background: linear-gradient(90deg, #14b86f, #34d399, #2dd4bf);
-  opacity: 0.95;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(16, 185, 129, 0.1), transparent 44%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.86), transparent 52%);
+  opacity: 0.9;
 }
 
 .dashboard-stat-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(52, 211, 153, 0.38);
+  transform: translateY(-2px);
+  border-color: rgba(16, 185, 129, 0.34);
   box-shadow:
-    0 28px 64px rgba(2, 8, 23, 0.38),
-    0 0 0 1px rgba(52, 211, 153, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+    0 16px 34px rgba(15, 23, 42, 0.12),
+    0 0 0 1px rgba(16, 185, 129, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.dashboard-stat-card__label {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  line-height: 1.15;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.dashboard-stat-card__value {
+  position: relative;
+  z-index: 1;
+  display: -webkit-box;
+  margin: 0.36rem 0 0;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: clamp(1.05rem, 1.85vw, 1.42rem);
+  font-weight: 950;
+  line-height: 1.05;
+  color: #12833f;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-stat-card__unit {
+  font-size: 0.62em;
+  font-weight: 800;
+  color: #64748b;
+}
+
+.dashboard-stat-card__content {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.dashboard-stat-card__deco {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .dashboard-stat-card__deco {
+    display: flex;
+    align-items: center;
+    gap: 1.3rem;
+    margin-left: auto;
+    padding-left: 0.75rem;
+    flex: 0 0 auto;
+  }
+
+  .dashboard-stat-card__deco::before {
+    content: "";
+    width: 1px;
+    height: 2.7rem;
+    background: linear-gradient(180deg, transparent, rgba(148, 163, 184, 0.4), transparent);
+  }
+
+  .dashboard-stat-card__deco svg {
+    width: 3rem;
+    height: 3rem;
+    flex: 0 0 auto;
+    color: rgba(16, 185, 129, 0.2);
+  }
 }
 
 .dashboard-stat-icon {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 0.85rem;
-  background: linear-gradient(145deg, rgba(20, 184, 111, 0.35), rgba(15, 23, 42, 0.65));
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: 0 10px 24px rgba(2, 8, 23, 0.28);
+  width: 4rem;
+  height: 4rem;
+  flex: 0 0 auto;
+  border-radius: 9999px;
+  border: 1px solid rgba(16, 185, 129, 0.24);
+  background:
+    radial-gradient(circle at 35% 22%, rgba(255, 255, 255, 0.95), rgba(236, 253, 245, 0.72) 44%, rgba(209, 250, 229, 0.48));
+  box-shadow:
+    0 10px 22px rgba(16, 185, 129, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.dashboard-stat-icon img {
+  width: 2.85rem;
+  height: 2.85rem;
+  object-fit: contain;
 }
 
 .dashboard-meet-card {
@@ -1130,6 +1288,99 @@ body {
   background: linear-gradient(180deg, #14b86f, #34d399);
   opacity: 0.85;
   border-radius: 4px 0 0 4px;
+}
+
+/* ===== Carrousel d'avis (défilement animé infini vers la droite) ===== */
+.hf-reviews-marquee {
+  position: relative;
+  overflow: hidden;
+  padding: 0.5rem 0;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
+}
+.hf-reviews-marquee__track {
+  display: flex;
+  width: max-content;
+  animation: hf-reviews-scroll 48s linear infinite;
+  will-change: transform;
+}
+.hf-reviews-marquee:hover .hf-reviews-marquee__track,
+.hf-reviews-marquee:focus-within .hf-reviews-marquee__track {
+  animation-play-state: paused;
+}
+.hf-review-card {
+  width: 25rem;
+  margin-right: 1rem;
+  flex: 0 0 auto;
+  background: #ffffff;
+  box-shadow: 0 18px 44px -30px rgba(0, 0, 0, 0.55);
+  transition: transform 260ms ease, box-shadow 260ms ease, border-color 260ms ease;
+}
+.hf-review-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 26px 60px -28px rgba(0, 0, 0, 0.5);
+}
+/* Texte foncé sur cartes blanches */
+.hf-review-card .text-white { color: #0f172a; }
+.hf-review-card .text-slate-200 { color: #475569; }
+.hf-review-card .text-slate-400 { color: #64748b; }
+.hf-review-card .text-slate-600 { color: #cbd5e1; }
+.hf-review-card .text-brand-200 { color: #047857; }
+@keyframes hf-reviews-scroll {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
+}
+@media (max-width: 640px) {
+  .hf-review-card { width: 16.5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hf-reviews-marquee__track { animation: none; }
+}
+
+.dashboard-next-appointment-card {
+  border-color: rgba(16, 185, 129, 0.72) !important;
+  height: 100%;
+  min-height: 0;
+  box-shadow:
+    0 18px 42px rgba(16, 185, 129, 0.12),
+    0 0 0 1px rgba(16, 185, 129, 0.18) inset,
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+}
+
+.dashboard-last-program-card {
+  align-items: stretch;
+  border-color: rgba(16, 185, 129, 0.72) !important;
+  height: 100%;
+  justify-content: flex-start !important;
+  min-height: 0;
+  box-shadow:
+    0 18px 42px rgba(16, 185, 129, 0.12),
+    0 0 0 1px rgba(16, 185, 129, 0.18) inset,
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+}
+
+.dashboard-last-program-card__header,
+.dashboard-last-program-card__body {
+  flex: 0 0 auto;
+  transform: translateY(0);
+}
+
+.dashboard-last-program-card__body .dashboard-outline-program-btn {
+  margin-top: 0.375rem;
+}
+
+.dashboard-next-appointment-card .dashboard-rdv-bar {
+  margin-top: 0.45rem;
+  padding-top: 0.45rem;
+  padding-bottom: 0.45rem;
+}
+
+.dashboard-next-appointment-card .dashboard-rdv-bar + div {
+  margin-top: 0.45rem;
+}
+
+.dashboard-next-appointment-card > p:last-child {
+  margin-top: 0.35rem;
 }
 
 .dashboard-program-card {
@@ -1191,8 +1442,10 @@ body {
 }
 
 .auth-page.theme-light .dashboard-stat-card {
-  background: linear-gradient(165deg, rgba(255, 255, 255, 0.85), rgba(241, 245, 249, 0.65));
-  border-color: rgba(148, 163, 184, 0.4);
+  background:
+    radial-gradient(circle at calc(100% - 2.2rem) 50%, rgba(148, 163, 184, 0.16) 0 1px, transparent 1.4px) 0 0 / 8px 8px,
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94));
+  border-color: rgba(226, 232, 240, 0.92);
 }
 
 .auth-page.theme-light .dashboard-meet-card {
@@ -1270,6 +1523,13 @@ body {
   .athlete-card-stage {
     width: clamp(22rem, 36vw, 31.25rem);
     max-width: none;
+    align-items: stretch;
+  }
+
+  .athlete-card-stage .athlete-pro-card {
+    aspect-ratio: auto;
+    height: 100%;
+    align-self: flex-start;
   }
 }
 
@@ -1478,7 +1738,7 @@ body {
   width: 92%;
   margin-left: 4%;
   margin-top: clamp(3.1rem, 12.5cqw, 4.05rem);
-  height: 9.5rem;
+  height: 8.4rem;
   flex-shrink: 0;
   padding: 2px;
   background: linear-gradient(180deg, #4ade80, #22c55e, #16a34a);
@@ -1696,16 +1956,16 @@ body {
 
 .athlete-pro-card__icon-hex {
   display: inline-flex;
-  height: 1.3rem;
-  width: 1.3rem;
+  height: 1.12rem;
+  width: 1.12rem;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
 }
 
 .athlete-pro-card__icon-hex svg {
-  width: 1.15rem;
-  height: 1.15rem;
+  width: 1rem;
+  height: 1rem;
   color: #22c55e !important;
   filter: drop-shadow(0 0 4px rgba(34,197,94,0.65));
 }
@@ -1721,12 +1981,12 @@ body {
   color: #22c55e;
   font-weight: 800;
   text-align: center;
-  font-size: 0.7rem;
+  font-size: 0.6rem;
 }
 
 .athlete-pro-card__label {
   margin: 0;
-  font-size: 0.62rem;
+  font-size: 0.54rem;
   font-weight: 600;
   line-height: 1.3;
   letter-spacing: 0.02em;
@@ -1735,7 +1995,7 @@ body {
 
 .athlete-pro-card__value {
   margin: 0;
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   font-weight: 800;
   line-height: 1.2;
   color: #4ade80;
@@ -2215,13 +2475,42 @@ body {
   letter-spacing: 0.18em;
   color: rgba(74, 222, 128, 0.85);
   text-transform: uppercase;
+  margin-bottom: 0.25rem;
 }
+
+/* Pastille « non lus » sur l'icône de messagerie du menu */
+.hf-sidebar__item-icon { position: relative; }
+.hf-sidebar__item-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #ef4444;
+  box-shadow: 0 0 0 2px rgba(2, 8, 23, 0.9);
+}
+.hf-sidebar__item-count {
+  margin-left: auto;
+  min-width: 1.15rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 900;
+  line-height: 1.15rem;
+  text-align: center;
+}
+.hf-sidebar.is-collapsed .hf-sidebar__item-count { display: none; }
 
 .hf-sidebar__brand-title {
   font-family: 'Orbitron', system-ui, sans-serif;
-  font-size: 0.95rem;
+  font-size: 0.86rem;
   font-weight: 900;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.01em;
+  line-height: 1.08;
+  white-space: nowrap;
   color: #fff;
   text-shadow: 0 0 10px rgba(34, 197, 94, 0.45);
 }
@@ -2865,6 +3154,10 @@ body {
 .hf-review-card__message {
   overflow-wrap: anywhere;
   word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* Dashboard settings */

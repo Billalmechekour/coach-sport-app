@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { createClient } from "@supabase/supabase-js";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import coachHero from "./assets/images/hicham-hero-v2.jpg";
@@ -14,6 +15,8 @@ import mmImage from "./assets/certifications/mm.jpg";
 import hmLogo from "./assets/images/logo-trident.png";
 import noAppointmentsGif from "./assets/images/no-appointments.gif";
 import exercisesFrData from "./assets/exercises-fr.json";
+
+const COACH_DISPLAY_NAME = "Hicham Mechekour";
 
 const portfolioData = {
   fr: {
@@ -1346,7 +1349,7 @@ const healthStatusValues = [
   { value: "ongoing", label: "En cours" },
   { value: "completed", label: "Terminé" }
 ];
-const dashboardNavKeys = new Set(["dashboard", "programs", "shop", "exercises", "appointments", "settings"]);
+const dashboardNavKeys = new Set(["dashboard", "programs", "shop", "exercises", "appointments", "messages", "comments", "settings"]);
 const sportProfileFields =
   "first_name,last_name,date_of_birth,sex,country_code,avatar_url,phone_number,phone_country_code,phone_verified_at,address_line1,address_line2,postal_code,city,region,created_at,height_cm,current_weight_kg,has_no_sport,sport_practices,sport_practiced,sport_level,sport_goal,sport_goal_custom,sessions_per_week,injuries,remarks,has_no_supplement,dietary_supplements,has_no_injury,injury_history,has_no_medical_information,medical_information,sport_profile_completed_at";
 const countryDialCodeMap = {
@@ -1674,6 +1677,8 @@ const athleteAvatarCatalog = {
   male: Array.from({ length: 10 }, (_, index) => `/avatars/homme/avatar-homme-${index + 1}.png`),
   female: Array.from({ length: 10 }, (_, index) => `/avatars/femme%20/avatar-femme-${index + 1}.png`)
 };
+// Avatars réservés au coach (public/avatars-coach/1.png … 10.png)
+const coachAvatarCatalog = Array.from({ length: 10 }, (_, index) => `/avatars-coach/${index + 1}.png`);
 
 function getAthleteAvatarOptions(sex) {
   return String(sex || "").toLowerCase() === "female" ? athleteAvatarCatalog.female : athleteAvatarCatalog.male;
@@ -2358,10 +2363,47 @@ function getInitials(name = "") {
   return initials.toUpperCase() || "HF";
 }
 
+function formatPersonName(name = "") {
+  return String(name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) =>
+      word
+        .split("-")
+        .map((part) =>
+          part ? `${part[0].toLocaleUpperCase("fr-FR")}${part.slice(1).toLocaleLowerCase("fr-FR")}` : ""
+        )
+        .join("-")
+    )
+    .join(" ");
+}
+
+function getNameInitials(firstName = "", lastName = "", fallbackName = "") {
+  const names = [firstName, lastName].map((name) => String(name || "").trim()).filter(Boolean);
+  const initials = names.map((name) => name[0]).join("");
+  return initials.length >= 2 ? initials.toUpperCase() : getInitials(names.join(" ") || fallbackName);
+}
+
+function BrandAppText({ text = "HICHAM-FIT APP", appClassName = "" }) {
+  const value = String(text || "");
+  const appIndex = value.toUpperCase().lastIndexOf("APP");
+
+  if (appIndex < 0) return value;
+
+  return (
+    <>
+      {value.slice(0, appIndex)}
+      <span className={appClassName}>{value.slice(appIndex, appIndex + 3)}</span>
+      {value.slice(appIndex + 3)}
+    </>
+  );
+}
+
 function getUserDisplayName(user) {
   if (!user) return "";
 
-  const fullName = String(user.fullName || `${user.firstName || ""} ${user.lastName || ""}`).trim();
+  const fullName = formatPersonName(user.fullName || `${user.firstName || ""} ${user.lastName || ""}`);
   return fullName || user.email || "Athlete";
 }
 
@@ -2523,11 +2565,11 @@ const athleteCardDecorUrl = "/decor de la carte athlete.png";
 function DashboardAdCarousel({ firstName, go }) {
   const slides = [
     { tag: "Bienvenue", emoji: "👋", hero: "/image_Slide0.png", title: `Bienvenue ${firstName || ""} sur Hicham Fit App`.trim(), desc: "Progressez avec un meilleur suivi, accédez à vos programmes personnalisés, découvrez vos exercices et avancez à votre rythme avec l'accompagnement de Coach Hicham." },
-    { tag: "Boutique", emoji: "🛍️", title: "Découvrez notre boutique sportive", desc: "Retrouvez des produits sélectionnés pour accompagner vos entraînements et améliorer vos performances.", btn: "Voir la boutique", view: "shop" },
-    { tag: "Programme", emoji: "📋", title: "Programme personnalisé disponible", desc: "Suivez un programme adapté à votre objectif et progressez étape par étape avec Coach Hicham.", btn: "Voir mes programmes", view: "programs" },
-    { tag: "Exercices", emoji: "🏋️", title: "Explorez la bibliothèque d'exercices", desc: "Accédez à une bibliothèque complète d'exercices avec démonstrations, conseils et filtres pour construire vos séances plus facilement.", btn: "Voir les exercices", view: "exercises" },
-    { tag: "Paiement sécurisé", emoji: "🔒", title: "Paiement sécurisé et flexible", desc: "Réglez vos programmes, produits ou abonnements en toute simplicité : carte bancaire, PayPal, Revolut Pay et autres méthodes via Stripe." },
-    { tag: "Rendez-vous", emoji: "📅", title: "Prenez rendez-vous avec Coach Hicham", desc: "Réservez un rendez-vous en visio ou en appel audio pour poser vos questions, ajuster votre programme, suivre votre progression et recevoir des conseils personnalisés.", btn: "Prendre rendez-vous", view: "appointments" },
+    { tag: "Boutique", emoji: "🛍️", hero: "/image_Slide1.png", title: "Découvrez notre boutique sportive", desc: "Retrouvez des produits sélectionnés pour accompagner vos entraînements et améliorer vos performances.", btn: "Voir la boutique", view: "shop" },
+    { tag: "Programme", emoji: "📋", hero: "/image_Slide2.png", title: "Programme personnalisé disponible", desc: "Suivez un programme adapté à votre objectif et progressez étape par étape avec Coach Hicham.", btn: "Voir mes programmes", view: "programs" },
+    { tag: "Exercices", emoji: "🏋️", hero: "/image_Slide3.png", title: "Explorez la bibliothèque d'exercices", desc: "Accédez à une bibliothèque complète d'exercices avec démonstrations, conseils et filtres pour construire vos séances plus facilement.", btn: "Voir les exercices", view: "exercises" },
+    { tag: "Paiement sécurisé", emoji: "🔒", hero: "/image_Slide4.png", title: "Paiement sécurisé et flexible", desc: "Réglez vos programmes, produits ou abonnements en toute simplicité : carte bancaire, PayPal, Revolut Pay et autres méthodes via Stripe." },
+    { tag: "Rendez-vous", emoji: "📅", hero: "/image_Slide5.png", title: "Prenez rendez-vous avec Coach Hicham", desc: "Réservez un rendez-vous en visio ou en appel audio pour poser vos questions, ajuster votre programme, suivre votre progression et recevoir des conseils personnalisés.", btn: "Prendre rendez-vous", view: "appointments" },
   ];
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -2546,27 +2588,87 @@ function DashboardAdCarousel({ firstName, go }) {
     </div>
   );
 
-  // Slide 0 (Bienvenue) : carte compacte — texte à gauche + photo fondue à droite (cadrage tête visible).
+  // Slide 0 (Bienvenue) : les atouts restent rattaches au bloc texte, sous le paragraphe.
   if (s.hero) {
+    const isWelcomeSlide = s.tag === "Bienvenue";
+    const isPaymentSlide = s.tag === "Paiement sécurisé";
+    const heroFeatures = [
+      { label: "Suivi intelligent", icon: (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M4 20h16" /><rect x="5" y="12" width="3" height="7" rx="0.6" /><rect x="10.5" y="8" width="3" height="11" rx="0.6" /><rect x="16" y="4" width="3" height="15" rx="0.6" /></svg>) },
+      { label: "Programmes personnalisés", icon: (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><rect x="6" y="4" width="12" height="16" rx="2" /><rect x="9" y="2.5" width="6" height="3" rx="1" /><path d="M9.5 12.5l2 2 3.5-3.5" /></svg>) },
+      { label: "Exercices variés", icon: (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M4 9v6M7 7v10M17 7v10M20 9v6" /><path d="M7 12h10" /></svg>) },
+      { label: "Accompagnement expert", icon: (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><circle cx="12" cy="8" r="4" /><path d="M4.5 20a7.5 7.5 0 0115 0" /></svg>) },
+    ];
     return (
-      <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} className="relative flex min-h-[210px] shrink-0 flex-col justify-center overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-white via-emerald-50/70 to-slate-100 shadow-inner md:min-h-[250px]">
-        <img
-          src={s.hero}
-          alt="Hicham Fit App"
-          onError={(e) => { e.currentTarget.style.display = "none"; }}
-          className="pointer-events-none absolute right-0 top-0 hidden h-full w-[62%] object-cover object-[42%_18%] sm:block"
-          style={{ maskImage: "linear-gradient(to right, transparent 0%, #000 24%)", WebkitMaskImage: "linear-gradient(to right, transparent 0%, #000 24%)" }}
-        />
-        <div className="relative z-10 flex flex-1 flex-col justify-start px-5 py-4 md:px-7 md:py-5">
-          <h3 className="max-w-[64%] font-display font-black leading-tight text-slate-900 sm:max-w-[54%]">
-            <span className="block text-2xl leading-none sm:text-3xl md:text-[36px]">Bienvenue</span>
-            <span className="mt-1 block text-xl sm:text-2xl md:text-[28px]">
-              <span className="capitalize text-emerald-500">{firstName || ""}</span> sur Hicham Fit App
-            </span>
-          </h3>
-          <p className="mt-2 max-w-[62%] text-xs leading-snug text-slate-600 sm:max-w-[52%] sm:text-sm">
-            Progressez avec un meilleur suivi, accédez à vos programmes personnalisés, découvrez vos exercices et avancez à votre rythme avec l'accompagnement de <span className="font-semibold text-emerald-600">Coach Hicham</span>.
-          </p>
+      <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} className="relative flex h-[238px] shrink-0 flex-col overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-white via-emerald-50/70 to-slate-100 shadow-inner md:h-[252px]">
+        <div className="relative min-h-0 flex-1">
+          <img
+            src={s.hero}
+            alt="Hicham Fit App"
+            onError={(e) => { e.currentTarget.style.display = "none"; }}
+            className={`pointer-events-none absolute right-0 top-0 hidden h-full object-fill object-right sm:block ${isPaymentSlide ? "w-[74%]" : "w-[68%]"}`}
+            style={{
+              maskImage: "linear-gradient(to right, transparent 0%, transparent 9%, rgba(0,0,0,0.7) 20%, #000 32%)",
+              WebkitMaskImage: "linear-gradient(to right, transparent 0%, transparent 9%, rgba(0,0,0,0.7) 20%, #000 32%)"
+            }}
+          />
+          <div className="relative z-10 flex h-full flex-col justify-center px-5 py-4 pb-6 md:px-7 md:py-5 md:pb-7">
+            <div className="max-w-full sm:max-w-[55%]">
+              {isWelcomeSlide ? (
+                <>
+                  <div className="translate-y-2">
+                    <h3 className="mt-2 font-display text-2xl font-black leading-tight text-slate-900 sm:text-3xl md:text-[34px]">
+                      Bienvenue {firstName ? <><span className="capitalize text-emerald-500">{firstName}</span> </> : null}sur Hicham Fit App
+                    </h3>
+                    <p className="mt-2 border-l-2 border-emerald-400 pl-3 text-[11px] leading-snug text-slate-600 sm:text-xs">
+                      Progressez avec un meilleur suivi, accédez à vos programmes personnalisés, découvrez vos exercices et avancez à votre rythme avec l'accompagnement de <span className="font-semibold text-emerald-600">Coach Hicham</span>.
+                    </p>
+                  </div>
+                  <div className="mt-5 grid w-fit max-w-full translate-y-2 grid-cols-[repeat(4,4.35rem)] gap-0 rounded-2xl border border-white/90 bg-white/80 px-2 py-1.5 shadow-[0_14px_30px_rgba(15,23,42,0.09)] backdrop-blur sm:grid-cols-[repeat(4,5.35rem)] sm:gap-1 sm:px-3 md:mt-6 md:grid-cols-[repeat(4,5.75rem)] md:py-2">
+                    {heroFeatures.map((f) => (
+                      <div key={f.label} className="flex min-w-0 flex-col items-center gap-1 text-center text-emerald-500">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-emerald-50 to-emerald-100/70 text-emerald-600 ring-1 ring-emerald-200/80 shadow-[0_2px_5px_rgba(16,185,129,0.18)] sm:h-7 sm:w-7" aria-hidden="true">
+                          {f.icon}
+                        </span>
+                        <span className="min-h-[1.65rem] text-[7px] font-semibold leading-tight text-slate-600 sm:text-[9px] md:text-[10px]">{f.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="translate-y-2">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">{s.tag}</p>
+                  <h3 className="mt-2 font-display text-2xl font-black leading-tight text-slate-900 sm:text-3xl md:text-[34px]">
+                    {s.title}
+                  </h3>
+                  <p className="mt-3 border-l-2 border-emerald-400 pl-3 text-xs leading-snug text-slate-600 sm:text-sm">
+                    {s.desc}
+                  </p>
+                  {isPaymentSlide ? (
+                    <div className="mt-3 grid w-full max-w-[21rem] grid-cols-3 gap-1.5 sm:gap-2" aria-label="Moyens de paiement acceptés">
+                      {[
+                        ["Visa", "/payement/visa.png", ""],
+                        ["Mastercard", "/payement/mastercard.png", "scale-[1.28]"],
+                        ["Carte bancaire", "/payement/carre_bancaire.png", "scale-[1.2]"],
+                        ["PayPal", "/payement/paypal.png", ""],
+                        ["Revolut", "/payement/revolut.png", "scale-[1.28]"],
+                        ["CCP Poste Algerie", "/payement/ccp.png", "scale-[1.22]"],
+                      ].map(([name, src, logoScale]) => (
+                        <span key={name} className="inline-flex h-8 min-w-0 items-center justify-center rounded-lg border border-slate-200 bg-white/90 p-1 shadow-sm">
+                          <img src={src} alt={name} className={`h-full w-full object-contain ${logoScale}`} loading="lazy" />
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                  {s.btn ? (
+                    <button type="button" onClick={() => go(s.view)} className="mt-4 inline-flex items-center gap-2 rounded-xl border-2 border-emerald-300 bg-emerald-400 px-4 py-2 text-xs font-black text-slate-950 shadow-[0_12px_26px_rgba(16,185,129,0.20)] transition hover:bg-emerald-300 sm:text-sm">
+                      {s.btn}
+                      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                    </button>
+                  ) : null}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
         {nav}
       </div>
@@ -2574,7 +2676,7 @@ function DashboardAdCarousel({ firstName, go }) {
   }
 
   return (
-    <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} className="relative flex min-h-[210px] shrink-0 flex-col justify-center overflow-hidden rounded-2xl border border-brand-300/25 bg-gradient-to-br from-slate-900 via-slate-950 to-emerald-950/50 p-4 md:min-h-[250px] md:p-6">
+    <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} className="relative flex h-[245px] shrink-0 flex-col justify-center overflow-hidden rounded-2xl border border-brand-300/25 bg-gradient-to-br from-slate-900 via-slate-950 to-emerald-950/50 p-4 md:h-[265px] md:p-6">
       <div className="pointer-events-none absolute -left-10 -top-10 h-40 w-40 rounded-full bg-brand-500/25 blur-3xl" aria-hidden />
       <div className="pointer-events-none absolute -bottom-16 right-0 h-40 w-40 rounded-full bg-emerald-500/15 blur-3xl" aria-hidden />
       <div className="relative z-10 flex flex-1 items-center gap-4 md:gap-5">
@@ -2632,7 +2734,8 @@ function AthleteLuxuryCard({ language, fullName, matricule, email, birthDate, co
           ]
         };
 
-  const values = [fullName, matricule || email, birthDate, registrationDate];
+  const displayFullName = formatPersonName(fullName) || fullName;
+  const values = [displayFullName, matricule || email, birthDate, registrationDate];
   const iconClass = "h-3 w-3 text-slate-100";
   const icons = [
     <svg key="u" className={iconClass} viewBox="0 0 24 24" aria-hidden>
@@ -2900,7 +3003,10 @@ function DashboardSidebar({
   onToggleLangMenu,
   athleteName = "",
   athleteSubtitle = "",
-  athleteAvatarUrl = ""
+  athleteAvatarUrl = "",
+  athleteInitials = "",
+  isCoach = false,
+  coachUnread = 0
 }) {
   const labels = {
     fr: {
@@ -2909,6 +3015,8 @@ function DashboardSidebar({
       shop: "Boutique",
       exercises: "Exercices",
       appointments: "Rendez-vous",
+      messages: "Messagerie",
+      comments: "Commentaires",
       settings: "Paramètres",
       logout: "Déconnexion",
       collapse: "Réduire",
@@ -2922,6 +3030,8 @@ function DashboardSidebar({
       shop: "Shop",
       exercises: "Exercises",
       appointments: "Appointments",
+      messages: "Messages",
+      comments: "Comments",
       settings: "Settings",
       logout: "Logout",
       collapse: "Collapse",
@@ -2935,6 +3045,8 @@ function DashboardSidebar({
       shop: "المتجر",
       exercises: "تمارين",
       appointments: "المواعيد",
+      messages: "الرسائل",
+      comments: "التعليقات",
       settings: "الإعدادات",
       logout: "تسجيل الخروج",
       collapse: "طي",
@@ -2999,6 +3111,16 @@ function DashboardSidebar({
         </svg>
       )
     },
+    ...(isCoach ? [{
+      key: "comments",
+      label: t.comments,
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z" />
+          <path d="M8 9h8M8 13h5" />
+        </svg>
+      )
+    }] : []),
     {
       key: "settings",
       label: t.settings,
@@ -3035,7 +3157,7 @@ function DashboardSidebar({
           </button>
           <span className="hf-sidebar__brand-text">
             <span className="hf-sidebar__brand-eyebrow">{t.brandLine}</span>
-            <span className="hf-sidebar__brand-title">{t.brandName}</span>
+            <span className="hf-sidebar__brand-title"><BrandAppText text={t.brandName} /></span>
           </span>
         </div>
 
@@ -3046,7 +3168,7 @@ function DashboardSidebar({
               {athleteAvatarUrl ? (
                 <img src={athleteAvatarUrl} alt="" />
               ) : (
-                athleteName.split(" ").filter(Boolean).slice(0, 2).map((p) => p[0]).join("").toUpperCase() || "?"
+                athleteInitials || getInitials(athleteName) || "?"
               )}
             </span>
             <span className="hf-sidebar__athlete-info">
@@ -3069,8 +3191,12 @@ function DashboardSidebar({
               data-testid={`sidebar-nav-${item.key}`}
               title={item.label}
             >
-              <span className="hf-sidebar__item-icon">{item.icon}</span>
+              <span className="hf-sidebar__item-icon">
+                {item.icon}
+                {item.badge ? <span className="hf-sidebar__item-dot" aria-hidden /> : null}
+              </span>
               <span className="hf-sidebar__item-label">{item.label}</span>
+              {item.badge ? <span className="hf-sidebar__item-count">{item.badge}</span> : null}
               {activeKey === item.key ? <span className="hf-sidebar__item-bar" aria-hidden /> : null}
             </button>
           ))}
@@ -3273,7 +3399,9 @@ function SettingsIcon({ name, className = "" }) {
     danger:
       "M12 2 1.8 20.2h20.4L12 2Zm1 13.4h-2V17h2v-1.6Zm0-6.9h-2v5.1h2V8.5Z",
     save:
-      "M5 3h12l2 2v16H5V3Zm2 2v5h9V5H7Zm2 10v4h6v-4H9Z"
+      "M5 3h12l2 2v16H5V3Zm2 2v5h9V5H7Zm2 10v4h6v-4H9Z",
+    comments:
+      "M4 3.5h16A1.5 1.5 0 0 1 21.5 5v10A1.5 1.5 0 0 1 20 16.5H9.6L4.9 21v-4.5H4A1.5 1.5 0 0 1 2.5 15V5A1.5 1.5 0 0 1 4 3.5Zm3 4.2v1.6h10V7.7H7Zm0 3.4v1.6h7v-1.6H7Z"
   };
 
   return (
@@ -3622,6 +3750,68 @@ function formatSlotRange(time) {
   return `${time}-${addMinutesToTime(time, coachSlotDurationMin)}`;
 }
 
+// Coach Hicham réside en Algérie : les créneaux qu'il définit sont en heure d'Algérie
+// (GMT+1, sans heure d'été). On calcule l'instant réel avec ce décalage fixe, puis on
+// affiche l'heure dans le fuseau local de chaque visiteur (France, etc.).
+const COACH_UTC_OFFSET = "+01:00";
+
+function coachSlotInstant(dateKey, time) {
+  return new Date(`${dateKey}T${time}:00${COACH_UTC_OFFSET}`);
+}
+
+function appointmentConfirmAt(dateKey) {
+  return new Date(`${dateKey}T00:00:00`).getTime();
+}
+
+function appointmentStartAt(appt) {
+  return coachSlotInstant(appt.date, appt.time).getTime();
+}
+
+function getAppointmentStatus(appt, now = new Date()) {
+  if (!appt) return "upcoming";
+  if (appt.cancelled) return "cancelled";
+  if (appt.joined) return "joined";
+  const nowMs = now.getTime();
+  if (nowMs > appointmentStartAt(appt) + 10 * 60000) return "expired";
+  return nowMs < appointmentConfirmAt(appt.date) ? "upcoming" : "confirmed";
+}
+
+function canCancelScheduledAppointment(appt, now = new Date()) {
+  return Boolean(appt) && getAppointmentStatus(appt, now) === "upcoming";
+}
+
+function canJoinScheduledAppointment(appt, now = new Date()) {
+  if (!appt || appt.cancelled || appt.joined) return false;
+  const start = appointmentStartAt(appt);
+  const nowMs = now.getTime();
+  return nowMs >= start - 10 * 60000 && nowMs <= start + 10 * 60000;
+}
+
+// Heure d'un créneau (défini en heure d'Algérie) affichée dans le fuseau local du visiteur.
+function formatLocalTime(dateKey, time, locale = "fr-FR") {
+  if (!dateKey || !time) return time || "—";
+  return coachSlotInstant(dateKey, time).toLocaleTimeString(locale, {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
+}
+
+// Plage horaire début-fin d'un créneau, en heure locale du visiteur.
+function formatLocalSlotRange(dateKey, time, locale = "fr-FR") {
+  return `${formatLocalTime(dateKey, time, locale)}-${formatLocalTime(
+    dateKey,
+    addMinutesToTime(time, coachSlotDurationMin),
+    locale
+  )}`;
+}
+
+// Étiquette du fuseau local du visiteur, ex. "(GMT+1)".
+function localGmtLabel() {
+  const h = -Math.round(new Date().getTimezoneOffset() / 60);
+  return `(GMT${h >= 0 ? "+" : ""}${h})`;
+}
+
 function slotsForDateKey(key) {
   if (!key) return [];
   const weekday = new Date(`${key}T00:00:00`).getDay();
@@ -3722,7 +3912,7 @@ const coachPrograms = [
     number: "PRG-012",
     name: "Coaching Élite 1-à-1",
     sentDate: "2026-06-25",
-    remark: "Débloqué dès que le coaching est réglé.",
+    remark: "",
     priceType: "Payant"
   }
 ];
@@ -3841,6 +4031,233 @@ async function generateInvoicePdf({ items, total, customerName, customerEmail, i
   return doc.output("datauristring");
 }
 
+// Inbox du coach (thème clair) rendue dans le drawer « Ma messagerie » de la barre du haut.
+function CoachChatInbox({ onUnread }) {
+  const [conversations, setConversations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeId, setActiveId] = useState(null);
+  const [activeName, setActiveName] = useState("");
+  const [thread, setThread] = useState([]);
+  const [threadLoading, setThreadLoading] = useState(false);
+  const [reply, setReply] = useState("");
+  const [sending, setSending] = useState(false);
+  const [search, setSearch] = useState("");
+  const [readFilter, setReadFilter] = useState("all");
+  const [sort, setSort] = useState("recent");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const endRef = useRef(null);
+
+  const loadConversations = async (silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      const token = await getHmToken();
+      if (!token) return;
+      const list = await fetchCoachConversations(token);
+      setConversations(list);
+      if (typeof onUnread === "function") onUnread(list.reduce((s, c) => s + (Number(c.unread) || 0), 0));
+    } catch { /* ignore */ } finally { if (!silent) setLoading(false); }
+  };
+  useEffect(() => { loadConversations(); /* eslint-disable-next-line */ }, []);
+  useEffect(() => { if (endRef.current) endRef.current.scrollIntoView({ block: "end" }); }, [thread, activeId]);
+
+  // Temps réel (WebSocket) : à chaque nouveau message, on rafraîchit la liste + le fil ouvert.
+  const activeIdRef = useRef(null);
+  useEffect(() => { activeIdRef.current = activeId; }, [activeId]);
+  useEffect(() => {
+    let unsub = () => {};
+    (async () => {
+      const token = await getHmToken();
+      if (!token) return;
+      unsub = subscribeToMessages(token, async (row) => {
+        loadConversations(true);
+        if (activeIdRef.current && row?.athlete_id === activeIdRef.current) {
+          const t = await getHmToken();
+          if (t) { try { const m = await fetchMessageThread({ accessToken: t, athleteId: activeIdRef.current }); setThread(m); } catch { /* ignore */ } }
+        }
+      });
+    })();
+    return () => unsub();
+    // eslint-disable-next-line
+  }, []);
+
+  // Filet de sécurité (si le WebSocket se coupe) : rafraîchissement discret toutes les 12 s.
+  useEffect(() => {
+    const iv = setInterval(async () => {
+      const token = await getHmToken();
+      if (!token) return;
+      if (activeId) {
+        try { const m = await fetchMessageThread({ accessToken: token, athleteId: activeId }); setThread((p) => (p.length !== m.length ? m : p)); } catch { /* ignore */ }
+      } else {
+        loadConversations(true);
+      }
+    }, 12000);
+    return () => clearInterval(iv);
+    // eslint-disable-next-line
+  }, [activeId]);
+
+  const openConversation = async (conv) => {
+    setActiveId(conv.athlete_id); setActiveName(conv.athlete_name); setThreadLoading(true); setThread([]);
+    try {
+      const token = await getHmToken();
+      if (!token) return;
+      const msgs = await fetchMessageThread({ accessToken: token, athleteId: conv.athlete_id });
+      setThread(msgs);
+      setConversations((prev) => prev.map((c) => (c.athlete_id === conv.athlete_id ? { ...c, unread: 0 } : c)));
+      if (typeof onUnread === "function") onUnread((p) => Math.max(0, (Number(p) || 0) - (Number(conv.unread) || 0)));
+    } catch { /* ignore */ } finally { setThreadLoading(false); }
+  };
+  const backToList = () => { setActiveId(null); setThread([]); loadConversations(true); };
+  const sendReply = async () => {
+    const body = reply.trim();
+    if (!body || !activeId) return;
+    setSending(true);
+    try {
+      const token = await getHmToken();
+      if (!token) return;
+      const msg = await sendBackendMessage({ accessToken: token, athleteId: activeId, body, kind: "text" });
+      if (msg) setThread((prev) => [...prev, msg]);
+      setReply("");
+      setConversations((prev) => prev.map((c) => (c.athlete_id === activeId ? { ...c, last_message: body, last_sender: "coach", last_at: new Date().toISOString() } : c)));
+    } catch { /* ignore */ } finally { setSending(false); }
+  };
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const fromTs = dateFrom ? new Date(`${dateFrom}T00:00:00`).getTime() : null;
+    const toTs = dateTo ? new Date(`${dateTo}T23:59:59`).getTime() : null;
+    const list = conversations.filter((c) => {
+      if (q && !String(c.athlete_name || "").toLowerCase().includes(q)) return false;
+      if (readFilter === "unread" && !(c.unread > 0)) return false;
+      if (readFilter === "read" && c.unread > 0) return false;
+      const ts = new Date(c.last_at).getTime();
+      if (fromTs != null && Number.isFinite(ts) && ts < fromTs) return false;
+      if (toTs != null && Number.isFinite(ts) && ts > toTs) return false;
+      return true;
+    });
+    list.sort((a, b) => { const da = new Date(a.last_at).getTime(); const db = new Date(b.last_at).getTime(); return sort === "recent" ? db - da : da - db; });
+    return list;
+  }, [conversations, search, readFilter, sort, dateFrom, dateTo]);
+
+  const fmtWhen = (iso) => { try { return new Date(iso).toLocaleString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return ""; } };
+  const preview = (c) => {
+    const prefix = c.last_sender === "coach" ? "Vous : " : "";
+    const body = c.last_kind && c.last_kind !== "text" ? `[${c.last_kind === "image" ? "Image" : c.last_kind === "voice" ? "Vocal" : "Fichier"}]` : c.last_message;
+    return `${prefix}${body || ""}`;
+  };
+  const inputCls = "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-brand-400";
+
+  // ----- Vue conversation -----
+  if (activeId) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="flex shrink-0 items-center gap-3 border-b border-slate-200 px-4 py-3">
+          <button type="button" onClick={backToList} className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 text-slate-500 transition hover:border-brand-400 hover:text-slate-900" aria-label="Retour">
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18 9 12l6-6" /></svg>
+          </button>
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-xs font-black text-white">{getInitials(activeName)}</div>
+          <p className="truncate font-display text-base font-black text-slate-900">{activeName}</p>
+        </div>
+        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto bg-slate-50 px-4 py-4">
+          {threadLoading ? (
+            <p className="py-8 text-center text-sm text-slate-400">Chargement…</p>
+          ) : thread.length === 0 ? (
+            <p className="py-8 text-center text-sm text-slate-400">Aucun message.</p>
+          ) : (
+            thread.map((m) => {
+              const mine = m.sender === "coach";
+              const body = m.kind && m.kind !== "text" ? `[${m.kind === "image" ? "Image" : m.kind === "voice" ? "Message vocal" : "Fichier"}]` : m.body;
+              return (
+                <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm ${mine ? "bg-brand-500 text-white" : "bg-white text-slate-800 border border-slate-200"}`}>
+                    <p className="whitespace-pre-wrap break-words">{body}</p>
+                    <p className={`mt-1 text-[10px] ${mine ? "text-white/70" : "text-slate-400"}`}>{fmtWhen(m.created_at)}</p>
+                  </div>
+                </div>
+              );
+            })
+          )}
+          <div ref={endRef} />
+        </div>
+        <div className="flex shrink-0 items-end gap-2 border-t border-slate-200 px-4 py-3">
+          <textarea value={reply} onChange={(e) => setReply(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendReply(); } }} rows={1} placeholder="Écrire un message…" className={`${inputCls} max-h-28 flex-1 resize-none`} />
+          <button type="button" onClick={sendReply} disabled={sending || !reply.trim()} className="rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-black text-white transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50">{sending ? "…" : "Envoyer"}</button>
+        </div>
+      </div>
+    );
+  }
+
+  // ----- Vue liste (inbox) -----
+  const totalUnread = conversations.reduce((s, c) => s + (Number(c.unread) || 0), 0);
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="shrink-0 border-b border-slate-200 px-4 py-2.5">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <svg viewBox="0 0 24 24" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher un athlète…" className={`${inputCls} pl-9`} />
+          </div>
+          <button type="button" onClick={() => setShowFilters((v) => !v)} className={`flex h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-bold transition ${showFilters ? "border-brand-400 text-brand-600" : "border-slate-300 text-slate-500 hover:border-brand-400"}`}>
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
+            Filtres
+          </button>
+        </div>
+        {showFilters ? (
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <select value={readFilter} onChange={(e) => setReadFilter(e.target.value)} className={inputCls}>
+              <option value="all">Tous</option>
+              <option value="unread">Non lus</option>
+              <option value="read">Lus</option>
+            </select>
+            <select value={sort} onChange={(e) => setSort(e.target.value)} className={inputCls}>
+              <option value="recent">Plus récent</option>
+              <option value="old">Plus ancien</option>
+            </select>
+            <label className="text-[11px] font-semibold text-slate-500">Du<input type="date" value={dateFrom} max={dateTo || undefined} onChange={(e) => setDateFrom(e.target.value)} className={inputCls} /></label>
+            <label className="text-[11px] font-semibold text-slate-500">Au<input type="date" value={dateTo} min={dateFrom || undefined} onChange={(e) => setDateTo(e.target.value)} className={inputCls} /></label>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50 px-2 py-2">
+        {loading ? (
+          <p className="py-8 text-center text-sm text-slate-400">Chargement…</p>
+        ) : conversations.length === 0 ? (
+          <p className="px-4 py-8 text-center text-sm text-slate-400">Aucun message reçu pour le moment.</p>
+        ) : filtered.length === 0 ? (
+          <p className="px-4 py-8 text-center text-sm text-slate-400">Aucune conversation ne correspond à ces filtres.</p>
+        ) : (
+          filtered.map((c) => {
+            const unread = c.unread > 0;
+            return (
+              <button key={c.athlete_id} type="button" onClick={() => openConversation(c)} className={`mb-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition ${unread ? "bg-brand-50" : "hover:bg-white"}`}>
+                <div className="relative shrink-0">
+                  <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-slate-900 text-sm font-black text-white">
+                    {c.athlete_avatar ? <img src={c.athlete_avatar} alt="" className="h-full w-full object-cover" /> : <span>{getInitials(c.athlete_name)}</span>}
+                  </div>
+                  {unread ? <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-red-500" /> : null}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className={`truncate ${unread ? "font-black text-slate-900" : "font-bold text-slate-700"}`}>{c.athlete_name}</p>
+                    <span className="shrink-0 text-[11px] font-semibold text-slate-400">{fmtWhen(c.last_at)}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className={`truncate text-xs ${unread ? "text-slate-700" : "text-slate-400"}`}>{preview(c)}</p>
+                    {unread ? <span className="shrink-0 rounded-full bg-red-500 px-1.5 text-[10px] font-black text-white">{c.unread}</span> : null}
+                  </div>
+                </div>
+              </button>
+            );
+          })
+        )}
+      </div>
+      {totalUnread ? <div className="shrink-0 border-t border-slate-200 px-4 py-2 text-center text-[11px] font-bold text-slate-400">{totalUnread} message{totalUnread > 1 ? "s" : ""} non lu{totalUnread > 1 ? "s" : ""}</div> : null}
+    </div>
+  );
+}
+
 function CoachInbox() {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [selectedNotifs, setSelectedNotifs] = useState([]);
@@ -3888,6 +4305,31 @@ function CoachInbox() {
       return [welcome];
     }
   });
+
+  // Point rouge « nouveau message du coach » : basé sur la date de dernière lecture de la messagerie.
+  const [lastChatReadAt, setLastChatReadAt] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    const v = Number(window.localStorage.getItem("hm-coach-chat-read") || 0);
+    return Number.isFinite(v) ? v : 0;
+  });
+  const hasUnreadCoach = chatMessages.some(
+    (m) => m && m.from === "coach" && m.id !== "coach-welcome" && new Date(m.date).getTime() > lastChatReadAt
+  );
+  const markChatRead = () => {
+    const t = Date.now();
+    setLastChatReadAt(t);
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem("hm-coach-chat-read", String(t));
+      } catch {
+        /* ignore */
+      }
+    }
+  };
+  const openChat = () => {
+    markChatRead();
+    setIsChatOpen(true);
+  };
 
   useEffect(() => {
     const computeCoachOnline = () => {
@@ -3985,13 +4427,61 @@ function CoachInbox() {
     }
     return next;
   };
-  const pushChatMessage = (message) =>
+  const pushChatMessage = (message) => {
     setChatMessages((current) =>
       persistChat([
         ...current,
         { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, date: new Date().toISOString(), from: "user", ...message }
       ])
     );
+    // Envoi au backend pour que le coach reçoive le message (texte complet ; pièce jointe = libellé).
+    if (!__hmIsCoach) {
+      const kind = message.type === "image" ? "image" : message.type === "voice" ? "voice" : message.type === "file" ? "file" : "text";
+      const body = kind === "text"
+        ? String(message.text || "").trim()
+        : kind === "image" ? "[Image]" : kind === "voice" ? "[Message vocal]" : `[Fichier] ${message.fileName || ""}`.trim();
+      if (body) {
+        (async () => {
+          const token = await getHmToken();
+          if (!token) return;
+          try { await sendBackendMessage({ accessToken: token, body, kind }); } catch { /* ignore */ }
+        })();
+      }
+    }
+  };
+  // Récupère les réponses du coach : temps réel (WebSocket) + filet de sécurité toutes les 12 s.
+  useEffect(() => {
+    if (__hmIsCoach) return;
+    let cancelled = false;
+    const pull = async () => {
+      const token = await getHmToken();
+      if (!token || cancelled) return;
+      try {
+        const msgs = await fetchMessageThread({ accessToken: token });
+        if (cancelled) return;
+        const coachMsgs = msgs.filter((m) => m.sender === "coach");
+        if (!coachMsgs.length) return;
+        setChatMessages((current) => {
+          const existing = new Set(current.map((m) => m.backendId).filter(Boolean));
+          const toAdd = coachMsgs
+            .filter((m) => !existing.has(m.id))
+            .map((m) => ({ id: `srv-${m.id}`, backendId: m.id, from: "coach", type: "text", text: m.body, date: m.created_at, reactions: [] }));
+          if (!toAdd.length) return current;
+          const merged = [...current, ...toAdd].sort((a, b) => new Date(a.date) - new Date(b.date));
+          return persistChat(merged);
+        });
+      } catch { /* ignore */ }
+    };
+    pull();
+    // Temps réel : dès qu'un message arrive dans MA conversation (RLS), on rafraîchit.
+    let unsub = () => {};
+    (async () => {
+      const token = await getHmToken();
+      if (token) unsub = subscribeToMessages(token, (row) => { if (row?.sender === "coach") pull(); });
+    })();
+    const interval = setInterval(pull, 12000);
+    return () => { cancelled = true; clearInterval(interval); unsub(); };
+  }, []);
   const sendChatText = () => {
     const text = chatText.trim();
     if (!text) return;
@@ -4082,11 +4572,17 @@ function CoachInbox() {
           </span>
         ) : null}
       </button>
-      <button type="button" onClick={() => setIsChatOpen(true)} className="settings-hero__action" aria-label="Messagerie" title="Messagerie">
+      <button type="button" onClick={openChat} className="settings-hero__action relative" aria-label="Messagerie" title="Messagerie">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z" />
           <path d="M8 9h8M8 13h5" />
         </svg>
+        {hasUnreadCoach ? (
+          <span className="absolute right-1 top-1 flex h-2.5 w-2.5" aria-label="Nouveau message">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-rose-500 shadow-[0_0_0_2px_rgba(255,255,255,0.9)]" />
+          </span>
+        ) : null}
       </button>
 
       {isNotifOpen && typeof document !== "undefined"
@@ -4213,20 +4709,35 @@ function CoachInbox() {
             <div className="flex h-[80vh] max-h-[640px] w-[min(100%,32rem)] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(2,6,23,0.25)]" onClick={(event) => event.stopPropagation()}>
               <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <img src={coachHero} alt="Coach Hicham" className="h-10 w-10 rounded-full object-cover" />
-                  <div>
-                    <h2 className="font-display text-base font-black text-slate-900">Coach Hicham</h2>
-                    <p className={`flex items-center gap-1.5 text-xs font-bold ${coachOnline ? "text-brand-600" : "text-rose-500"}`}>
-                      <span className={`h-2 w-2 rounded-full ${coachOnline ? "bg-brand-500" : "bg-rose-500"}`} />
-                      {coachOnline ? "En ligne" : "Hors ligne"}
-                    </p>
-                  </div>
+                  {__hmIsCoach ? (
+                    <>
+                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500/15 text-brand-600">
+                        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H8l-4 4V6a1 1 0 0 1 1-1Z" /><path d="m4.5 6.5 7.5 5 7.5-5" /></svg>
+                      </span>
+                      <h2 className="font-display text-base font-black text-slate-900">Ma messagerie</h2>
+                    </>
+                  ) : (
+                    <>
+                      <img src={coachHero} alt="Coach Hicham" className="h-10 w-10 rounded-full object-cover" />
+                      <div>
+                        <h2 className="font-display text-base font-black text-slate-900">Coach Hicham</h2>
+                        <p className={`flex items-center gap-1.5 text-xs font-bold ${coachOnline ? "text-brand-600" : "text-rose-500"}`}>
+                          <span className={`h-2 w-2 rounded-full ${coachOnline ? "bg-brand-500" : "bg-rose-500"}`} />
+                          {coachOnline ? "En ligne" : "Hors ligne"}
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </div>
                 <button type="button" onClick={() => { stopChatRecording(); setIsChatOpen(false); }} aria-label="Fermer" className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-500 transition hover:border-brand-400 hover:text-slate-900">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
                 </button>
               </div>
 
+              {__hmIsCoach ? (
+                <CoachChatInbox />
+              ) : (
+              <>
               <div className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-slate-50 px-4 py-4">
                 {chatMessages.map((message) => {
                   const isCoach = message.from === "coach";
@@ -4344,6 +4855,8 @@ function CoachInbox() {
                 <input ref={chatFileInputRef} type="file" className="hidden" onChange={handleChatFile} />
                 <input ref={chatImageInputRef} type="file" accept="image/*" className="hidden" onChange={handleChatFile} />
               </div>
+              </>
+              )}
             </div>
           </div>,
           document.body
@@ -5482,6 +5995,7 @@ function AppointmentsPage({ onBack, onGoToShop, customerEmail }) {
   const [selectedDate, setSelectedDate] = useState("");
   const [pendingSlot, setPendingSlot] = useState(null);
   const [pendingMode, setPendingMode] = useState("video");
+  const [pendingCancelId, setPendingCancelId] = useState(null);
   const [apptDateFrom, setApptDateFrom] = useState("");
   const [apptDateTo, setApptDateTo] = useState("");
   const [apptSortDesc, setApptSortDesc] = useState(true);
@@ -5527,20 +6041,10 @@ function AppointmentsPage({ onBack, onGoToShop, customerEmail }) {
   const sendEmail = (subject, detail) =>
     addShopNotification(`📧 ${subject}${customerEmail ? ` (${customerEmail})` : ""} — ${detail}`);
 
-  const apptStart = (appt) => new Date(`${appt.date}T${appt.time}:00`).getTime();
+  const apptStart = (appt) => appointmentStartAt(appt);
   const apptEnd = (appt) => apptStart(appt) + coachSlotDurationMin * 60000;
-  const getApptStatus = (appt) => {
-    if (appt.cancelled) return "cancelled";
-    if (appt.joined) return "joined";
-    if (now.getTime() > apptStart(appt) + 10 * 60000) return "expired";
-    if (appt.date > todayKey) return "upcoming";
-    return "confirmed";
-  };
-  const canJoin = (appt) => {
-    if (appt.cancelled || appt.joined) return false;
-    const start = apptStart(appt);
-    return now.getTime() >= start - 10 * 60000 && now.getTime() <= start + 10 * 60000;
-  };
+  const getApptStatus = (appt) => getAppointmentStatus(appt, now);
+  const canJoin = (appt) => canJoinScheduledAppointment(appt, now);
 
   const isSlotBooked = (key, time) =>
     appointments.some((item) => !item.cancelled && item.date === key && item.time === time);
@@ -5591,7 +6095,7 @@ function AppointmentsPage({ onBack, onGoToShop, customerEmail }) {
     setAppointments(persistAppointments([...appointments, appt]));
     sendEmail(
       "Confirmation de rendez-vous",
-      `Le ${longDateLabel(appt.date)} à ${formatSlotRange(appt.time)} en ${modeLabel(appt.mode)} avec Coach Hicham. Vous pouvez annuler jusqu'au ${dayBeforeLabel(appt.date)} 23:59, sans quoi le rendez-vous sera confirmé.`
+      `Le ${longDateLabel(appt.date)} à ${formatLocalSlotRange(appt.date, appt.time)} en ${modeLabel(appt.mode)} avec Coach Hicham. Vous pouvez annuler jusqu'au ${dayBeforeLabel(appt.date)} 23:59, sans quoi le rendez-vous sera confirmé.`
     );
     setPendingSlot(null);
   };
@@ -5606,13 +6110,13 @@ function AppointmentsPage({ onBack, onGoToShop, customerEmail }) {
       : appointments.filter((item) => item.id !== id);
     setAppointments(persistAppointments(next));
     if (activeCallId === id) setActiveCallId(null);
+    // Annulation manuelle par l'athlète : PAS de notification.
+    // Seule l'annulation automatique (absence) déclenche une notification.
     if (auto) {
       sendEmail(
         "Rendez-vous annulé automatiquement",
-        `Vous n'avez pas rejoint le ${longDateLabel(target.date)} à ${formatSlotRange(target.time)}. Le rendez-vous a été annulé.`
+        `Vous n'avez pas rejoint le ${longDateLabel(target.date)} à ${formatLocalSlotRange(target.date, target.time)}. Le rendez-vous a été annulé.`
       );
-    } else {
-      sendEmail("Annulation de rendez-vous", `Le ${longDateLabel(target.date)} à ${formatSlotRange(target.time)} a bien été annulé.`);
     }
   };
 
@@ -5627,15 +6131,25 @@ function AppointmentsPage({ onBack, onGoToShop, customerEmail }) {
     const emails = [];
     const next = appointments.map((item) => {
       let updated = item;
-      if (!updated.cancelled && !updated.joined && nowMs > apptStart(updated) + 10 * 60000) {
+      const start = apptStart(updated);
+      // 1) Auto-annulation : rendez-vous non rejoint 10 min après le début.
+      if (!updated.cancelled && !updated.joined && nowMs > start + 10 * 60000) {
         updated = { ...updated, cancelled: true, autoCancelled: true };
         changed = true;
-        emails.push(["Rendez-vous annulé automatiquement", `Vous n'avez pas rejoint le ${longDateLabel(item.date)} à ${formatSlotRange(item.time)}. Le rendez-vous a été annulé.`]);
+        emails.push(["Rendez-vous annulé automatiquement", `Vous n'avez pas rejoint le ${longDateLabel(item.date)} à ${formatLocalSlotRange(item.date, item.time)}. Le rendez-vous a été annulé.`]);
       }
-      if (!updated.cancelled && !updated.reminderSent && updated.date === todayKey) {
+      // 2) Confirmation : le délai d'annulation (la veille à 23:59) est passé.
+      const confirmAt = appointmentConfirmAt(item.date);
+      if (!updated.cancelled && !updated.joined && !updated.confirmedNotified && nowMs >= confirmAt) {
+        updated = { ...updated, confirmedNotified: true };
+        changed = true;
+        emails.push(["Rendez-vous confirmé", `Votre rendez-vous du ${longDateLabel(item.date)} à ${formatLocalSlotRange(item.date, item.time)} en ${modeLabel(item.mode)} avec Coach Hicham est confirmé.`]);
+      }
+      // 3) Rappel : moins de 2h avant le rendez-vous.
+      if (!updated.cancelled && !updated.joined && !updated.reminderSent && nowMs >= start - 2 * 60 * 60000 && nowMs < start) {
         updated = { ...updated, reminderSent: true };
         changed = true;
-        emails.push(["Rappel de rendez-vous", `Vous avez un rendez-vous aujourd'hui à ${formatSlotRange(item.time)} en ${modeLabel(item.mode)} avec Coach Hicham.`]);
+        emails.push(["Rappel de rendez-vous", `Rappel : votre rendez-vous avec Coach Hicham est dans moins de 2h, à ${formatLocalSlotRange(item.date, item.time)} en ${modeLabel(item.mode)}.`]);
       }
       return updated;
     });
@@ -5707,8 +6221,9 @@ function AppointmentsPage({ onBack, onGoToShop, customerEmail }) {
       <div className="settings-hero shrink-0">
         <div className="settings-hero__icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8" aria-hidden="true">
-            <rect x="3" y="4" width="18" height="18" rx="2" />
-            <path d="M16 2v4M8 2v4M3 10h18" />
+            <rect x="3" y="5" width="18" height="16" rx="2" />
+            <path d="M16 3v4M8 3v4M3 10h18" />
+            <circle cx="12" cy="15" r="1.5" fill="currentColor" />
           </svg>
         </div>
         <div className="min-w-0 flex-1">
@@ -5839,7 +6354,7 @@ function AppointmentsPage({ onBack, onGoToShop, customerEmail }) {
                       <div key={time} className="w-36 shrink-0 rounded-2xl border border-brand-400/45 bg-brand-500/10 p-3 text-center">
                         <p className="flex items-center justify-center gap-1.5 font-display text-sm font-black text-white">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0 text-brand-200" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
-                          {formatSlotRange(time)}
+                          {formatLocalSlotRange(selectedDate, time)}
                         </p>
                         <button
                           type="button"
@@ -5974,12 +6489,13 @@ function AppointmentsPage({ onBack, onGoToShop, customerEmail }) {
                     const status = getApptStatus(item);
                     const badge = statusBadge[status] || statusBadge.cancelled;
                     const joinable = canJoin(item);
-                    const cancellable = status === "upcoming";
+                    const cancellable = canCancelScheduledAppointment(item, now);
+                    const waitingToJoin = status === "confirmed";
                     return (
                       <tr key={item.id} className="h-14 border-t border-slate-600/40">
                         <td className="px-3 py-3 text-sm font-black text-white">{item.number}</td>
                         <td className="px-3 py-3 text-sm font-bold capitalize text-white">{longDateLabel(item.date)}</td>
-                        <td className="px-3 py-3 text-sm font-semibold text-brand-100">{formatSlotRange(item.time)}</td>
+                        <td className="px-3 py-3 text-sm font-semibold text-brand-100">{formatLocalSlotRange(item.date, item.time)}</td>
                         <td className="px-3 py-3 text-sm text-slate-300">{item.mode === "vocal" ? "Vocal" : "Vidéo"}</td>
                         <td className="px-3 py-3">
                           <span className={`inline-block rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-wide ${badge.cls}`}>{badge.label}</span>
@@ -5996,10 +6512,18 @@ function AppointmentsPage({ onBack, onGoToShop, customerEmail }) {
                           ) : cancellable ? (
                             <button
                               type="button"
-                              onClick={() => cancelAppointment(item.id)}
+                              onClick={() => setPendingCancelId(item.id)}
                               className="rounded-xl border border-rose-300 bg-rose-100 px-3 py-2 text-xs font-black text-rose-700 transition hover:bg-rose-200"
                             >
                               Annuler
+                            </button>
+                          ) : waitingToJoin ? (
+                            <button
+                              type="button"
+                              disabled
+                              className="cursor-not-allowed rounded-xl border-2 border-slate-300 bg-slate-100 px-3 py-2 text-xs font-black text-slate-400"
+                            >
+                              Rejoindre
                             </button>
                           ) : (
                             <span className="text-xs font-bold text-slate-500">—</span>
@@ -6054,7 +6578,7 @@ function AppointmentsPage({ onBack, onGoToShop, customerEmail }) {
               <div className="px-5 py-4">
                 <p className="text-sm text-slate-600">
                   Votre créneau est réservé pour le <span className="font-black capitalize text-slate-900">{longDateLabel(pendingSlot.date)}</span> à{" "}
-                  <span className="font-black text-slate-900">{formatSlotRange(pendingSlot.time)}</span>, en ligne via un appel{" "}
+                  <span className="font-black text-slate-900">{formatLocalSlotRange(pendingSlot.date, pendingSlot.time)}</span>, en ligne via un appel{" "}
                   <span className="font-black text-slate-900">{pendingMode === "vocal" ? "vocal" : "vidéo"}</span> selon votre choix.
                 </p>
                 <div className="mt-4">
@@ -6096,6 +6620,68 @@ function AppointmentsPage({ onBack, onGoToShop, customerEmail }) {
         )
         : null}
 
+      {pendingCancelId && typeof document !== "undefined"
+        ? (() => {
+            const appt = appointments.find((a) => a.id === pendingCancelId && !a.cancelled);
+            if (!appt) return null;
+            const apptCanCancel = canCancelScheduledAppointment(appt, now);
+            return createPortal(
+              <div
+                className="fixed inset-0 z-[97] grid place-items-center p-4"
+                style={{ background: "rgba(2,6,23,0.6)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Confirmer l'annulation"
+                onClick={() => setPendingCancelId(null)}
+              >
+                <div className="w-[min(100%,28rem)] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(2,6,23,0.25)]" onClick={(event) => event.stopPropagation()}>
+                  <div className="flex items-center gap-3 border-b border-slate-200 px-5 py-4">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" /></svg>
+                    </span>
+                    <div>
+                      <h2 className="font-display text-lg font-black text-slate-900">Annuler le rendez-vous ?</h2>
+                      <p className="text-xs font-bold text-slate-500">avec Coach Hicham</p>
+                    </div>
+                  </div>
+                  <div className="px-5 py-4">
+                    <p className="text-sm text-slate-600">
+                      {apptCanCancel ? (
+                        <>
+                          Voulez-vous vraiment annuler votre rendez-vous du{" "}
+                          <span className="font-black capitalize text-slate-900">{longDateLabel(appt.date)}</span> à{" "}
+                          <span className="font-black text-slate-900">{formatLocalSlotRange(appt.date, appt.time)}</span> ?
+                        </>
+                      ) : (
+                        "Ce rendez-vous est déjà confirmé. L'annulation n'est plus disponible."
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex gap-2 border-t border-slate-200 px-5 py-4">
+                    <button type="button" onClick={() => setPendingCancelId(null)} className="flex-1 rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-black text-slate-600 transition hover:border-slate-400">
+                      Retour
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (canCancelScheduledAppointment(appt, new Date())) {
+                          cancelAppointment(pendingCancelId);
+                          setPendingCancelId(null);
+                        }
+                      }}
+                      disabled={!apptCanCancel}
+                      className="flex-1 rounded-2xl border-2 border-rose-400 bg-rose-500 px-4 py-2.5 text-sm font-black text-white transition hover:bg-rose-600 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-100 disabled:text-slate-400"
+                    >
+                      Confirmer l'annulation
+                    </button>
+                  </div>
+                </div>
+              </div>,
+              document.body
+            );
+          })()
+        : null}
+
       {activeCall && typeof document !== "undefined"
         ? createPortal(
           <div
@@ -6122,7 +6708,7 @@ function AppointmentsPage({ onBack, onGoToShop, customerEmail }) {
                   <img src={coachHero} alt="Coach Hicham" className="mx-auto h-28 w-28 rounded-full object-cover ring-4 ring-brand-400/40" />
                   <p className="mt-4 font-display text-xl font-black text-white">Coach Hicham</p>
                   <p className="mt-1 text-sm text-slate-400">
-                    {activeCall.mode === "vocal" ? "Appel vocal en cours…" : "Appel vidéo en cours…"} ({formatSlotRange(activeCall.time)})
+                    {activeCall.mode === "vocal" ? "Appel vocal en cours…" : "Appel vidéo en cours…"} ({formatLocalSlotRange(activeCall.date, activeCall.time)})
                   </p>
                 </div>
               </div>
@@ -6193,7 +6779,14 @@ function MyProgramsPage({ onBack, onGoToShop, refreshSession, onInvoiceSent, onP
           return next;
         });
         setStatusFilter("Acheté");
-        addShopNotification("Paiement confirmé ✓ Programme(s) débloqué(s) dans Mes programmes.");
+        {
+          const names = ids.map((pid) => coachPrograms.find((p) => p.id === pid)?.name).filter(Boolean).join(", ");
+          addShopNotification(
+            ids.length > 1
+              ? `Vous avez débloqué ${ids.length} programmes (${names}) dans « Mes programmes ».`
+              : `Vous avez débloqué le programme « ${names || "—"} » dans « Mes programmes ».`
+          );
+        }
         if (result.invoiceSent && typeof onInvoiceSent === "function") onInvoiceSent();
       }
     };
@@ -6249,7 +6842,7 @@ function MyProgramsPage({ onBack, onGoToShop, refreshSession, onInvoiceSent, onP
           /* ignore storage errors */
         }
       }
-      addShopNotification(`« ${program.name} » est débloqué dans Mes programmes.`);
+      addShopNotification(`Vous avez débloqué le programme « ${program.name} » dans « Mes programmes ».`);
       return;
     }
     // Programme payant : paiement RÉEL. En Algérie, choix Stripe / Chargily ; sinon Stripe direct.
@@ -6759,6 +7352,29 @@ function ShopPage({
       return [welcome];
     }
   });
+  const [lastChatReadAt, setLastChatReadAt] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    const v = Number(window.localStorage.getItem("hm-coach-chat-read") || 0);
+    return Number.isFinite(v) ? v : 0;
+  });
+  const hasUnreadCoach = chatMessages.some(
+    (m) => m && m.from === "coach" && m.id !== "coach-welcome" && new Date(m.date).getTime() > lastChatReadAt
+  );
+  const markChatRead = () => {
+    const t = Date.now();
+    setLastChatReadAt(t);
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem("hm-coach-chat-read", String(t));
+      } catch {
+        /* ignore */
+      }
+    }
+  };
+  const openChat = () => {
+    markChatRead();
+    setIsChatOpen(true);
+  };
   const mediaRecorderRef = useRef(null);
   const chatFileInputRef = useRef(null);
   const chatImageInputRef = useRef(null);
@@ -6905,6 +7521,19 @@ function ShopPage({
         { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, date: new Date().toISOString(), from: "user", ...message }
       ])
     );
+    if (!__hmIsCoach) {
+      const kind = message.type === "image" ? "image" : message.type === "voice" ? "voice" : message.type === "file" ? "file" : "text";
+      const body = kind === "text"
+        ? String(message.text || "").trim()
+        : kind === "image" ? "[Image]" : kind === "voice" ? "[Message vocal]" : `[Fichier] ${message.fileName || ""}`.trim();
+      if (body) {
+        (async () => {
+          const token = await getHmToken();
+          if (!token) return;
+          try { await sendBackendMessage({ accessToken: token, body, kind }); } catch { /* ignore */ }
+        })();
+      }
+    }
   };
 
   const sendChatText = () => {
@@ -7036,8 +7665,8 @@ function ShopPage({
           : "";
         addNotification(
           ids.length > 1
-            ? `Paiement confirmé : ${ids.length} programmes débloqués (${titles}). Retrouvez-les dans « Mes programmes ».${invoiceNote}`
-            : `Paiement confirmé : « ${titles} » débloqué. Retrouvez-le dans « Mes programmes ».${invoiceNote}`
+            ? `Vous avez débloqué ${ids.length} programmes (${titles}) dans la boutique.${invoiceNote}`
+            : `Vous avez débloqué le programme « ${titles} » dans la boutique.${invoiceNote}`
         );
         setCheckoutMessage("Paiement confirmé ✓ Tes programmes sont débloqués dans « Mes programmes »." + (invoiceNote ? ` ${invoiceNote.trim()}` : ""));
         if (result.invoiceSent && typeof onInvoiceSent === "function") {
@@ -7210,11 +7839,17 @@ function ShopPage({
               </span>
             ) : null}
           </button>
-          <button type="button" onClick={() => setIsChatOpen(true)} className="settings-hero__action" aria-label="Messagerie" title="Messagerie">
+          <button type="button" onClick={openChat} className="settings-hero__action relative" aria-label="Messagerie" title="Messagerie">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z" />
               <path d="M8 9h8M8 13h5" />
             </svg>
+            {hasUnreadCoach ? (
+              <span className="absolute right-1 top-1 flex h-2.5 w-2.5" aria-label="Nouveau message">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-rose-500 shadow-[0_0_0_2px_rgba(255,255,255,0.9)]" />
+              </span>
+            ) : null}
           </button>
         </div>
       </div>
@@ -8062,14 +8697,25 @@ function ShopPage({
             >
               <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <img src={coachHero} alt="Coach Hicham" className="h-10 w-10 rounded-full object-cover" />
-                  <div>
-                    <h2 className="font-display text-base font-black text-slate-900">Coach Hicham</h2>
-                    <p className={`flex items-center gap-1.5 text-xs font-bold ${coachOnline ? "text-brand-600" : "text-rose-500"}`}>
-                      <span className={`h-2 w-2 rounded-full ${coachOnline ? "bg-brand-500" : "bg-rose-500"}`} />
-                      {coachOnline ? "En ligne" : "Hors ligne"}
-                    </p>
-                  </div>
+                  {__hmIsCoach ? (
+                    <>
+                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500/15 text-brand-600">
+                        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H8l-4 4V6a1 1 0 0 1 1-1Z" /><path d="m4.5 6.5 7.5 5 7.5-5" /></svg>
+                      </span>
+                      <h2 className="font-display text-base font-black text-slate-900">Ma messagerie</h2>
+                    </>
+                  ) : (
+                    <>
+                      <img src={coachHero} alt="Coach Hicham" className="h-10 w-10 rounded-full object-cover" />
+                      <div>
+                        <h2 className="font-display text-base font-black text-slate-900">Coach Hicham</h2>
+                        <p className={`flex items-center gap-1.5 text-xs font-bold ${coachOnline ? "text-brand-600" : "text-rose-500"}`}>
+                          <span className={`h-2 w-2 rounded-full ${coachOnline ? "bg-brand-500" : "bg-rose-500"}`} />
+                          {coachOnline ? "En ligne" : "Hors ligne"}
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </div>
                 <button
                   type="button"
@@ -8086,6 +8732,10 @@ function ShopPage({
                 </button>
               </div>
 
+              {__hmIsCoach ? (
+                <CoachChatInbox />
+              ) : (
+              <>
               <div className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-slate-50 px-4 py-4">
                 {chatMessages.map((message) => {
                   const isCoach = message.from === "coach";
@@ -8327,6 +8977,8 @@ function ShopPage({
                 <input ref={chatFileInputRef} type="file" className="hidden" onChange={handleChatFile} />
                 <input ref={chatImageInputRef} type="file" accept="image/*" className="hidden" onChange={handleChatFile} />
               </div>
+              </>
+              )}
             </div>
           </div>,
           document.body
@@ -8900,6 +9552,8 @@ function HealthInformationEditor({
 }
 
 function SettingsPage({
+  isCoach = false,
+  coachContent = null,
   currentUser,
   athleteSex,
   settingsForm,
@@ -8940,8 +9594,8 @@ function SettingsPage({
   const phoneDialCountryName =
     countryOptions.find((country) => country.code === settingsForm.country)?.name || "Pays";
   const avatarInitials = getInitials(`${settingsForm.firstName} ${settingsForm.lastName}`.trim() || currentUser?.fullName || "");
-  const avatarOptions = getAthleteAvatarOptions(athleteSex || currentUser?.sex);
-  const avatarSexLabel = getAthleteSexLabel(athleteSex || currentUser?.sex);
+  const avatarOptions = isCoach ? coachAvatarCatalog : getAthleteAvatarOptions(athleteSex || currentUser?.sex);
+  const avatarSexLabel = isCoach ? "Coach" : getAthleteSexLabel(athleteSex || currentUser?.sex);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const cartCount = (() => {
     if (typeof window === "undefined") return 0;
@@ -8970,37 +9624,41 @@ function SettingsPage({
           </p>
         </div>
         <div className="settings-hero__actions" aria-label="Actions rapides">
-          <button
-            type="button"
-            onClick={onBack}
-            className="settings-hero__back"
-            aria-label="Revenir en arrière"
-            title="Revenir en arrière"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M15 18 9 12l6-6" />
-              <path d="M9 12h11" />
-            </svg>
-            <span>Retour</span>
-          </button>
-          <button
-            type="button"
-            onClick={onGoToShop}
-            className="settings-hero__action"
-            aria-label="Panier"
-            title="Voir le panier (boutique)"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="9" cy="21" r="1" />
-              <circle cx="20" cy="21" r="1" />
-              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-            </svg>
-            {cartCount > 0 ? (
-              <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-brand-500 px-1 text-[10px] font-black text-white">
-                {cartCount}
-              </span>
-            ) : null}
-          </button>
+          {!isCoach && (
+            <>
+              <button
+                type="button"
+                onClick={onBack}
+                className="settings-hero__back"
+                aria-label="Revenir en arrière"
+                title="Revenir en arrière"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M15 18 9 12l6-6" />
+                  <path d="M9 12h11" />
+                </svg>
+                <span>Retour</span>
+              </button>
+              <button
+                type="button"
+                onClick={onGoToShop}
+                className="settings-hero__action"
+                aria-label="Panier"
+                title="Voir le panier (boutique)"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="9" cy="21" r="1" />
+                  <circle cx="20" cy="21" r="1" />
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                </svg>
+                {cartCount > 0 ? (
+                  <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-brand-500 px-1 text-[10px] font-black text-white">
+                    {cartCount}
+                  </span>
+                ) : null}
+              </button>
+            </>
+          )}
           <CoachInbox />
         </div>
       </div>
@@ -9136,6 +9794,8 @@ function SettingsPage({
               </button>
             </article>
 
+            {!isCoach && (
+              <>
             <article className="settings-card">
               <SettingsSectionHeader
                 icon="address"
@@ -9461,6 +10121,9 @@ function SettingsPage({
                 Enregistrer la santé
               </button>
             </article>
+              </>
+            )}
+            {isCoach ? coachContent : null}
           </div>
 
           <aside className="space-y-2">
@@ -9534,6 +10197,7 @@ function SettingsPage({
               </div>
             </article>
 
+            {!isCoach && (
             <article className="settings-card settings-card--danger">
               <SettingsSectionHeader icon="danger" eyebrow="Zone sensible" title="Suppression de compte" danger />
               <p className="mt-2 text-xs leading-relaxed text-slate-300">
@@ -9547,6 +10211,7 @@ function SettingsPage({
                 Supprimer mon compte
               </button>
             </article>
+            )}
           </aside>
         </div>
         {settingsFeedback.text ? (
@@ -9620,6 +10285,71 @@ const navSectionIds = ["services", "certifications", "experiences", "resultats",
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const authLoginRoute = "/auth?mode=login&form=1";
+// Compte du coach (admin) : détecté par son email pour ouvrir l'espace coach.
+const COACH_EMAIL = "noreply.hicham.fit@gmail.com";
+const isCoachEmail = (email) => !!email && String(email).trim().toLowerCase() === COACH_EMAIL;
+// Le coach peut changer son email : on mémorise son identifiant pour le reconnaître ensuite.
+const COACH_UID_KEY = "hm-coach-uid";
+const rememberCoachUid = (id) => {
+  try { if (id) window.localStorage.setItem(COACH_UID_KEY, String(id)); } catch { /* ignore */ }
+};
+const getRememberedCoachUid = () => {
+  try { return window.localStorage.getItem(COACH_UID_KEY) || ""; } catch { return ""; }
+};
+// Reconnaît le coach par email OU par identifiant mémorisé (résiste au changement d'email).
+const isCoachUser = (user) => {
+  if (!user) return false;
+  if (isCoachEmail(user.email)) return true;
+  return !!user.id && String(user.id) === getRememberedCoachUid();
+};
+
+// Contacts / réseaux sociaux du footer (éditables par le coach, stockés en base).
+const DEFAULT_SITE_CONTACTS = [
+  { kind: "facebook", label: "Facebook", value: "https://www.facebook.com/Hicham-fit" },
+  { kind: "tiktok", label: "TikTok", value: "https://www.tiktok.com/@mechkour_hicham7" },
+  { kind: "whatsapp", label: "WhatsApp", value: "+213779477711" },
+  { kind: "email", label: "Email", value: "hichamechkour39@gmail.com" }
+];
+
+const CONTACT_KINDS = ["facebook", "tiktok", "instagram", "linkedin", "whatsapp", "youtube", "phone", "email", "website", "custom"];
+
+const CONTACT_ICON_PATHS = {
+  facebook: "M13.5 22v-8h2.7l.4-3h-3.1V9.1c0-.9.3-1.5 1.6-1.5h1.7V5c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.4V11H8v3h2.6v8h2.9Z",
+  tiktok: "M14.8 3.1c.6 1.6 1.9 2.8 3.5 3.2v2.3a6.2 6.2 0 0 1-3.2-.9v5.2a5.9 5.9 0 1 1-5.1-5.9v2.4a3.5 3.5 0 1 0 2.7 3.4V2.5h2.1v.6Z",
+  whatsapp: "M20.5 3.5A11.8 11.8 0 0 0 1.8 17.7L.5 23.5l5.9-1.2A11.8 11.8 0 1 0 20.5 3.5Zm-8.7 18a9.8 9.8 0 0 1-5-1.4l-.3-.2-3.5.7.8-3.4-.2-.4A9.9 9.9 0 1 1 11.8 21.5Zm5.4-7.4c-.3-.1-1.9-1-2.2-1.1-.3-.1-.5-.1-.7.1l-.9 1.1c-.2.2-.4.2-.7.1a8.1 8.1 0 0 1-2.4-1.5 8.9 8.9 0 0 1-1.7-2.1c-.2-.3 0-.5.1-.7l.5-.6.3-.6a.6.6 0 0 0 0-.6c-.1-.1-.7-1.7-1-2.3-.2-.5-.5-.4-.7-.4h-.6a1.2 1.2 0 0 0-.9.4A3.6 3.6 0 0 0 5 9.3a6.2 6.2 0 0 0 1.3 3.3 14.2 14.2 0 0 0 5.3 4.7 17.5 17.5 0 0 0 1.8.7 4.3 4.3 0 0 0 2 .1 3.2 3.2 0 0 0 2.1-1.5 2.6 2.6 0 0 0 .2-1.5c-.1-.1-.3-.2-.6-.3Z",
+  email: "M3 6.8A1.8 1.8 0 0 1 4.8 5h14.4A1.8 1.8 0 0 1 21 6.8v10.4a1.8 1.8 0 0 1-1.8 1.8H4.8A1.8 1.8 0 0 1 3 17.2V6.8Zm1.8.2 7.2 4.9L19.2 7H4.8Zm14.4 10.2V8.8l-6.7 4.6a.9.9 0 0 1-1 0L4.8 8.8v8.4h14.4Z",
+  instagram: "M12 8.8a3.2 3.2 0 1 0 0 6.4 3.2 3.2 0 0 0 0-6.4Zm0-2.2A5.4 5.4 0 1 1 6.6 12 5.4 5.4 0 0 1 12 6.6Zm5.6-.3a1.26 1.26 0 1 1-1.26-1.26A1.26 1.26 0 0 1 17.6 6.3ZM12 4.2c-2.5 0-2.8 0-3.8.06-1 .05-1.5.2-1.9.35-.48.19-.82.41-1.18.77-.36.36-.58.7-.77 1.18-.15.4-.3.9-.35 1.9C4 9.2 4 9.5 4 12s0 2.8.06 3.8c.05 1 .2 1.5.35 1.9.19.48.41.82.77 1.18.36.36.7.58 1.18.77.4.15.9.3 1.9.35 1 .06 1.3.06 3.8.06s2.8 0 3.8-.06c1-.05 1.5-.2 1.9-.35.48-.19.82-.41 1.18-.77.36-.36.58-.7.77-1.18.15-.4.3-.9.35-1.9.06-1 .06-1.3.06-3.8s0-2.8-.06-3.8c-.05-1-.2-1.5-.35-1.9a3.18 3.18 0 0 0-.77-1.18 3.18 3.18 0 0 0-1.18-.77c-.4-.15-.9-.3-1.9-.35-1-.06-1.3-.06-3.8-.06Z",
+  youtube: "M21.6 7.2a2.5 2.5 0 0 0-1.75-1.77C18.28 5 12 5 12 5s-6.28 0-7.85.43A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.75 1.77C5.72 19 12 19 12 19s6.28 0 7.85-.43A2.5 2.5 0 0 0 21.6 16.8 26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8ZM10 15V9l5.2 3-5.2 3Z",
+  phone: "M6.6 10.8a15.5 15.5 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.24c1.1.37 2.3.57 3.6.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C11 21 3 13 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.3.2 2.5.57 3.6a1 1 0 0 1-.25 1l-2.2 2.2Z",
+  website: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm6.9 6h-2.6a15.6 15.6 0 0 0-1.2-3.1A8 8 0 0 1 18.9 8ZM12 4c.8 1 1.5 2.4 1.9 4h-3.8c.4-1.6 1.1-3 1.9-4ZM4.3 14a8 8 0 0 1 0-4h2.9a17.6 17.6 0 0 0 0 4H4.3Zm.8 2h2.6c.3 1.1.7 2.2 1.2 3.1A8 8 0 0 1 5.1 16Zm2.6-8H5.1a8 8 0 0 1 3.8-3.1c-.5.9-.9 2-1.2 3.1ZM12 20c-.8-1-1.5-2.4-1.9-4h3.8c-.4 1.6-1.1 3-1.9 4Zm2.3-6H9.7a15.6 15.6 0 0 1 0-4h4.6a15.6 15.6 0 0 1 0 4Zm.6 5.1c.5-.9.9-2 1.2-3.1h2.6a8 8 0 0 1-3.8 3.1Zm1.9-5.1a17.6 17.6 0 0 0 0-4h2.9a8 8 0 0 1 0 4h-2.9Z",
+  linkedin: "M6.94 5A1.94 1.94 0 1 1 3.06 5a1.94 1.94 0 0 1 3.88 0ZM3.4 8.4h3.1V21H3.4V8.4Zm5.1 0h2.97v1.72h.04c.41-.78 1.42-1.6 2.93-1.6 3.13 0 3.71 2.06 3.71 4.74V21h-3.1v-5.6c0-1.34-.02-3.06-1.86-3.06-1.87 0-2.15 1.46-2.15 2.96V21H8.5V8.4Z",
+  custom: "M10.6 13.4a1 1 0 0 0 1.4 0l4-4a3 3 0 0 0-4.2-4.2l-1 1a1 1 0 1 0 1.4 1.4l1-1a1 1 0 0 1 1.4 1.4l-4 4a1 1 0 0 0 0 1.4Zm2.8-2.8a1 1 0 0 0-1.4 0l-4 4a3 3 0 0 0 4.2 4.2l1-1a1 1 0 0 0-1.4-1.4l-1 1a1 1 0 0 1-1.4-1.4l4-4a1 1 0 0 0 0-1.4Z"
+};
+
+function contactIconPath(kind) {
+  return CONTACT_ICON_PATHS[kind] || CONTACT_ICON_PATHS.custom;
+}
+
+function contactHref(contact) {
+  const v = String(contact?.value || "").trim();
+  if (!v) return "#";
+  if (contact.kind === "email") return v.startsWith("mailto:") ? v : `mailto:${v}`;
+  if (contact.kind === "whatsapp") return `https://wa.me/${v.replace(/\D/g, "")}`;
+  if (contact.kind === "phone") return v.startsWith("tel:") ? v : `tel:${v.replace(/\s+/g, "")}`;
+  return /^https?:\/\//i.test(v) ? v : `https://${v}`;
+}
+
+function contactDisplay(contact) {
+  const v = String(contact?.value || "").trim();
+  if (["email", "phone", "whatsapp"].includes(contact?.kind)) return v;
+  try {
+    const u = new URL(/^https?:\/\//i.test(v) ? v : `https://${v}`);
+    const path = u.pathname.replace(/\/+$/, "").replace(/^\//, "");
+    return path || u.hostname.replace(/^www\./, "");
+  } catch {
+    return v;
+  }
+}
 const authEmailRedirectUrl =
   import.meta.env.VITE_AUTH_REDIRECT_URL || "http://localhost:5173/auth?mode=login";
 const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey);
@@ -9895,6 +10625,67 @@ async function deleteClientReview({ accessToken }) {
   return callSupabaseFunctionWithAuth("client-reviews", { action: "delete" }, accessToken);
 }
 
+async function deleteCoachClientReviews({ accessToken, reviewIds, all = false }) {
+  const ids = Array.isArray(reviewIds) ? reviewIds.map((id) => String(id || "").trim()).filter(Boolean) : [];
+  if (!all && !ids.length) return { success: true, deletedCount: 0 };
+  return callSupabaseFunctionWithAuth("client-reviews", { action: "coach-delete", reviewIds: ids, all: !!all }, accessToken);
+}
+
+// ===== Messagerie (coach ⇄ athlète) =====
+// Fournisseur de session global : permet au chat (CoachInbox) d'obtenir le token sans threader
+// les props à travers toutes les barres. App le renseigne avec refreshCurrentUserSession.
+let __hmSessionGetter = null;
+function setHmSessionGetter(fn) { __hmSessionGetter = fn; }
+async function getHmToken() {
+  try { const s = __hmSessionGetter ? await __hmSessionGetter() : null; return s?.accessToken || ""; }
+  catch { return ""; }
+}
+// L'athlète connecté est-il le coach ? (le chat ne poste pas côté athlète pour le coach)
+let __hmIsCoach = false;
+function setHmIsCoach(v) { __hmIsCoach = !!v; }
+
+async function fetchCoachConversations(accessToken) {
+  const data = await callSupabaseFunctionWithAuth("messages", { action: "conversations" }, accessToken);
+  return Array.isArray(data?.conversations) ? data.conversations : [];
+}
+async function fetchMessageThread({ accessToken, athleteId }) {
+  const data = await callSupabaseFunctionWithAuth("messages", { action: "thread", athleteId }, accessToken);
+  return Array.isArray(data?.messages) ? data.messages : [];
+}
+async function sendBackendMessage({ accessToken, athleteId, body, kind = "text" }) {
+  const data = await callSupabaseFunctionWithAuth("messages", { action: "send", athleteId, body, kind }, accessToken);
+  return data?.message || null;
+}
+async function markMessagesRead({ accessToken, athleteId }) {
+  return callSupabaseFunctionWithAuth("messages", { action: "mark-read", athleteId }, accessToken);
+}
+
+// ===== Temps réel (Supabase Realtime / WebSocket) =====
+let __hmRealtimeClient = null;
+function getRealtimeClient() {
+  if (!hasSupabaseConfig) return null;
+  if (!__hmRealtimeClient) {
+    __hmRealtimeClient = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+  }
+  return __hmRealtimeClient;
+}
+// S'abonne aux nouveaux messages. Le filtrage est fait par les règles RLS (le coach reçoit tout,
+// l'athlète uniquement sa propre conversation). Retourne une fonction pour se désabonner.
+function subscribeToMessages(accessToken, onInsert) {
+  const client = getRealtimeClient();
+  if (!client || !accessToken) return () => {};
+  try { client.realtime.setAuth(accessToken); } catch { /* ignore */ }
+  const channel = client
+    .channel(`hm-messages-${Math.random().toString(36).slice(2, 8)}`)
+    .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
+      try { onInsert(payload.new); } catch { /* ignore */ }
+    })
+    .subscribe();
+  return () => { try { client.removeChannel(channel); } catch { /* ignore */ } };
+}
+
 async function callSupabaseFunction(functionName, payload) {
   if (!hasSupabaseConfig) {
     throw new Error("SUPABASE_CONFIG_MISSING");
@@ -10151,6 +10942,679 @@ function CertificationMedia({ certTitle, certImages, isSlider, currentImageIndex
   );
 }
 
+function CoachMessagesPage({ refreshSession, onToast, onUnreadChange, authInputClass, authSelectClass }) {
+  const [conversations, setConversations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeId, setActiveId] = useState(null);
+  const [activeName, setActiveName] = useState("");
+  const [thread, setThread] = useState([]);
+  const [threadLoading, setThreadLoading] = useState(false);
+  const [reply, setReply] = useState("");
+  const [sending, setSending] = useState(false);
+  const [search, setSearch] = useState("");
+  const [readFilter, setReadFilter] = useState("all"); // all | unread | read
+  const [sort, setSort] = useState("recent"); // recent | old
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const threadEndRef = useRef(null);
+
+  const getToken = async () => {
+    try { const s = await refreshSession(); return s?.accessToken || ""; } catch { return ""; }
+  };
+
+  const loadConversations = async () => {
+    setLoading(true);
+    try {
+      const token = await getToken();
+      if (!token) throw new Error("SESSION");
+      const list = await fetchCoachConversations(token);
+      setConversations(list);
+      if (typeof onUnreadChange === "function") {
+        onUnreadChange(list.reduce((sum, c) => sum + (Number(c.unread) || 0), 0));
+      }
+    } catch {
+      /* silencieux : liste vide */
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadConversations(); /* eslint-disable-next-line */ }, []);
+
+  // Quasi temps réel : rafraîchissement automatique (fil ouvert = 4 s, inbox = 8 s).
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const token = await getToken();
+      if (!token) return;
+      if (activeId) {
+        try {
+          const msgs = await fetchMessageThread({ accessToken: token, athleteId: activeId });
+          setThread((prev) => (prev.length !== msgs.length ? msgs : prev));
+        } catch { /* ignore */ }
+      } else {
+        try {
+          const list = await fetchCoachConversations(token);
+          setConversations(list);
+          if (typeof onUnreadChange === "function") {
+            onUnreadChange(list.reduce((sum, c) => sum + (Number(c.unread) || 0), 0));
+          }
+        } catch { /* ignore */ }
+      }
+    }, activeId ? 2000 : 4000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line
+  }, [activeId]);
+
+  useEffect(() => {
+    if (threadEndRef.current) threadEndRef.current.scrollIntoView({ block: "end" });
+  }, [thread, activeId]);
+
+  const openConversation = async (conv) => {
+    setActiveId(conv.athlete_id);
+    setActiveName(conv.athlete_name);
+    setThreadLoading(true);
+    setThread([]);
+    try {
+      const token = await getToken();
+      if (!token) throw new Error("SESSION");
+      const msgs = await fetchMessageThread({ accessToken: token, athleteId: conv.athlete_id });
+      setThread(msgs);
+      // localement : cette conversation passe en « lu »
+      setConversations((prev) => prev.map((c) => (c.athlete_id === conv.athlete_id ? { ...c, unread: 0 } : c)));
+      if (typeof onUnreadChange === "function") {
+        onUnreadChange((prev) => Math.max(0, (Number(prev) || 0) - (Number(conv.unread) || 0)));
+      }
+    } catch {
+      if (typeof onToast === "function") onToast({ type: "error", text: "Impossible d'ouvrir la conversation." });
+    } finally {
+      setThreadLoading(false);
+    }
+  };
+
+  const backToInbox = () => { setActiveId(null); setThread([]); loadConversations(); };
+
+  const sendReply = async () => {
+    const body = reply.trim();
+    if (!body || !activeId) return;
+    setSending(true);
+    try {
+      const token = await getToken();
+      if (!token) throw new Error("SESSION");
+      const msg = await sendBackendMessage({ accessToken: token, athleteId: activeId, body, kind: "text" });
+      if (msg) setThread((prev) => [...prev, msg]);
+      setReply("");
+      setConversations((prev) => prev.map((c) => (c.athlete_id === activeId ? { ...c, last_message: body, last_sender: "coach", last_at: new Date().toISOString() } : c)));
+    } catch {
+      if (typeof onToast === "function") onToast({ type: "error", text: "Échec de l'envoi. Réessaie." });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const fromTs = dateFrom ? new Date(`${dateFrom}T00:00:00`).getTime() : null;
+    const toTs = dateTo ? new Date(`${dateTo}T23:59:59`).getTime() : null;
+    const list = conversations.filter((c) => {
+      if (q && !String(c.athlete_name || "").toLowerCase().includes(q)) return false;
+      if (readFilter === "unread" && !(c.unread > 0)) return false;
+      if (readFilter === "read" && c.unread > 0) return false;
+      const ts = new Date(c.last_at).getTime();
+      if (fromTs != null && Number.isFinite(ts) && ts < fromTs) return false;
+      if (toTs != null && Number.isFinite(ts) && ts > toTs) return false;
+      return true;
+    });
+    list.sort((a, b) => {
+      const da = new Date(a.last_at).getTime();
+      const db = new Date(b.last_at).getTime();
+      return sort === "recent" ? db - da : da - db;
+    });
+    return list;
+  }, [conversations, search, readFilter, sort, dateFrom, dateTo]);
+
+  const fmtWhen = (iso) => {
+    try { return new Date(iso).toLocaleString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }); }
+    catch { return ""; }
+  };
+  const preview = (c) => {
+    const prefix = c.last_sender === "coach" ? "Vous : " : "";
+    const body = c.last_kind && c.last_kind !== "text" ? `[${c.last_kind === "image" ? "Image" : c.last_kind === "voice" ? "Vocal" : "Fichier"}]` : c.last_message;
+    return `${prefix}${body || ""}`;
+  };
+  const totalUnread = conversations.reduce((s, c) => s + (Number(c.unread) || 0), 0);
+  const hasFilter = Boolean(search.trim() || dateFrom || dateTo || readFilter !== "all");
+
+  // ---- Vue conversation ----
+  if (activeId) {
+    return (
+      <article className="settings-card flex min-h-[60vh] flex-col">
+        <div className="flex items-center gap-3 border-b border-slate-600/40 pb-3">
+          <button type="button" onClick={backToInbox} className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-500/60 text-slate-300 transition hover:border-brand-300 hover:text-brand-200" aria-label="Retour">
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18 9 12l6-6" /></svg>
+          </button>
+          <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-brand-300/40 bg-brand-500/10 text-xs font-black text-brand-200">
+            {getInitials(activeName)}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate font-black text-white">{activeName}</p>
+            <p className="text-[11px] text-slate-400">Conversation</p>
+          </div>
+        </div>
+
+        <div className="flex-1 space-y-2 overflow-y-auto py-3">
+          {threadLoading ? (
+            <p className="py-8 text-center text-sm text-slate-400">Chargement…</p>
+          ) : thread.length === 0 ? (
+            <p className="py-8 text-center text-sm text-slate-400">Aucun message.</p>
+          ) : (
+            thread.map((m) => {
+              const mine = m.sender === "coach";
+              const body = m.kind && m.kind !== "text" ? `[${m.kind === "image" ? "Image" : m.kind === "voice" ? "Vocal" : "Fichier"}]` : m.body;
+              return (
+                <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm ${mine ? "bg-brand-500 text-slate-950" : "bg-slate-800 text-slate-100"}`}>
+                    <p className="whitespace-pre-wrap break-words">{body}</p>
+                    <p className={`mt-1 text-[10px] ${mine ? "text-slate-900/60" : "text-slate-400"}`}>{fmtWhen(m.created_at)}</p>
+                  </div>
+                </div>
+              );
+            })
+          )}
+          <div ref={threadEndRef} />
+        </div>
+
+        <div className="mt-2 flex items-end gap-2 border-t border-slate-600/40 pt-3">
+          <textarea
+            value={reply}
+            onChange={(e) => setReply(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendReply(); } }}
+            rows={1}
+            placeholder="Écris ta réponse…"
+            className={`${authInputClass} max-h-32 flex-1 resize-none`}
+          />
+          <button type="button" onClick={sendReply} disabled={sending || !reply.trim()} className="rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-black text-slate-950 transition hover:bg-brand-400 disabled:cursor-not-allowed disabled:opacity-50">
+            {sending ? "…" : "Envoyer"}
+          </button>
+        </div>
+      </article>
+    );
+  }
+
+  // ---- Vue inbox (liste des conversations) ----
+  return (
+    <article className="settings-card">
+      <SettingsSectionHeader
+        icon="comments"
+        eyebrow="Messagerie"
+        title="Messages des athlètes"
+        action={(
+          <button type="button" onClick={loadConversations} disabled={loading} className="rounded-xl border border-slate-500/60 px-3 py-1.5 text-xs font-black text-slate-300 transition hover:border-brand-300 hover:text-brand-200 disabled:opacity-50">
+            {loading ? "…" : "Rafraîchir"}
+          </button>
+        )}
+      />
+
+      {/* Filtres */}
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <label className="block text-xs font-semibold text-slate-300 xl:col-span-1">
+          <span>Statut</span>
+          <select value={readFilter} onChange={(e) => setReadFilter(e.target.value)} className={authSelectClass}>
+            <option value="all">Tous</option>
+            <option value="unread">Non lus</option>
+            <option value="read">Lus</option>
+          </select>
+        </label>
+        <label className="block text-xs font-semibold text-slate-300">
+          <span>Trier</span>
+          <select value={sort} onChange={(e) => setSort(e.target.value)} className={authSelectClass}>
+            <option value="recent">Plus récent</option>
+            <option value="old">Plus ancien</option>
+          </select>
+        </label>
+        <label className="block text-xs font-semibold text-slate-300">
+          <span>Du</span>
+          <input type="date" value={dateFrom} max={dateTo || undefined} onChange={(e) => setDateFrom(e.target.value)} className={authInputClass} />
+        </label>
+        <label className="block text-xs font-semibold text-slate-300">
+          <span>Au</span>
+          <input type="date" value={dateTo} min={dateFrom || undefined} onChange={(e) => setDateTo(e.target.value)} className={authInputClass} />
+        </label>
+        <label className="block text-xs font-semibold text-slate-300">
+          <span>Nom / prénom</span>
+          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher…" className={authInputClass} />
+        </label>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-400">
+        <span>{filtered.length} conversation{filtered.length > 1 ? "s" : ""}{totalUnread ? ` · ${totalUnread} non lu${totalUnread > 1 ? "s" : ""}` : ""}</span>
+        {hasFilter ? (
+          <button type="button" onClick={() => { setSearch(""); setReadFilter("all"); setDateFrom(""); setDateTo(""); }} className="font-bold text-brand-300 hover:text-brand-200">Réinitialiser les filtres</button>
+        ) : null}
+      </div>
+
+      {/* Liste */}
+      <div className="mt-4 space-y-2">
+        {loading ? (
+          <p className="rounded-xl border border-slate-600/60 bg-slate-950/40 px-3 py-6 text-center text-sm text-slate-300">Chargement…</p>
+        ) : conversations.length === 0 ? (
+          <p className="rounded-xl border border-slate-600/60 bg-slate-950/40 px-3 py-6 text-center text-sm text-slate-300">Aucun message reçu pour le moment.</p>
+        ) : filtered.length === 0 ? (
+          <p className="rounded-xl border border-slate-600/60 bg-slate-950/40 px-3 py-6 text-center text-sm text-slate-300">Aucune conversation ne correspond à ces filtres.</p>
+        ) : (
+          filtered.map((c) => {
+            const unread = c.unread > 0;
+            return (
+              <button
+                key={c.athlete_id}
+                type="button"
+                onClick={() => openConversation(c)}
+                className={`flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition ${unread ? "border-brand-300/50 bg-brand-500/5" : "border-slate-600/60 bg-slate-950/40"} hover:border-brand-300`}
+              >
+                <div className="relative shrink-0">
+                  <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-brand-300/40 bg-brand-500/10 text-sm font-black text-brand-200">
+                    {c.athlete_avatar ? <img src={c.athlete_avatar} alt="" className="h-full w-full object-cover" /> : <span>{getInitials(c.athlete_name)}</span>}
+                  </div>
+                  {unread ? <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-slate-950 bg-red-500" aria-label="Non lu" /> : null}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className={`truncate ${unread ? "font-black text-white" : "font-bold text-slate-200"}`}>{c.athlete_name}</p>
+                    <span className="shrink-0 text-[11px] font-semibold text-slate-400">{fmtWhen(c.last_at)}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className={`truncate text-xs ${unread ? "text-slate-200" : "text-slate-400"}`}>{preview(c)}</p>
+                    {unread ? <span className="shrink-0 rounded-full bg-red-500 px-1.5 text-[10px] font-black text-white">{c.unread}</span> : null}
+                  </div>
+                </div>
+              </button>
+            );
+          })
+        )}
+      </div>
+    </article>
+  );
+}
+
+function CoachReviewsPage({ reviews, onChanged, refreshSession, onToast, authInputClass, authSelectClass }) {
+  const [sort, setSort] = useState("recent"); // recent | old
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [nameQuery, setNameQuery] = useState("");
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState(() => new Set());
+  const [busy, setBusy] = useState(false);
+
+  const toggleSelect = (id) =>
+    setSelected((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const exitSelect = () => { setSelectMode(false); setSelected(new Set()); };
+  const resetFilters = () => { setSort("recent"); setDateFrom(""); setDateTo(""); setNameQuery(""); };
+
+  const filtered = useMemo(() => {
+    const q = nameQuery.trim().toLowerCase();
+    const fromTs = dateFrom ? new Date(`${dateFrom}T00:00:00`).getTime() : null;
+    const toTs = dateTo ? new Date(`${dateTo}T23:59:59`).getTime() : null;
+    const list = (Array.isArray(reviews) ? reviews : []).filter((r) => {
+      if (q && !String(r.authorName || "").toLowerCase().includes(q)) return false;
+      const ts = new Date(r.createdAt).getTime();
+      if (fromTs != null && Number.isFinite(ts) && ts < fromTs) return false;
+      if (toTs != null && Number.isFinite(ts) && ts > toTs) return false;
+      return true;
+    });
+    list.sort((a, b) => {
+      const da = new Date(a.createdAt).getTime();
+      const db = new Date(b.createdAt).getTime();
+      return sort === "recent" ? db - da : da - db;
+    });
+    return list;
+  }, [reviews, nameQuery, dateFrom, dateTo, sort]);
+
+  const total = Array.isArray(reviews) ? reviews.length : 0;
+  const hasFilter = Boolean(nameQuery.trim() || dateFrom || dateTo);
+
+  const runDelete = async (opts, successText) => {
+    setBusy(true);
+    try {
+      let token = "";
+      try { const s = await refreshSession(); token = s?.accessToken || ""; } catch { /* ignore */ }
+      if (!token) throw new Error("SESSION_REQUIRED");
+      try {
+        await deleteCoachClientReviews({ accessToken: token, ...opts });
+      } catch (firstErr) {
+        // Auto-réparation : coach pas encore reconnu côté serveur → on pose le marqueur puis on réessaie.
+        if (firstErr?.status === 403 || firstErr?.code === "FORBIDDEN") {
+          try {
+            await callSupabaseFunctionWithAuth("update-account-security", { metadata: { is_coach: true } }, token);
+          } catch { /* ignore : le marqueur est déjà posé */ }
+          await deleteCoachClientReviews({ accessToken: token, ...opts });
+        } else {
+          throw firstErr;
+        }
+      }
+      if (opts.all) onChanged([]);
+      else onChanged((prev) => prev.filter((r) => !opts.reviewIds.includes(r.id)));
+      exitSelect();
+      if (typeof onToast === "function") onToast({ type: "success", text: successText });
+    } catch {
+      if (typeof onToast === "function") onToast({ type: "error", text: "Échec de la suppression. Réessaie." });
+    } finally {
+      setBusy(false);
+    }
+  };
+  const deleteOne = (id) => runDelete({ reviewIds: [id] }, "Commentaire supprimé ✓");
+  const deleteSelected = () => runDelete({ reviewIds: [...selected] }, "Commentaires supprimés ✓");
+  const deleteAll = () => runDelete({ all: true }, "Tous les commentaires ont été supprimés ✓");
+
+  const fmtDate = (iso) => {
+    try { return new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" }); }
+    catch { return ""; }
+  };
+
+  return (
+    <article className="settings-card">
+      <SettingsSectionHeader
+        icon="comments"
+        eyebrow="Modération"
+        title="Commentaires des athlètes"
+        action={(
+          <div className="flex flex-wrap items-center gap-2">
+            {selectMode ? (
+              <>
+                <button type="button" onClick={deleteSelected} disabled={busy || selected.size === 0} className="rounded-xl border border-red-400/60 bg-red-500/10 px-3 py-1.5 text-xs font-black text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50">
+                  Supprimer la sélection{selected.size ? ` (${selected.size})` : ""}
+                </button>
+                <button type="button" onClick={exitSelect} disabled={busy} className="rounded-xl border border-slate-500/60 px-3 py-1.5 text-xs font-black text-slate-300 transition hover:border-brand-300 hover:text-brand-200">
+                  Annuler
+                </button>
+              </>
+            ) : (
+              <>
+                <button type="button" onClick={deleteAll} disabled={busy || total === 0} className="rounded-xl border border-red-400/60 bg-red-500/10 px-3 py-1.5 text-xs font-black text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50">
+                  Tout supprimer
+                </button>
+                <button type="button" onClick={() => setSelectMode(true)} disabled={busy || filtered.length === 0} className="rounded-xl border border-slate-500/60 px-3 py-1.5 text-xs font-black text-slate-300 transition hover:border-brand-300 hover:text-brand-200 disabled:cursor-not-allowed disabled:opacity-50">
+                  Sélectionner
+                </button>
+              </>
+            )}
+          </div>
+        )}
+      />
+
+      {/* Filtres */}
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <label className="block text-xs font-semibold text-slate-300">
+          <span>Trier</span>
+          <select value={sort} onChange={(e) => setSort(e.target.value)} className={authSelectClass}>
+            <option value="recent">Plus récent</option>
+            <option value="old">Plus ancien</option>
+          </select>
+        </label>
+        <label className="block text-xs font-semibold text-slate-300">
+          <span>Du</span>
+          <input type="date" value={dateFrom} max={dateTo || undefined} onChange={(e) => setDateFrom(e.target.value)} className={authInputClass} />
+        </label>
+        <label className="block text-xs font-semibold text-slate-300">
+          <span>Au</span>
+          <input type="date" value={dateTo} min={dateFrom || undefined} onChange={(e) => setDateTo(e.target.value)} className={authInputClass} />
+        </label>
+        <label className="block text-xs font-semibold text-slate-300">
+          <span>Nom / prénom de l'athlète</span>
+          <input type="text" value={nameQuery} onChange={(e) => setNameQuery(e.target.value)} placeholder="Rechercher un athlète…" className={authInputClass} />
+        </label>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-400">
+        <span>{filtered.length} affiché{filtered.length > 1 ? "s" : ""} / {total} au total</span>
+        {hasFilter ? (
+          <button type="button" onClick={resetFilters} className="font-bold text-brand-300 hover:text-brand-200">Réinitialiser les filtres</button>
+        ) : null}
+      </div>
+
+      {/* Liste */}
+      <div className="mt-4 space-y-3">
+        {total === 0 ? (
+          <p className="rounded-xl border border-slate-600/60 bg-slate-950/40 px-3 py-6 text-center text-sm text-slate-300">Aucun commentaire pour le moment.</p>
+        ) : filtered.length === 0 ? (
+          <p className="rounded-xl border border-slate-600/60 bg-slate-950/40 px-3 py-6 text-center text-sm text-slate-300">Aucun commentaire ne correspond à ces filtres.</p>
+        ) : null}
+
+        {filtered.map((r) => {
+          const initials = getInitials(r.authorName);
+          return (
+            <div key={r.id} className="flex items-start gap-3 rounded-xl border border-slate-600/60 bg-slate-950/40 p-3">
+              {selectMode ? (
+                <label className="flex shrink-0 cursor-pointer items-center pt-1">
+                  <input type="checkbox" checked={selected.has(r.id)} onChange={() => toggleSelect(r.id)} className="h-5 w-5 cursor-pointer accent-brand-500" />
+                </label>
+              ) : null}
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-brand-300/40 bg-brand-500/10 text-xs font-black text-brand-200">
+                {r.avatarUrl ? <img src={r.avatarUrl} alt="" className="h-full w-full object-cover" /> : <span>{initials}</span>}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="truncate font-black text-white">{r.authorName}</p>
+                  <span className="text-[11px] font-semibold text-slate-400">{fmtDate(r.createdAt)}</span>
+                </div>
+                <div className="mt-0.5 flex items-center gap-0.5" aria-label={`Note ${r.rating}/5`}>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <svg key={n} viewBox="0 0 24 24" className={`h-3.5 w-3.5 ${n <= r.rating ? "text-brand-300" : "text-slate-600"}`} fill="currentColor" aria-hidden="true">
+                      <path d="M12 2.6 14.4 8l5.9.5-4.45 3.9 1.35 5.8L12 15.15 6.8 18.2l1.35-5.8L3.7 8.5 9.6 8 12 2.6Z" />
+                    </svg>
+                  ))}
+                </div>
+                <p className="mt-1.5 break-words text-sm text-slate-200">{r.message}</p>
+              </div>
+              {!selectMode ? (
+                <button type="button" onClick={() => deleteOne(r.id)} disabled={busy} className="flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-red-400/60 bg-red-500/10 px-3 py-2 text-xs font-black text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50">
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" /></svg>
+                  <span className="hidden sm:inline">Suppr.</span>
+                </button>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+    </article>
+  );
+}
+
+function CoachContactsEditor({ contacts, onSaved, onToast, refreshSession, authInputClass, authSelectClass }) {
+  const kindLabels = {
+    facebook: "Facebook",
+    tiktok: "TikTok",
+    instagram: "Instagram",
+    linkedin: "LinkedIn",
+    whatsapp: "WhatsApp",
+    youtube: "YouTube",
+    phone: "Téléphone",
+    email: "Email",
+    website: "Site web",
+    custom: "Autre"
+  };
+  // On reflète EXACTEMENT la base : si le coach supprime tout, l'éditeur reste vide (pas de retour
+  // des valeurs par défaut). La base est l'unique source de vérité.
+  const mirror = (list) => (Array.isArray(list) ? list : []).map((c) => ({ ...c }));
+  const [draft, setDraft] = useState(() => mirror(contacts));
+  const [saving, setSaving] = useState(false);
+  const [feedback, setFeedback] = useState({ type: "", text: "" });
+  // Tant que le coach n'a rien modifié, on reflète la dernière liste enregistrée en base
+  // (rechargée après (re)connexion). On n'écrase jamais des modifications en cours.
+  const dirtyRef = useRef(false);
+  useEffect(() => {
+    if (dirtyRef.current) return;
+    setDraft(mirror(contacts));
+  }, [contacts]);
+
+  const updateRow = (i, patch) => { dirtyRef.current = true; setDraft((rows) => rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r))); };
+  const removeRow = (i) => { dirtyRef.current = true; setDraft((rows) => rows.filter((_, idx) => idx !== i)); };
+  const addRow = () => { dirtyRef.current = true; setDraft((rows) => [...rows, { kind: "custom", label: "", value: "" }]); };
+
+  // Sélection multiple pour supprimer rapidement plusieurs réseaux.
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState(() => new Set());
+  const toggleSelect = (i) =>
+    setSelected((s) => { const n = new Set(s); n.has(i) ? n.delete(i) : n.add(i); return n; });
+  const exitSelect = () => { setSelectMode(false); setSelected(new Set()); };
+  const deleteAll = () => { dirtyRef.current = true; setDraft([]); exitSelect(); };
+  const deleteSelected = () => {
+    dirtyRef.current = true;
+    setDraft((rows) => rows.filter((_, idx) => !selected.has(idx)));
+    exitSelect();
+  };
+
+  const save = async () => {
+    const cleaned = draft
+      .map((r, i) => ({ kind: r.kind || "custom", label: String(r.label || "").trim(), value: String(r.value || "").trim(), sort_order: i }))
+      .filter((r) => r.value);
+    setSaving(true);
+    setFeedback({ type: "", text: "" });
+    try {
+      let token = "";
+      try {
+        const s = await refreshSession();
+        token = s?.accessToken || "";
+      } catch {
+        /* ignore */
+      }
+      if (!token) throw new Error("SESSION_REQUIRED");
+      let data;
+      try {
+        data = await callSupabaseFunctionWithAuth("site-contacts", { action: "save", contacts: cleaned }, token);
+      } catch (firstErr) {
+        // Auto-réparation : compte coach pas encore reconnu côté serveur (email changé) → on pose le
+        // marqueur is_coach puis on réessaie une fois.
+        if (firstErr?.status === 403 || firstErr?.code === "FORBIDDEN") {
+          // Le marqueur is_coach est écrit côté serveur même si la fonction renvoie une erreur ensuite :
+          // on ignore son résultat et on réessaie l'enregistrement.
+          try {
+            await callSupabaseFunctionWithAuth("update-account-security", { metadata: { is_coach: true } }, token);
+          } catch { /* ignore : le marqueur est déjà posé */ }
+          data = await callSupabaseFunctionWithAuth("site-contacts", { action: "save", contacts: cleaned }, token);
+        } else {
+          throw firstErr;
+        }
+      }
+      const list = Array.isArray(data?.contacts) ? data.contacts : cleaned;
+      if (typeof onSaved === "function") onSaved(list);
+      dirtyRef.current = false;
+      setDraft(list.map((c) => ({ ...c })));
+      setFeedback({ type: "", text: "" });
+      if (typeof onToast === "function") {
+        onToast({ type: "success", text: "Contacts enregistrés ✓" });
+      }
+    } catch (err) {
+      const status = err?.status ? ` (${err.status})` : "";
+      const detail =
+        err?.code === "FORBIDDEN" || err?.status === 403
+          ? "Action réservée au coach : ton compte n'est pas reconnu comme coach côté serveur."
+          : err?.code === "AUTH_REQUIRED" || err?.status === 401
+            ? "Session non reconnue. Reconnecte-toi puis réessaie."
+            : String(err?.message || "Erreur inconnue");
+      setFeedback({ type: "error", text: `Échec de l'enregistrement${status} : ${detail}` });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <article className="settings-card">
+      <SettingsSectionHeader
+        icon="contact"
+        eyebrow="Visible par tous"
+        title="Réseaux & contacts"
+        action={(
+          <div className="flex flex-wrap items-center gap-2">
+            {selectMode ? (
+              <>
+                <button type="button" onClick={deleteSelected} disabled={selected.size === 0} className="rounded-xl border border-red-400/60 bg-red-500/10 px-3 py-1.5 text-xs font-black text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50">
+                  Supprimer la sélection{selected.size ? ` (${selected.size})` : ""}
+                </button>
+                <button type="button" onClick={exitSelect} className="rounded-xl border border-slate-500/60 px-3 py-1.5 text-xs font-black text-slate-300 transition hover:border-brand-300 hover:text-brand-200">
+                  Annuler
+                </button>
+              </>
+            ) : (
+              <>
+                <button type="button" onClick={deleteAll} disabled={draft.length === 0} className="rounded-xl border border-red-400/60 bg-red-500/10 px-3 py-1.5 text-xs font-black text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50">
+                  Tout supprimer
+                </button>
+                <button type="button" onClick={() => setSelectMode(true)} disabled={draft.length === 0} className="rounded-xl border border-slate-500/60 px-3 py-1.5 text-xs font-black text-slate-300 transition hover:border-brand-300 hover:text-brand-200 disabled:cursor-not-allowed disabled:opacity-50">
+                  Sélectionner
+                </button>
+              </>
+            )}
+            <button type="button" onClick={addRow} className="rounded-xl border border-brand-300/60 bg-brand-500/10 px-3 py-1.5 text-xs font-black text-brand-200 transition hover:bg-brand-500/20">
+              + Ajouter
+            </button>
+          </div>
+        )}
+      />
+      <div className="mt-4 space-y-3">
+        {draft.length === 0 ? (
+          <p className="rounded-xl border border-slate-600/60 bg-slate-950/40 px-3 py-3 text-sm text-slate-300">Aucun contact. Clique sur « + Ajouter ».</p>
+        ) : null}
+        {draft.map((row, i) => (
+          <div key={i} className="flex items-stretch gap-2">
+            {selectMode ? (
+              <label className="flex shrink-0 cursor-pointer items-center px-1">
+                <input type="checkbox" checked={selected.has(i)} onChange={() => toggleSelect(i)} className="h-5 w-5 cursor-pointer accent-brand-500" />
+              </label>
+            ) : null}
+          <div className="grid flex-1 grid-cols-1 gap-2 rounded-xl border border-slate-600/60 bg-slate-950/40 p-3 sm:grid-cols-[minmax(11rem,17rem)_1fr_auto] sm:items-stretch">
+            {row.kind === "custom" ? (
+              <div className="profile-other-combo" style={{ marginTop: 0 }}>
+                <select value={row.kind} onChange={(e) => updateRow(i, { kind: e.target.value })} className="profile-other-combo__select">
+                  {CONTACT_KINDS.map((k) => (
+                    <option key={k} value={k}>{kindLabels[k] || k}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  value={row.label}
+                  onChange={(e) => updateRow(i, { label: e.target.value })}
+                  className="profile-other-combo__input"
+                  placeholder="Hicham Mechekour"
+                />
+              </div>
+            ) : (
+              <select value={row.kind} onChange={(e) => updateRow(i, { kind: e.target.value })} className={authSelectClass}>
+                {CONTACT_KINDS.map((k) => (
+                  <option key={k} value={k}>{kindLabels[k] || k}</option>
+                ))}
+              </select>
+            )}
+            {row.kind === "custom" ? (
+              <input value={row.value} onChange={(e) => updateRow(i, { value: e.target.value })} placeholder="Lien / numéro / email" className={authInputClass} />
+            ) : (
+              <div className="grid gap-2 sm:grid-cols-2">
+                <input
+                  value={row.label}
+                  onChange={(e) => updateRow(i, { label: e.target.value })}
+                  disabled={row.kind === "phone" || row.kind === "whatsapp"}
+                  placeholder="Hicham Mechekour"
+                  className={`${authInputClass} ${row.kind === "phone" || row.kind === "whatsapp" ? "cursor-not-allowed opacity-60" : ""}`}
+                />
+                <input value={row.value} onChange={(e) => updateRow(i, { value: e.target.value })} placeholder="Lien / numéro / email" className={authInputClass} />
+              </div>
+            )}
+            <button type="button" onClick={() => removeRow(i)} className="mt-1.5 flex items-center justify-center gap-1.5 self-stretch rounded-lg border border-red-400/60 bg-red-500/10 px-3 text-xs font-black text-red-300 transition hover:bg-red-500/20">
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" /></svg>
+              Suppr.
+            </button>
+          </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button type="button" onClick={save} disabled={saving} className="rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-black text-slate-950 transition hover:bg-brand-400 disabled:cursor-not-allowed disabled:opacity-50">
+          {saving ? "Enregistrement…" : "Enregistrer les contacts"}
+        </button>
+        {feedback.text ? (
+          <span className={`text-xs font-bold ${feedback.type === "success" ? "text-brand-300" : "text-red-400"}`}>{feedback.text}</span>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
 export default function App() {
   const heroImages = [coachHero, coachHeroAlt];
   const cvDownloadHref = "/cv.pdf";
@@ -10186,6 +11650,35 @@ export default function App() {
       return "dashboard";
     }
   });
+  const [dashCancelOpen, setDashCancelOpen] = useState(false);
+  // Notification « Coach Hicham vous a envoyé un programme » (payant ou gratuit).
+  // Résumé au premier chargement, puis une notif par nouveau programme ajouté ensuite.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const key = "hm-programs-notified";
+      const saved = window.localStorage.getItem(key);
+      const known = new Set(saved ? JSON.parse(saved) : []);
+      const currentIds = coachPrograms.map((p) => p.id);
+      const newIds = currentIds.filter((id) => !known.has(id));
+      if (newIds.length) {
+        if (known.size === 0) {
+          addShopNotification(
+            `Coach Hicham vous a envoyé ${newIds.length} programme${newIds.length > 1 ? "s" : ""}. Retrouvez-${newIds.length > 1 ? "les" : "le"} dans « Mes programmes ».`
+          );
+        } else {
+          newIds.forEach((id) => {
+            const p = coachPrograms.find((x) => x.id === id);
+            if (p) addShopNotification(`Coach Hicham vous a envoyé le programme « ${p.name} » (${p.priceType}).`);
+          });
+        }
+        window.localStorage.setItem(key, JSON.stringify(currentIds));
+      }
+    } catch {
+      /* ignore */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [contactForm, setContactForm] = useState({
     message: "",
     rating: 0
@@ -10445,6 +11938,77 @@ export default function App() {
   const isCompleteProfilePage = currentRoute.path === "/complete-profile";
   const isDashboardPage = currentRoute.path === "/dashboard";
   const isHomePage = currentRoute.path === "/";
+  const isCoachAccount = isCoachUser(currentUser);
+  // Dès qu'on voit l'email du coach, on mémorise son identifiant (pour le garder reconnu après un changement d'email).
+  useEffect(() => {
+    if (isCoachEmail(currentUser?.email) && currentUser?.id) rememberCoachUid(currentUser.id);
+  }, [currentUser?.email, currentUser?.id]);
+  // Marque le compte comme coach côté serveur (is_coach) une seule fois : autorise l'enregistrement
+  // des contacts même si le coach a changé son email.
+  const coachFlaggedRef = useRef(false);
+  useEffect(() => {
+    if (!isCoachAccount || !currentUser?.id || coachFlaggedRef.current) return;
+    let flagged = "";
+    try { flagged = window.localStorage.getItem("hm-coach-flagged") || ""; } catch { /* ignore */ }
+    if (flagged === currentUser.id) { coachFlaggedRef.current = true; return; }
+    coachFlaggedRef.current = true;
+    (async () => {
+      try {
+        const s = await refreshCurrentUserSession();
+        if (!s?.accessToken) { coachFlaggedRef.current = false; return; }
+        await callSupabaseFunctionWithAuth("update-account-security", { metadata: { is_coach: true } }, s.accessToken);
+        try { window.localStorage.setItem("hm-coach-flagged", currentUser.id); } catch { /* ignore */ }
+      } catch {
+        coachFlaggedRef.current = false; // on réessaiera au prochain chargement
+      }
+    })();
+  }, [isCoachAccount, currentUser?.id]);
+  // Compteur de messages non lus (pastille rouge du menu Messagerie), chargé quand le coach est connecté.
+  // Le chat (CoachInbox) accède à la session via ce fournisseur global — tenu à jour à chaque rendu.
+  useEffect(() => { setHmSessionGetter(refreshCurrentUserSession); setHmIsCoach(isCoachAccount); });
+  // Le coach arrive d'abord sur la page Paramètres (une seule fois, sans forcer la navigation ensuite).
+  const coachLandedRef = useRef(false);
+  useEffect(() => {
+    if (isCoachAccount && isDashboardPage && !coachLandedRef.current) {
+      coachLandedRef.current = true;
+      const view = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "").get("view");
+      if (!view || view === "dashboard") {
+        setActiveNavKey("settings");
+      }
+    }
+    if (!isCoachAccount) coachLandedRef.current = false;
+  }, [isCoachAccount, isDashboardPage]);
+
+  // Contacts du footer : la base est la source de vérité. On reflète EXACTEMENT ce qui y est enregistré
+  // (une liste vide reste vide → une suppression est définitive et ne « revient » jamais).
+  const [siteContacts, setSiteContacts] = useState(DEFAULT_SITE_CONTACTS);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await callSupabaseFunction("site-contacts", { action: "list" });
+        const list = Array.isArray(data?.contacts) ? data.contacts : [];
+        if (!cancelled) setSiteContacts(list);
+      } catch {
+        // Fonction indisponible : on garde les valeurs par défaut à l'écran.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  // Coach : pays de résidence par défaut = Algérie (s'il n'en a pas encore choisi un).
+  useEffect(() => {
+    if (isCoachAccount && !settingsForm.country) {
+      setSettingsForm((prev) => (prev.country ? prev : { ...prev, country: "DZ", phoneCountryCode: getCountryDialCode("DZ") }));
+    }
+  }, [isCoachAccount, settingsForm.country]);
+  const [dashboardNow, setDashboardNow] = useState(() => new Date());
+  useEffect(() => {
+    if (!isDashboardPage) return undefined;
+    const id = setInterval(() => setDashboardNow(new Date()), 30000);
+    return () => clearInterval(id);
+  }, [isDashboardPage]);
   const authSearchParams = new URLSearchParams(currentRoute.search);
   const authModeQuery = authSearchParams.get("mode");
   const authFormQuery = authSearchParams.get("form");
@@ -10531,6 +12095,17 @@ export default function App() {
   const currentUserReview = currentUser?.id
     ? sortedClientReviews.find((review) => review.authorId === currentUser.id) || null
     : null;
+  // Si l'athlète a déjà un avis, on pré-remplit automatiquement le formulaire (message + note).
+  const currentUserReviewId = currentUserReview?.id || "";
+  useEffect(() => {
+    if (currentUserReview) {
+      setEditingReviewId(currentUserReview.id);
+      setContactForm({ message: currentUserReview.message, rating: currentUserReview.rating });
+    } else {
+      setEditingReviewId("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUserReviewId]);
   const clientReviewCount = clientReviews.length;
   const averageClientRating = clientReviewCount
     ? clientReviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / clientReviewCount
@@ -11431,12 +13006,19 @@ export default function App() {
       return;
     }
 
+    // Le coach ne passe jamais par « compléter le profil » : on le renvoie vers son espace.
+    if (isCompleteProfilePage && currentUser && isCoachUser(currentUser)) {
+      navigateTo("/dashboard?view=settings");
+      return;
+    }
+
     // Onboarding obligatoire : un utilisateur connecté qui n'a pas terminé son profil sportif
     // (nouveau compte) va DIRECTEMENT sur « compléter le profil », et n'est jamais laissé sur la
     // page d'accueil ni sur le dashboard. (sportProfileCompleted est fiable : posé à la connexion /
     // restauration de session, et mis à true une fois le profil complété → pas de boucle ni de flash.)
     if (
       currentUser &&
+      !isCoachUser(currentUser) &&
       currentUser.sportProfileCompleted === false &&
       (isDashboardPage || isHomePage)
     ) {
@@ -11589,12 +13171,14 @@ export default function App() {
       setClientReviews((prev) => [savedReview, ...prev.filter((review) => review.authorId !== savedReview.authorId)].slice(0, 100));
       setSendFeedback({ type: "", text: "" });
       const wasEditing = Boolean(editingReviewId);
-      setEditingReviewId("");
+      // On garde le formulaire pré-rempli et le bouton actif après enregistrement :
+      // l'athlète peut re-modifier. Le formulaire ne se vide qu'à la suppression de l'avis.
+      setEditingReviewId(savedReview.id);
       setHighlightedReviewId(savedReview.id);
       setReviewPage(0);
       setContactForm({
-        message: "",
-        rating: 0
+        message: savedReview.message,
+        rating: savedReview.rating
       });
       setAppToast({
         type: "success",
@@ -11793,6 +13377,12 @@ export default function App() {
     }
 
     setAuthFeedback({ type: "success", text: authText.loginSuccess });
+    if (isCoachEmail(nextUser.email) && nextUser.id) rememberCoachUid(nextUser.id);
+    if (isCoachUser(nextUser)) {
+      // Le coach accède directement à son espace (Paramètres), sans « compléter le profil ».
+      navigateTo("/dashboard?view=settings");
+      return;
+    }
     if (!profileCompleted) {
       navigateTo("/complete-profile");
       return;
@@ -12640,10 +14230,12 @@ export default function App() {
       const dietarySupplements = sportProfileFormToSupplements(sportProfileForm);
       const injuryHistory = sportProfileFormToInjuries(sportProfileForm);
       const medicalInformation = sportProfileFormToMedicalInformation(sportProfileForm);
-      const profilePayload = {
-        ...sportProfileFormToPayload(sportProfileForm),
-        ...settingsFormToProfilePayload(settingsForm)
-      };
+      const profilePayload = isCoachAccount
+        ? settingsFormToProfilePayload(settingsForm)
+        : {
+            ...sportProfileFormToPayload(sportProfileForm),
+            ...settingsFormToProfilePayload(settingsForm)
+          };
       const emailChangeRedirectTo =
         typeof window !== "undefined"
           ? new URL("/dashboard?view=settings&email_change=confirmed", window.location.origin).toString()
@@ -12669,7 +14261,9 @@ export default function App() {
           injury_history: injuryHistory,
           has_no_medical_information: Boolean(sportProfileForm.hasNoMedicalInformation),
           medical_information: medicalInformation,
-          sport_goal_custom: sportProfileForm.sportGoal === "other" ? sportProfileForm.sportGoalCustom.trim() : ""
+          sport_goal_custom: sportProfileForm.sportGoal === "other" ? sportProfileForm.sportGoalCustom.trim() : "",
+          // Marque durablement le compte comme coach (reconnu côté serveur même après un changement d'email).
+          ...(isCoachAccount ? { is_coach: true } : {})
         },
         profile: profilePayload,
         emailRedirectTo: emailChangeRedirectTo
@@ -12722,7 +14316,7 @@ export default function App() {
         }
       }
       let updatedProfile = updatedAccount?.profile ? normalizeSportProfile(updatedAccount.profile) : null;
-      if (!updatedProfile && isProfileAction) {
+      if (!updatedProfile && (isProfileAction || isCoachAccount)) {
         updatedProfile = normalizeSportProfile({
           ...sportProfile,
           ...settingsFormToProfilePayload(settingsForm),
@@ -13072,7 +14666,7 @@ export default function App() {
           <img src={hmLogo} alt="Logo HM" className="h-11 w-11 rounded-xl border border-brand-300/60" />
           <div>
             <p className="whitespace-nowrap text-[8px] uppercase tracking-[0.1em] text-brand-300 sm:text-[9px]">{content.nav.coachLabel}</p>
-            <p className="font-display text-base font-bold tracking-wide text-white sm:text-lg">HICHAM-FIT APP</p>
+            <p className="font-display text-base font-bold tracking-wide text-white sm:text-lg"><BrandAppText /></p>
           </div>
         </button>
 
@@ -13223,7 +14817,7 @@ export default function App() {
             ) : (
               <div className="py-10 text-center">
                 <p className="font-display text-lg font-black text-slate-900">Votre panier est vide</p>
-                <p className="mt-2 text-sm text-slate-500">Ajoutez des programmes payants pour les r\u00e9gler en une seule fois.</p>
+                <p className="mt-2 text-sm text-slate-500">Ajoutez des programmes payants pour les régler en une seule fois.</p>
               </div>
             )}
           </div>
@@ -13764,6 +15358,15 @@ export default function App() {
 
   if (isDashboardPage && currentUser) {
     const dashboardLocale = language === "en" ? "en" : language === "ar" ? "ar" : "fr";
+    const athleteFirstName = sportProfile.first_name || currentUser.firstName || "";
+    const athleteLastName = sportProfile.last_name || currentUser.lastName || "";
+    const athleteDisplayName =
+      formatPersonName(`${athleteFirstName} ${athleteLastName}`.trim() || currentUser.fullName) ||
+      currentUser.email ||
+      "Athlete";
+    const athleteInitials = getNameInitials(athleteFirstName, athleteLastName, currentUser.fullName);
+    const coachDisplayName = COACH_DISPLAY_NAME;
+    const coachInitials = getInitials(COACH_DISPLAY_NAME);
     const athleteCountry =
       countryOptions.find((option) => option.code === sportProfile.country_code)?.name || sportProfile.country_code || "-";
     const athleteMatricule = getAthleteMatricule(currentUser.id);
@@ -13788,35 +15391,53 @@ export default function App() {
       } catch {
         return null;
       }
-      const nowMs = Date.now();
+      const nowMs = dashboardNow.getTime();
       return (
         list
           .filter(
             (a) =>
               a && !a.cancelled && a.date && a.time &&
-              new Date(`${a.date}T${a.time}:00`).getTime() + coachSlotDurationMin * 60000 > nowMs
+              coachSlotInstant(a.date, a.time).getTime() + coachSlotDurationMin * 60000 > nowMs
           )
           .sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`))[0] || null
       );
     })();
     const nextAppointment = nextAppointmentRaw
-      ? {
-          number: nextAppointmentRaw.number,
-          date: new Date(`${nextAppointmentRaw.date}T00:00:00`).toLocaleDateString(dashLocaleTag, {
-            weekday: "short",
-            day: "2-digit",
-            month: "short"
-          }),
-          time: `${nextAppointmentRaw.time}-${addMinutesToTime(nextAppointmentRaw.time, coachSlotDurationMin)}`,
-          mode: nextAppointmentRaw.mode === "vocal" ? "Appel vocal" : "Appel vidéo",
-          startsAt: new Date(`${nextAppointmentRaw.date}T${nextAppointmentRaw.time}:00`).toISOString()
-        }
+      ? (() => {
+          // Heure définie par le coach = heure d'Algérie → on l'affiche dans le fuseau local de l'athlète.
+          const instant = coachSlotInstant(nextAppointmentRaw.date, nextAppointmentRaw.time);
+          const wd = instant.toLocaleDateString(dashLocaleTag, { weekday: "long" });
+          return {
+            number: nextAppointmentRaw.number,
+            dateMain: instant.toLocaleDateString(dashLocaleTag, { day: "2-digit", month: "short", year: "numeric" }),
+            weekday: wd.charAt(0).toUpperCase() + wd.slice(1),
+            timeStart: instant.toLocaleTimeString(dashLocaleTag, { hour: "2-digit", minute: "2-digit", hour12: false }),
+            mode: nextAppointmentRaw.mode === "vocal" ? "Appel audio" : "Appel vidéo / audio",
+            startsAt: instant.toISOString()
+          };
+        })()
       : null;
-    const appointmentStartsAt = nextAppointment?.startsAt ? new Date(nextAppointment.startsAt) : null;
+    const gmtOffsetH = -Math.round(new Date().getTimezoneOffset() / 60);
+    const gmtLabel = `(GMT${gmtOffsetH >= 0 ? "+" : ""}${gmtOffsetH})`;
+    const dashboardAppointmentStatus = getAppointmentStatus(nextAppointmentRaw, dashboardNow);
+    const dashboardAppointmentCancellable = canCancelScheduledAppointment(nextAppointmentRaw, dashboardNow);
     // Bouton « Rejoindre » actif seulement à partir de 10 min avant et jusqu'à 10 min après l'heure.
-    const canJoinAppointment = appointmentStartsAt
-      ? Date.now() >= appointmentStartsAt.getTime() - 10 * 60 * 1000 && Date.now() <= appointmentStartsAt.getTime() + 10 * 60 * 1000
-      : false;
+    const canJoinAppointment = canJoinScheduledAppointment(nextAppointmentRaw, dashboardNow);
+    const dashboardStatusBadge =
+      dashboardAppointmentStatus === "confirmed"
+        ? {
+            cls: "bg-sky-100 text-sky-700",
+            label: language === "en" ? "Confirmed" : language === "ar" ? "مؤكد" : "Confirmé"
+          }
+        : dashboardAppointmentStatus === "expired" || dashboardAppointmentStatus === "cancelled"
+          ? {
+              cls: "bg-rose-100 text-rose-700",
+              label: language === "en" ? "Cancelled" : language === "ar" ? "ملغى" : "Annulé"
+            }
+          : {
+              cls: "bg-amber-100 text-amber-700",
+              label: language === "en" ? "Upcoming" : language === "ar" ? "قادم" : "À venir"
+            };
     // Dernier programme envoyé par le coach (le plus récent).
     const lastProgram = coachPrograms
       .slice()
@@ -13834,7 +15455,7 @@ export default function App() {
           : (dashHour >= 5 && dashHour < 18)
             ? "Bonjour"
             : "Bonsoir";
-    const welcomeName = currentUser.firstName || currentUser.fullName;
+    const welcomeName = formatPersonName(athleteFirstName) || athleteDisplayName;
     const dashboardCartCount = (() => {
       if (typeof window === "undefined") return 0;
       try {
@@ -13855,6 +15476,74 @@ export default function App() {
         {appToastNode}
         {globalCartNode}
         {paymentChoiceNode}
+        {dashCancelOpen && nextAppointment && dashboardAppointmentCancellable && typeof document !== "undefined"
+          ? createPortal(
+              <div
+                className="fixed inset-0 z-[97] grid place-items-center p-4"
+                style={{ background: "rgba(2,6,23,0.6)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Confirmer l'annulation"
+                onClick={() => setDashCancelOpen(false)}
+              >
+                <div className="w-[min(100%,28rem)] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(2,6,23,0.25)]" onClick={(event) => event.stopPropagation()}>
+                  <div className="flex items-center gap-3 border-b border-slate-200 px-5 py-4">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" /></svg>
+                    </span>
+                    <div>
+                      <h2 className="font-display text-lg font-black text-slate-900">
+                        {language === "en" ? "Cancel appointment?" : "Annuler le rendez-vous ?"}
+                      </h2>
+                      <p className="text-xs font-bold text-slate-500">
+                        {language === "en" ? "with Coach Hicham" : "avec Coach Hicham"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="px-5 py-4">
+                    <p className="text-sm text-slate-600">
+                      {language === "en" ? "Do you really want to cancel your appointment on " : "Voulez-vous vraiment annuler votre rendez-vous du "}
+                      <span className="font-black capitalize text-slate-900">{nextAppointment.dateMain}</span>
+                      {language === "en" ? " at " : " à "}
+                      <span className="font-black text-slate-900">{nextAppointment.timeStart}</span> ?
+                    </p>
+                  </div>
+                  <div className="flex gap-2 border-t border-slate-200 px-5 py-4">
+                    <button type="button" onClick={() => setDashCancelOpen(false)} className="flex-1 rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-black text-slate-600 transition hover:border-slate-400">
+                      {language === "en" ? "Back" : "Retour"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (
+                          nextAppointmentRaw &&
+                          canCancelScheduledAppointment(nextAppointmentRaw, new Date()) &&
+                          typeof window !== "undefined"
+                        ) {
+                          try {
+                            const saved = window.localStorage.getItem("hm-appointments");
+                            const list = saved ? JSON.parse(saved) : [];
+                            const updated = list.map((a) => (a && a.number === nextAppointmentRaw.number ? { ...a, cancelled: true } : a));
+                            window.localStorage.setItem("hm-appointments", JSON.stringify(updated));
+                            setDashCancelOpen(false);
+                            window.location.reload();
+                          } catch {
+                            setDashCancelOpen(false);
+                          }
+                        } else {
+                          setDashCancelOpen(false);
+                        }
+                      }}
+                      className="flex-1 rounded-2xl border-2 border-rose-400 bg-rose-500 px-4 py-2.5 text-sm font-black text-white transition hover:bg-rose-600"
+                    >
+                      {language === "en" ? "Confirm cancellation" : "Confirmer l'annulation"}
+                    </button>
+                  </div>
+                </div>
+              </div>,
+              document.body
+            )
+          : null}
         <DashboardSidebar
           language={language}
           isOpen={sidebarOpen}
@@ -13877,9 +15566,11 @@ export default function App() {
           languageOptions={languageOptions}
           isLangMenuOpen={isLangMenuOpen}
           onToggleLangMenu={() => setIsLangMenuOpen((v) => !v)}
-          athleteName={currentUser.fullName}
+          athleteName={isCoachAccount ? coachDisplayName : athleteDisplayName}
           athleteSubtitle={currentUser.email}
           athleteAvatarUrl={currentUser.avatarUrl}
+          athleteInitials={isCoachAccount ? coachInitials : athleteInitials}
+          isCoach={isCoachAccount}
         />
         {!sidebarOpen ? null : (
           <button
@@ -13908,6 +15599,17 @@ export default function App() {
         <main className="hf-dashboard-main relative z-10 mx-auto flex min-h-0 w-full max-w-[1700px] flex-1 flex-col overflow-hidden px-1.5 pb-1.5 pt-0 sm:px-2">
           {activeNavKey === "settings" ? (
             <SettingsPage
+              isCoach={isCoachAccount}
+              coachContent={isCoachAccount ? (
+                <CoachContactsEditor
+                  contacts={siteContacts}
+                  onSaved={setSiteContacts}
+                  onToast={(t) => setAppToast(t)}
+                  refreshSession={refreshCurrentUserSession}
+                  authInputClass={authInputClass}
+                  authSelectClass={authSelectClass}
+                />
+              ) : null}
               currentUser={currentUser}
               athleteSex={sportProfile.sex || currentUser.sex || ""}
               settingsForm={settingsForm}
@@ -13966,6 +15668,19 @@ export default function App() {
               customerEmail={currentUser.email || ""}
               onGoToShop={() => setIsGlobalCartOpen(true)}
             />
+          ) : activeNavKey === "comments" && isCoachAccount ? (
+            <section className="settings-page flex min-h-0 flex-1 flex-col overflow-hidden">
+              <div className="settings-scroll mt-2 min-h-0 flex-1 overflow-y-auto pr-1">
+                <CoachReviewsPage
+                  reviews={clientReviews}
+                  onChanged={setClientReviews}
+                  refreshSession={refreshCurrentUserSession}
+                  onToast={(t) => setAppToast(t)}
+                  authInputClass={authInputClass}
+                  authSelectClass={authSelectClass}
+                />
+              </div>
+            </section>
           ) : activeNavKey === "shop" ? (
             <ShopPage
               searchValue={shopSearch}
@@ -13988,10 +15703,10 @@ export default function App() {
               <div className="settings-hero shrink-0">
                 <div className="settings-hero__icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8" aria-hidden="true">
-                    <rect x="3" y="3" width="7" height="7" rx="1.5" />
-                    <rect x="14" y="3" width="7" height="7" rx="1.5" />
-                    <rect x="14" y="14" width="7" height="7" rx="1.5" />
-                    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                    <rect x="3" y="3" width="7" height="9" rx="1.5" />
+                    <rect x="14" y="3" width="7" height="5" rx="1.5" />
+                    <rect x="14" y="12" width="7" height="9" rx="1.5" />
+                    <rect x="3" y="16" width="7" height="5" rx="1.5" />
                   </svg>
                 </div>
                 <div className="min-w-0 flex-1">
@@ -14041,19 +15756,19 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="mt-1 flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto pr-1">
+              <div className="mt-1 flex min-h-0 flex-1 flex-col gap-1 overflow-hidden pr-0">
                 <DashboardAdCarousel firstName={welcomeName} go={(view) => { setActiveNavKey(view); navigateTo(`/dashboard?view=${view}`); }} />
-                <div className="flex shrink-0 flex-col gap-1 lg:flex-row lg:items-stretch">
+                <div className="mt-1 flex shrink-0 flex-col gap-1 lg:flex-row lg:items-stretch lg:gap-2">
                 <div className="athlete-card-stage flex min-w-0 shrink-0 justify-center lg:justify-start">
                   <AthleteLuxuryCard
                     language={language}
-                    fullName={currentUser.fullName}
+                    fullName={athleteDisplayName}
                     matricule={athleteMatricule}
                     email={currentUser.email}
                     birthDate={birthDate}
                     country={athleteCountry}
                     registrationDate={registrationDate}
-                    initials={getInitials(currentUser.fullName)}
+                    initials={athleteInitials}
                     photoUrl={currentUser.avatarUrl}
                   />
                 </div>
@@ -14064,27 +15779,17 @@ export default function App() {
                       label:
                         language === "en" ? "Current weight" : language === "ar" ? "الوزن الحالي" : "Poids actuel",
                       value: sportProfile.current_weight_kg ? `${sportProfile.current_weight_kg} kg` : "—",
-                      icon: (
-                        <svg viewBox="0 0 24 24" className="h-5 w-5 text-brand-100" aria-hidden>
-                          <path
-                            fill="currentColor"
-                            d="M12 3a4 4 0 0 1 4 4v1h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2V7a4 4 0 0 1 4-4Zm0 2a2 2 0 0 0-2 2v1h4V7a2 2 0 0 0-2-2Zm-4 5H6v8h12v-8h-2v1a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1v-1Z"
-                          />
-                        </svg>
-                      )
+                      iconSrc: "/icones statistiques/poids.png",
+                      iconClass: "stat-icon--poids",
+                      watermark: (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4" /><path d="M8.5 8h7" /><circle cx="12" cy="13" r="2.2" /><path d="M12 11.2l1.4-1.1" /></svg>)
                     },
                     {
                       label:
                         language === "en" ? "Current height" : language === "ar" ? "الطول الحالي" : "Taille actuelle",
                       value: sportProfile.height_cm ? `${sportProfile.height_cm} cm` : "—",
-                      icon: (
-                        <svg viewBox="0 0 24 24" className="h-5 w-5 text-brand-100" aria-hidden>
-                          <path
-                            fill="currentColor"
-                            d="M11 3h2v3.17l3.59-3.59L18 6l-5 5v8h-2v-8L6 6l1.41-1.42L11 6.17V3Z"
-                          />
-                        </svg>
-                      )
+                      iconSrc: "/icones statistiques/taille.png",
+                      iconClass: "stat-icon--taille",
+                      watermark: (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="5" r="2" /><path d="M8 7.5v6.5M5 10.5h6M8 14l-2 5M8 14l2 5" /><path d="M18 3v18M18 6h2.5M18 10h2.5M18 14h2.5M18 18h2.5" /></svg>)
                     },
                     {
                       label:
@@ -14094,164 +15799,160 @@ export default function App() {
                             ? "الهدف الرياضي"
                             : "Objectif sportif",
                       value: getSportGoalLabel(sportProfile.sport_goal, sportProfile.sport_goal_custom),
-                      icon: (
-                        <svg viewBox="0 0 24 24" className="h-5 w-5 text-brand-100" aria-hidden>
-                          <path
-                            fill="currentColor"
-                            d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm0 2a8 8 0 1 1-8 8 8 8 0 0 1 8-8Zm3.3 4.3L10 13.6 8.7 12.3a1 1 0 0 0-1.4 1.4l2.5 2.5a1 1 0 0 0 1.4 0l5.7-5.7a1 1 0 0 0-1.4-1.4Z"
-                          />
-                        </svg>
-                      )
+                      iconSrc: "/icones statistiques/objectif.png",
+                      iconClass: "stat-icon--objectif",
+                      watermark: (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="13" r="7.5" /><circle cx="11" cy="13" r="4" /><circle cx="11" cy="13" r="0.8" /><path d="M11 13l7.5-7.5M15.5 4.5h4v4" /></svg>)
                     }
-                  ].map(({ label, value, icon }) => (
-                    <article key={label} className="dashboard-stat-card p-2 pt-3.5">
-                      <div className="flex items-start justify-between gap-1">
-                        <div className="dashboard-stat-icon h-7 w-7 shrink-0 text-brand-100 [&_svg]:h-3.5 [&_svg]:w-3.5">
-                          {icon}
-                        </div>
+                  ].map(({ label, value, iconSrc, iconClass, watermark }) => {
+                    const m = String(value).match(/^(\d[\d.,]*)\s*(.*)$/);
+                    return (
+                    <article key={label} className="dashboard-stat-card dashboard-stat-card--profile">
+                      <div className="dashboard-stat-icon" aria-hidden="true">
+                        {iconClass === "stat-icon--poids" ? (
+                          <span className="stat-icon--poids-crop" style={{ backgroundImage: `url("${iconSrc}")` }} />
+                        ) : (
+                          <img src={iconSrc} className={iconClass} alt="" loading="lazy" />
+                        )}
                       </div>
-                      <p className="mt-1 text-[8px] font-bold uppercase tracking-[0.14em] text-slate-400">{label}</p>
-                      <p className="mt-0.5 line-clamp-2 text-xs font-black leading-tight text-white sm:text-sm">{value}</p>
+                      <div className="dashboard-stat-card__content">
+                        <p className="dashboard-stat-card__label">{label}</p>
+                        <p className="dashboard-stat-card__value">
+                          {m && m[2]
+                            ? (<><span className="dashboard-stat-card__num">{m[1]}</span> <span className="dashboard-stat-card__unit">{m[2]}</span></>)
+                            : value}
+                        </p>
+                      </div>
+                      <div className="dashboard-stat-card__deco" aria-hidden="true">{watermark}</div>
                     </article>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
-              <div className="flex shrink-0 gap-1 lg:flex-row flex-col">
-                <article className="auth-glass-card flex min-h-[240px] min-w-0 flex-1 flex-col overflow-hidden p-2">
-                  <div className="flex shrink-0 flex-wrap items-center justify-between gap-1">
-                    <div>
-                      <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-brand-200">Suivi athlète</p>
-                      <h2 className="font-display text-sm font-black text-white">Évolution du poids</h2>
-                    </div>
-                    <div className="flex rounded-lg border border-slate-600/60 bg-slate-950/35 p-0.5">
-                      {rangeOptions.map((option) => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => setDashboardWeightRange(option.value)}
-                          className={`rounded-md px-2 py-1 text-[10px] font-black transition ${dashboardWeightRange === option.value
-                              ? "bg-brand-500 text-slate-950"
-                              : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
-                            }`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="mt-1 flex min-h-0 flex-1 flex-col gap-1 overflow-hidden">
-                    <ProgressChart
-                      compact
-                      title="Évolution du poids"
-                      unit="kg"
-                      values={weightSeries}
-                      action={
-                        <button
-                          type="button"
-                          className="shrink-0 rounded-lg border border-brand-300/60 bg-brand-500/10 px-2 py-1 text-[10px] font-black text-brand-200 transition hover:border-brand-300 hover:bg-brand-500/15"
-                        >
-                          Ajouter une mesure
-                        </button>
-                      }
-                    />
-                    {objectiveChart ? (
-                      <ProgressChart compact title={objectiveChart.title} unit={objectiveChart.unit} values={objectiveChart.values} />
-                    ) : null}
-                  </div>
-                </article>
-              </div>
-
-              <div className="dashboard-row-appo-program grid shrink-0 gap-1 lg:grid-cols-2">
-                <article className="auth-glass-card group relative overflow-hidden p-2 md:p-2.5">
+              <div className="dashboard-row-appo-program flex min-h-0 flex-1 flex-col gap-1 overflow-hidden lg:flex-row lg:items-stretch lg:gap-2">
+                <article className="auth-glass-card dashboard-next-appointment-card group relative flex min-h-0 w-full flex-col justify-start overflow-hidden px-2 pb-1.5 pt-1.5 md:px-2.5 md:pb-2 md:pt-1.5 lg:h-full lg:w-[clamp(22rem,36vw,31.25rem)]">
                   <div className="pointer-events-none absolute -left-12 -top-12 h-28 w-28 rounded-full bg-brand-500/20 blur-2xl" aria-hidden />
                   <div className="pointer-events-none absolute -bottom-14 -right-10 h-28 w-28 rounded-full bg-emerald-500/15 blur-2xl" aria-hidden />
-                  <div className="relative z-10 flex flex-wrap items-end justify-between gap-1">
+                  <div className="relative z-10 flex items-start justify-between gap-2">
                     <div>
                       <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-brand-200">
-                        {language === "en" ? "Coach Hicham" : language === "ar" ? "المدرب هشام" : "Coach Hicham"}
+                        {language === "en" ? "Appointment" : language === "ar" ? "موعد" : "Rendez-vous"}
                       </p>
                       <h2 className="mt-0.5 font-display text-sm font-black text-white">
                         {language === "en" ? "Next appointment" : language === "ar" ? "الموعد القادم" : "Prochain rendez-vous"}
                       </h2>
                     </div>
-                    <div className="rounded-lg border border-white/12 bg-white/[0.05] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-300">
-                      {language === "en" ? "1:1" : language === "ar" ? "1:1" : "1:1"}
-                    </div>
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-brand-300/50 bg-gradient-to-br from-brand-400/40 to-emerald-500/25 text-white shadow-[0_6px_18px_-6px_rgba(20,184,111,0.7)]">
+                      <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                        <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" />
+                      </svg>
+                    </span>
                   </div>
-                  <div className="dashboard-meet-card relative z-10 mt-1.5 pl-3.5 pr-2 py-2 sm:pl-4">
-                    <div className="grid grid-cols-2 gap-1">
-                      {[
-                        [
-                          language === "en" ? "Appt. #" : language === "ar" ? "رقم الموعد" : "N° RDV",
-                          nextAppointment?.number || "—"
-                        ],
-                        [
-                          language === "en" ? "Date" : language === "ar" ? "التاريخ" : "Date",
-                          nextAppointment?.date || "—"
-                        ],
-                        [
-                          language === "en" ? "Time" : language === "ar" ? "الوقت" : "Heure",
-                          nextAppointment?.time || "—"
-                        ],
-                        [
-                          language === "en" ? "Mode" : language === "ar" ? "الوضع" : "Mode",
-                          nextAppointment?.mode ||
-                          (language === "en"
-                            ? "Audio / video call"
-                            : language === "ar"
-                              ? "صوت / فيديو"
-                              : "Appel audio / Appel vidéo")
-                        ]
-                      ].map(([label, value]) => (
-                        <div
-                          key={String(label)}
-                          className="rounded-xl border border-brand-300/20 bg-gradient-to-br from-slate-900/60 to-slate-950/30 px-2 py-1.5 backdrop-blur-sm transition group-hover:border-brand-300/40"
-                        >
-                          <p className="text-[8px] font-bold uppercase tracking-[0.12em] text-brand-200/80">{label}</p>
-                          <p className="mt-0.5 truncate text-[11px] font-black text-brand-50">{value}</p>
-                        </div>
-                      ))}
-                    </div>
-                    {!nextAppointment ? (
-                      <p className="mt-1.5 rounded-lg border border-white/10 bg-slate-950/25 px-2 py-1.5 text-[10px] text-slate-300">
-                        {language === "en"
-                          ? "No appointment scheduled yet."
-                          : language === "ar"
-                            ? "لا يوجد موعد مجدول حالياً."
-                            : "Aucun rendez-vous programmé pour le moment."}
-                      </p>
-                    ) : null}
+                  <div className="dashboard-rdv-bar relative z-10 mt-2 grid grid-cols-5 items-stretch rounded-2xl border border-slate-200 bg-white px-0.5 py-2 shadow-sm">
+                    {[
+                      {
+                        label: language === "en" ? "Appt. #" : language === "ar" ? "رقم الموعد" : "N° RDV",
+                        value: nextAppointment?.number || "—",
+                        strong: true,
+                        icon: (<svg viewBox="0 0 24 24" className="h-2.5 w-2.5 shrink-0 text-emerald-500" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>)
+                      },
+                      {
+                        label: language === "en" ? "Date" : language === "ar" ? "التاريخ" : "Date",
+                        value: nextAppointment?.dateMain || "—",
+                        sub: nextAppointment?.weekday || null,
+                        icon: (<svg viewBox="0 0 24 24" className="h-2.5 w-2.5 shrink-0 text-emerald-500" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>)
+                      },
+                      {
+                        label: language === "en" ? "Time" : language === "ar" ? "الوقت" : "Heure",
+                        value: nextAppointment?.timeStart || "—",
+                        sub: nextAppointment ? gmtLabel : null,
+                        icon: (<svg viewBox="0 0 24 24" className="h-2.5 w-2.5 shrink-0 text-emerald-500" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="9" /><path d="M12 7.5V12l3 1.8" /></svg>)
+                      },
+                      {
+                        label: language === "en" ? "Mode" : language === "ar" ? "الوضع" : "Mode",
+                        value: nextAppointment?.mode || "—",
+                        icon: (<svg viewBox="0 0 24 24" className="h-2.5 w-2.5 shrink-0 text-emerald-500" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M15 10.5 20 7v10l-5-3.5" /><rect x="3" y="6" width="12" height="12" rx="2" /></svg>)
+                      },
+                      { label: language === "en" ? "Status" : language === "ar" ? "الحالة" : "Statut", badge: true }
+                    ].map((col, idx) => (
+                      <div key={col.label} className={`flex min-w-0 flex-col items-center justify-start gap-0.5 px-0.5 text-center ${idx > 0 ? "border-l border-slate-200" : ""}`}>
+                        <span className="text-[7px] font-bold uppercase tracking-wider text-slate-400">{col.label}</span>
+                        {col.badge ? (
+                          <span className={`mt-0.5 rounded-md px-1.5 py-0.5 text-[8.5px] font-black ${dashboardStatusBadge.cls}`}>
+                            {dashboardStatusBadge.label}
+                          </span>
+                        ) : (
+                          <>
+                            <span className={`flex max-w-full items-center justify-center gap-0.5 text-[9px] font-black leading-tight ${col.strong ? "text-emerald-600" : "text-slate-800"}`}>
+                              {col.icon}
+                              <span className="truncate">{col.value}</span>
+                            </span>
+                            {col.sub ? <span className="text-[7px] leading-none text-slate-400">{col.sub}</span> : null}
+                          </>
+                        )}
+                      </div>
+                    ))}
                   </div>
+                  <div className="relative z-10 mt-auto grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      disabled={!canJoinAppointment}
+                      onClick={() => {
+                        setActiveNavKey("appointments");
+                        navigateTo("/dashboard?view=appointments");
+                      }}
+                      className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500 px-2 py-2 text-[11px] font-black text-white shadow-[0_8px_20px_-8px_rgba(16,185,129,0.8)] transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                        <path d="M15 10.5 20 7v10l-5-3.5" /><rect x="3" y="6" width="12" height="12" rx="2" />
+                      </svg>
+                      {language === "en" ? "Join call" : language === "ar" ? "انضم للمكالمة" : "Rejoindre l'appel"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!dashboardAppointmentCancellable}
+                      onClick={() => {
+                        if (dashboardAppointmentCancellable) setDashCancelOpen(true);
+                      }}
+                      className={`flex items-center justify-center gap-1.5 rounded-xl border px-2 py-2 text-[11px] font-black transition disabled:cursor-not-allowed ${
+                        dashboardAppointmentCancellable
+                          ? "border-red-300 bg-white text-red-600 hover:border-red-400 hover:bg-red-50 hover:text-red-700"
+                          : "border-slate-200 bg-slate-100 text-slate-400"
+                      }`}
+                    >
+                      <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                        <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
+                      </svg>
+                      {language === "en" ? "Cancel" : language === "ar" ? "إلغاء" : "Annuler"}
+                    </button>
+                  </div>
+                  <p className="relative z-10 mt-1.5 text-center text-[8.5px] leading-tight text-slate-400">
+                    {language === "en"
+                      ? "You can join the call 10 min before your appointment."
+                      : language === "ar"
+                        ? "يمكنك الانضمام للمكالمة قبل 10 دقائق من موعدك."
+                        : "Vous pouvez rejoindre l'appel 10 min avant votre rendez-vous."}
+                  </p>
                   <button
                     type="button"
-                    disabled={!canJoinAppointment}
                     onClick={() => {
                       setActiveNavKey("appointments");
                       navigateTo("/dashboard?view=appointments");
                     }}
-                    className={`relative z-10 mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-lg border px-2 py-1.5 text-[11px] font-black transition ${canJoinAppointment
-                        ? "dashboard-join-btn-active"
-                        : "cursor-not-allowed border-slate-600/50 bg-slate-950/35 text-slate-500"
-                      }`}
+                    className="relative z-10 mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-xl border border-emerald-500 bg-transparent px-2 py-2 text-[11px] font-black text-emerald-600 transition hover:border-emerald-600 hover:bg-emerald-50/70 hover:text-emerald-700"
                   >
-                    <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 fill-current" aria-hidden>
-                      <path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1.02 1.02 0 0 0-1.02.24l-2.2 2.2a15.1 15.1 0 0 1-6.59-6.59l2.2-2.2c.28-.28.36-.7.25-1.09A11.7 11.7 0 0 1 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1ZM19 12h2a9 9 0 0 0-9-9v2c3.87 0 7 3.13 7 7Zm-4 0h2c0-2.76-2.24-5-5-5v2c1.66 0 3 1.34 3 3Z" />
+                    <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <rect x="3" y="4" width="18" height="18" rx="2" />
+                      <path d="M16 2v4M8 2v4M3 10h18" />
+                      <path d="M8 15h8M8 18h5" />
                     </svg>
-                    {language === "en" ? "Join call" : language === "ar" ? "انضم للمكالمة" : "Rejoindre l'appel"}
+                    {language === "en" ? "Open my appointments" : language === "ar" ? "مواعيدي" : "Accéder à mes rendez-vous"}
                   </button>
-                  <p className="relative z-10 mt-1 hidden text-center text-[9px] text-slate-400 sm:block">
-                    {language === "en"
-                      ? "Active 10 min before."
-                      : language === "ar"
-                        ? "يُفعّل قبل 10 دقائق."
-                        : "Actif 10 min avant le RDV."}
-                  </p>
                 </article>
 
-                <article className="auth-glass-card group relative flex flex-col overflow-hidden p-0">
+                <article className="auth-glass-card dashboard-last-program-card group relative flex min-w-0 flex-1 flex-col justify-start overflow-hidden px-2 pb-1.5 pt-1.5 md:px-2.5 md:pb-2 md:pt-1.5">
                   <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-brand-500/20 blur-2xl" aria-hidden />
-                  <div className="relative z-10 flex items-center justify-between gap-2 p-2.5 md:p-3">
+                  <div className="dashboard-last-program-card__header relative z-10 flex shrink-0 items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-brand-200">
                         {language === "en" ? "Program" : language === "ar" ? "البرنامج" : "Programme"}
@@ -14260,60 +15961,47 @@ export default function App() {
                         {language === "en" ? "Last program sent" : language === "ar" ? "آخر برنامج مُرسَل" : "Dernier programme envoyé"}
                       </h2>
                     </div>
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-brand-300/50 bg-gradient-to-br from-brand-400/40 to-emerald-500/25 text-white shadow-[0_6px_18px_-6px_rgba(20,184,111,0.7)]">
-                      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-brand-300/50 bg-gradient-to-br from-brand-400/40 to-emerald-500/25 text-white shadow-[0_6px_18px_-6px_rgba(20,184,111,0.7)]">
+                      <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                         <path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H18a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6.5A2.5 2.5 0 0 1 4 19.5v-15Z" />
                         <path d="M8 7h8M8 11h8M8 15h5" />
                       </svg>
                     </span>
                   </div>
                   {lastProgram ? (
-                    <div className="relative z-10 flex min-h-0 flex-1 flex-col border-t border-white/10 p-2.5 md:p-3">
-                      <div className="flex items-start gap-2.5 rounded-2xl border border-white/10 bg-slate-950/30 p-2.5">
-                        <div className="prog-card__icon relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl">
-                          <svg viewBox="0 0 24 24" className="h-6 w-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <div className="dashboard-last-program-card__body relative z-10 mt-2 border-t border-white/10 pt-2">
+                      <div className="flex items-start gap-2 rounded-xl border border-white/10 bg-slate-950/30 p-1.5">
+                        <div className="prog-card__icon relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl">
+                          <svg viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z" />
                             <path d="M14 2v6h6M9 13h6M9 17h4" />
                           </svg>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate font-display text-sm font-black text-white">{lastProgram.name}</p>
-                          <div className="mt-1.5 flex flex-wrap items-center gap-1">
-                            <span className="inline-flex items-center gap-1 rounded-md border border-white/12 bg-slate-950/40 px-1.5 py-0.5 text-[10px] font-bold text-slate-200">
+                          <p className="truncate font-display text-xs font-black text-white">{lastProgram.name}</p>
+                          <div className="mt-1 flex flex-wrap items-center gap-1">
+                            <span className="inline-flex items-center gap-1 rounded-md border border-white/12 bg-slate-950/40 px-1.5 py-0.5 text-[8.5px] font-bold text-slate-200">
                               <svg viewBox="0 0 24 24" className="h-2.5 w-2.5 text-brand-200" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                                 <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" />
                               </svg>
                               {new Date(`${lastProgram.sentDate}T00:00:00`).toLocaleDateString(dashLocaleTag, { day: "2-digit", month: "short", year: "numeric" })}
                             </span>
-                            <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-black ${lastProgram.priceType === "Gratuit" ? "prog-badge--free" : "prog-badge--paid"}`}>
+                            <span className={`rounded-md px-1.5 py-0.5 text-[8.5px] font-black ${lastProgram.priceType === "Gratuit" ? "prog-badge--free" : "prog-badge--paid"}`}>
                               {lastProgram.priceType}
                             </span>
-                            <span className="rounded-md border border-white/12 bg-slate-950/40 px-1.5 py-0.5 text-[10px] font-black text-slate-300">
+                            <span className="rounded-md border border-white/12 bg-slate-950/40 px-1.5 py-0.5 text-[8.5px] font-black text-slate-300">
                               {lastProgram.number}
                             </span>
                           </div>
                           {lastProgram.remark ? (
-                            <p className="mt-1.5 line-clamp-2 text-[10px] italic leading-snug text-slate-300/90">“{lastProgram.remark}”</p>
+                            <p className="mt-1 line-clamp-2 text-[9px] italic leading-snug text-slate-300/90">“{lastProgram.remark}”</p>
                           ) : null}
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActiveNavKey("programs");
-                          navigateTo("/dashboard?view=programs");
-                        }}
-                        className="promo-cta mt-2.5 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-[11px] font-black"
-                      >
-                        {language === "en" ? "View my programs" : language === "ar" ? "برامجي" : "Consulter mes programmes"}
-                        <svg viewBox="0 0 24 24" className="promo-cta__arrow h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                          <path d="M5 12h14M13 6l6 6-6 6" />
-                        </svg>
-                      </button>
                     </div>
                   ) : (
-                    <div className="relative z-10 border-t border-white/10 p-2.5 md:p-3">
-                      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/30 p-3 md:p-4">
+                    <div className="dashboard-last-program-card__body relative z-10 mt-2 border-t border-white/10 pt-2">
+                      <div className="relative overflow-hidden rounded-xl border border-white/10 bg-slate-950/30 p-2.5">
                         <div className="pointer-events-none absolute -right-3 -top-3 opacity-[0.12]">
                           <svg viewBox="0 0 24 24" className="h-16 w-16 text-brand-200" aria-hidden>
                             <path fill="currentColor" d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 16H5V10h14v10Zm0-12H5V6h14v2Z" />
@@ -14329,22 +16017,23 @@ export default function App() {
                               ? "سيرسل لك مدربك برنامجك قريباً."
                               : "Votre coach Hicham vous enverra un programme prochainement."}
                         </p>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setActiveNavKey("programs");
-                            navigateTo("/dashboard?view=programs");
-                          }}
-                          className="promo-cta relative mt-2.5 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-[11px] font-black"
-                        >
-                          {language === "en" ? "View my programs" : language === "ar" ? "برامجي" : "Consulter mes programmes"}
-                          <svg viewBox="0 0 24 24" className="promo-cta__arrow h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                            <path d="M5 12h14M13 6l6 6-6 6" />
-                          </svg>
-                        </button>
                       </div>
                     </div>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveNavKey("programs");
+                      navigateTo("/dashboard?view=programs");
+                    }}
+                    className="dashboard-outline-program-btn dashboard-last-program-card__program-btn relative z-10 mt-auto flex w-full items-center justify-center gap-1.5 rounded-xl border border-emerald-500 bg-transparent px-2 py-2 text-[11px] font-black text-emerald-600 transition hover:border-emerald-600 hover:bg-emerald-50/70 hover:text-emerald-700"
+                  >
+                    <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H18a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6.5A2.5 2.5 0 0 1 4 19.5v-15Z" />
+                      <path d="M8 7h8M8 11h8M8 15h5" />
+                    </svg>
+                    {language === "en" ? "Open my programs" : language === "ar" ? "برامجي" : "Accéder à mes programmes"}
+                  </button>
                 </article>
               </div>
               </div>
@@ -14365,12 +16054,14 @@ export default function App() {
         {authHeader}
         <main className="relative z-10 mx-auto flex min-h-screen max-w-4xl items-center justify-center px-4 py-12 sm:px-6">
           <section className="auth-glass-card w-full max-w-2xl p-8 text-center md:p-10">
-            <div className="success-orb mx-auto mb-5" aria-hidden="true">
-              <span className="success-orb-ring" />
-              <span className="success-orb-core">
-                <svg viewBox="0 0 24 24" className="success-orb-check h-8 w-8 fill-current">
-                  <path d="m9.55 16.2-3.6-3.6-1.4 1.4 5 5L20 8.45l-1.4-1.4-9.05 9.15Z" />
-                </svg>
+            <div className="mx-auto mb-4 flex justify-center">
+              <span className="flex h-[78px] w-[78px] items-center justify-center rounded-full bg-white shadow-[0_8px_24px_-12px_rgba(0,0,0,0.35)] sm:h-[88px] sm:w-[88px]">
+                <img
+                  src="/Succes%202.gif"
+                  alt=""
+                  aria-hidden="true"
+                  className="h-[74px] w-[74px] object-contain sm:h-[84px] sm:w-[84px]"
+                />
               </span>
             </div>
             <h1 className="font-display text-3xl font-black text-white md:text-4xl">{authText.accountCreatedTitle}</h1>
@@ -14483,7 +16174,7 @@ export default function App() {
         dir={isArabic ? "rtl" : "ltr"}
       >
         {authHeader}
-        <main className="relative z-10 mx-auto flex min-h-screen max-w-2xl items-center justify-center px-4 py-12 sm:px-6">
+        <main className="relative z-10 mx-auto max-w-2xl px-4 pb-24 pt-12 sm:px-6">
           <section className="auth-glass-card w-full max-w-2xl p-7 md:p-8">
             <div className="mx-auto mb-5 inline-flex h-16 w-16 items-center justify-center rounded-full border border-brand-300/70 bg-brand-500/15 text-brand-200">
               <svg viewBox="0 0 24 24" className="h-8 w-8 fill-current" aria-hidden="true">
@@ -14494,11 +16185,17 @@ export default function App() {
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-200">{authText.title}</p>
             <h1 className="mt-3 font-display text-3xl font-black text-white md:text-4xl">{authText.resetCodeTab}</h1>
             <p className="mt-3 text-slate-200">{authText.resetCodeSubtitle}</p>
-            <p className="mt-3 text-sm font-semibold text-slate-200">{pendingMailboxEmail}</p>
+            <div className="mt-3 inline-flex max-w-full items-center gap-2 rounded-full border border-brand-300/35 bg-brand-500/10 px-3 py-1.5 text-sm font-semibold text-brand-100">
+              <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 fill-current" aria-hidden="true"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Zm2 .4v.2l6 3.9 6-3.9V6.4a.4.4 0 0 0-.4-.4H6.4a.4.4 0 0 0-.4.4Zm12 2.3-5.6 3.6a1 1 0 0 1-1.1 0L6 8.7V17.6c0 .2.2.4.4.4h11.2c.2 0 .4-.2.4-.4V8.7Z" /></svg>
+              <span className="truncate">{pendingMailboxEmail}</span>
+            </div>
 
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-300/25 bg-slate-950/45 px-4 py-3 text-sm">
-              <p className="font-medium text-slate-200">{authText.resetCodeCountdown}</p>
-              <p className="font-semibold text-brand-200">{resetCodeCountdownLabel}</p>
+              <p className="flex items-center gap-2 font-medium text-slate-200">
+                <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-brand-300" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7.5V12l3 1.8" /></svg>
+                {authText.resetCodeCountdown}
+              </p>
+              <p className="rounded-lg bg-brand-500/20 px-2.5 py-1 font-black tabular-nums text-brand-100">{resetCodeCountdownLabel}</p>
             </div>
 
             <form onSubmit={handleVerifyResetCode} className="mt-6 space-y-4">
@@ -14515,7 +16212,7 @@ export default function App() {
                   onChange={(event) =>
                     setResetVerificationCode(event.target.value.replace(/[^A-Za-z0-9]/g, "").slice(0, 6))
                   }
-                  className={authInputClass}
+                  className="auth-field mt-2 w-full rounded-xl border px-3.5 py-2 text-base font-bold uppercase tracking-[0.12em] outline-none transition placeholder:font-semibold placeholder:normal-case placeholder:tracking-normal"
                   placeholder={authText.resetCodePlaceholder}
                   autoComplete="one-time-code"
                   inputMode="text"
@@ -14526,15 +16223,16 @@ export default function App() {
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <button
                   type="submit"
-                  className="min-h-[46px] w-full rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-brand-400 sm:col-span-2"
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-500 px-5 py-2 text-sm font-black text-slate-950 shadow-[0_10px_26px_-10px_rgba(16,185,129,0.85)] transition hover:bg-brand-400 sm:col-span-2"
                 >
+                  <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
                   {authText.resetCodeButton}
                 </button>
                 <button
                   type="button"
                   onClick={handleResendResetCode}
                   disabled={resetCodeSecondsLeft > 0}
-                  className={`min-h-[46px] min-w-0 rounded-lg px-4 py-2.5 text-center text-sm font-semibold leading-snug transition ${resetCodeSecondsLeft > 0
+                  className={`min-w-0 rounded-lg px-4 py-2 text-center text-xs font-semibold leading-snug transition ${resetCodeSecondsLeft > 0
                       ? "cursor-not-allowed border border-slate-700/60 bg-slate-900/45 text-slate-500"
                       : "border border-brand-300/60 bg-slate-900/70 text-white hover:border-brand-300"
                     }`}
@@ -14546,7 +16244,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => window.open(getMailboxUrl(pendingMailboxEmail), "_blank", "noopener,noreferrer")}
-                  className="min-h-[46px] min-w-0 rounded-lg border border-slate-500/75 bg-slate-900/70 px-4 py-2.5 text-center text-sm font-semibold leading-snug text-white transition hover:border-brand-300"
+                  className="min-w-0 rounded-lg border border-slate-500/75 bg-slate-900/70 px-4 py-2 text-center text-xs font-semibold leading-snug text-white transition hover:border-brand-300"
                 >
                   {authText.mailboxPromptAction}
                 </button>
@@ -14641,7 +16339,7 @@ export default function App() {
               <img src={hmLogo} alt="Logo HM" className="h-11 w-11 rounded-xl border border-brand-300/60" />
               <div>
                 <p className="whitespace-nowrap text-[8px] uppercase tracking-[0.1em] text-brand-300 sm:text-[9px]">{content.nav.coachLabel}</p>
-                <p className="font-display text-base font-bold tracking-wide text-white sm:text-lg">HICHAM-FIT APP</p>
+                <p className="font-display text-base font-bold tracking-wide text-white sm:text-lg"><BrandAppText /></p>
               </div>
             </button>
 
@@ -15099,7 +16797,7 @@ export default function App() {
             <img src={hmLogo} alt="Logo HM" className="h-11 w-11 rounded-xl border border-brand-300/60" />
             <div>
               <p className="whitespace-nowrap text-[8px] uppercase tracking-[0.1em] text-brand-300 sm:text-[9px]">{content.nav.coachLabel}</p>
-              <p className="font-display text-base font-bold tracking-wide text-white sm:text-lg">HICHAM-FIT APP</p>
+              <p className="font-display text-base font-bold tracking-wide text-white sm:text-lg"><BrandAppText /></p>
             </div>
           </div>
 
@@ -15207,12 +16905,16 @@ export default function App() {
               <span>{isLight ? content.controls.lightMode : content.controls.darkMode}</span>
             </button>
 
-            {currentUser ? (
+            {currentUser && isCoachAccount ? null : currentUser ? (
               <button
                 type="button"
                 onClick={() => {
                   setActiveNavKey("dashboard");
-                  navigateTo(currentUser.sportProfileCompleted ? "/dashboard" : "/complete-profile");
+                  navigateTo(
+                    currentUser.sportProfileCompleted
+                      ? "/dashboard"
+                      : "/complete-profile"
+                  );
                 }}
                 className="w-full whitespace-nowrap rounded-lg border border-brand-300/70 bg-brand-500/15 px-3 py-2 text-xs font-semibold text-brand-200 transition hover:border-brand-300 hover:bg-brand-500/20 sm:w-auto"
               >
@@ -15481,29 +17183,12 @@ export default function App() {
 
         <section id="apropos" className="reveal-up py-16" style={{ "--d": "1160ms" }}>
           <div className="reveal-up rounded-3xl border border-slate-700 bg-slate-900/70 p-8 md:p-10">
-            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div className="flex flex-col gap-4">
               <SectionTitle
                 chip={content.aboutSection.chip}
                 title={content.aboutSection.title}
                 subtitle={content.aboutSection.subtitle}
               />
-              <div className="flex flex-wrap items-center gap-3 md:mt-2 md:shrink-0">
-                <a
-                  href={cvDownloadHref}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="self-start rounded-xl border border-slate-500/70 bg-slate-900/65 px-5 py-2.5 text-sm font-semibold text-white transition hover:border-brand-300"
-                >
-                  {content.nav.viewCv}
-                </a>
-                <a
-                  href={cvDownloadHref}
-                  download
-                  className="self-start rounded-xl border border-brand-300/70 bg-brand-500/10 px-5 py-2.5 text-sm font-semibold text-brand-200 transition hover:border-brand-300 hover:bg-brand-500/15"
-                >
-                  {content.nav.downloadCv}
-                </a>
-              </div>
             </div>
 
             <div className="reveal-up mt-7 rounded-2xl border border-brand-300/35 bg-slate-950/50 p-5">
@@ -15552,33 +17237,33 @@ export default function App() {
           </div>
 
           {clientReviews.length ? (
-            <div className="mt-10 rounded-3xl border border-brand-400/30 bg-slate-900/65 p-5 shadow-[0_24px_70px_-40px_rgba(34,197,94,0.65)] backdrop-blur md:p-6">
-              <div className="flex flex-wrap items-end justify-between gap-3">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-brand-300">{content.resultsSection.title}</p>
-                  <h3 className="mt-2 font-display text-2xl font-black text-white md:text-3xl">{content.contact.reviewsTitle}</h3>
-                  {content.contact.reviewsSubtitle ? (
-                    <p className="mt-1 text-sm text-slate-300">{content.contact.reviewsSubtitle}</p>
-                  ) : null}
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  {currentUserReview ? (
-                    <button
-                      type="button"
-                      onClick={handleViewMyReview}
-                      className="rounded-full border border-brand-300/70 bg-brand-500/15 px-3 py-1 text-xs font-black text-brand-100 transition hover:bg-brand-500/25"
-                    >
-                      {content.contact.viewMyReview}
-                    </button>
-                  ) : null}
-                  <span className="rounded-full border border-brand-300/45 bg-brand-500/10 px-3 py-1 text-xs font-black text-brand-200">
-                    {clientReviews.length} avis
-                  </span>
-                </div>
+            <div className="mt-10">
+              <div className="max-w-2xl">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-brand-300">
+                  {language === "en" ? "Athlete testimonials" : language === "ar" ? "شهادات الرياضيين" : "Témoignages athlètes"}
+                </p>
+                <h3 className="mt-2 font-display text-2xl font-black text-white md:text-3xl">
+                  {language === "en" ? "What our athletes say" : language === "ar" ? "ماذا يقول رياضيونا" : "Ce que disent nos athlètes"}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                  {language === "en"
+                    ? "Discover our members' feedback on their progress with Coach Hicham."
+                    : language === "ar"
+                      ? "اكتشف آراء أعضائنا حول تقدمهم مع الكوتش هشام."
+                      : "Découvrez les retours de nos membres sur leur progression avec Coach Hicham."}
+                </p>
               </div>
 
-              <div className="mt-5 grid auto-rows-fr gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {visibleClientReviews.map((review) => {
+              {sortedClientReviews.length > 0 ? (
+              <div className="hf-reviews-marquee mt-6" aria-label={content.contact.reviewsTitle}>
+                <div className="hf-reviews-marquee__track">
+                {(sortedClientReviews.length >= 4
+                  ? [...sortedClientReviews, ...sortedClientReviews]
+                  : (() => {
+                      const base = Array.from({ length: Math.ceil(6 / sortedClientReviews.length) }).flatMap(() => sortedClientReviews);
+                      return [...base, ...base];
+                    })()
+                ).map((review, dupIndex) => {
                   const isOwnReview = Boolean(currentUser?.id && review.authorId === currentUser.id);
                   const isHighlightedReview = highlightedReviewId === review.id;
                   const reviewAvatarUrl = isOwnReview
@@ -15587,10 +17272,10 @@ export default function App() {
 
                   return (
                     <article
-                      key={review.id}
-                      className={`relative flex h-[285px] flex-col rounded-2xl border bg-slate-950/55 p-4 transition ${isHighlightedReview || isOwnReview
-                          ? "border-brand-300/90 shadow-[0_0_0_1px_rgba(52,211,153,0.45),0_20px_50px_-35px_rgba(34,197,94,0.9)]"
-                          : "border-slate-700/80"
+                      key={`${review.id}-${dupIndex}`}
+                      className={`hf-review-card group relative flex h-[200px] flex-col overflow-hidden rounded-2xl p-4 ${isHighlightedReview || isOwnReview
+                          ? "border-2 border-emerald-400"
+                          : "border border-emerald-100"
                         }`}
                     >
                       <div className="flex min-h-0 flex-1 items-start gap-3">
@@ -15617,66 +17302,16 @@ export default function App() {
                               ))}
                             </div>
                           </div>
-                          <p className={`hf-review-card__message mt-3 text-sm leading-relaxed text-slate-200 ${isOwnReview ? "pb-12" : ""}`}>
+                          <p className="hf-review-card__message mt-3 text-sm leading-relaxed text-slate-200">
                             {review.message}
                           </p>
-                          {isOwnReview ? (
-                            <div className="absolute bottom-4 right-4 flex flex-wrap justify-end gap-2">
-                              <button
-                                type="button"
-                                onClick={() => handleEditReview(review)}
-                                disabled={isReviewSaving}
-                                className="rounded-lg border border-brand-300/55 bg-brand-500/10 px-3 py-1.5 text-xs font-black text-brand-200 transition hover:bg-brand-500/20"
-                              >
-                                {content.contact.reviewEdit}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteReview(review.id)}
-                                disabled={isReviewSaving}
-                                className="rounded-lg border border-red-600/90 bg-red-950 px-3 py-1.5 text-xs font-black text-red-50 shadow-[0_10px_24px_-18px_rgba(248,113,113,0.95)] transition hover:border-red-400 hover:bg-red-900 disabled:cursor-not-allowed disabled:opacity-50"
-                              >
-                                {content.contact.reviewDelete}
-                              </button>
-                            </div>
-                          ) : null}
                         </div>
                       </div>
                     </article>
                   );
                 })}
-              </div>
-
-              {reviewPageCount > 1 ? (
-                <div className="mt-5 flex flex-wrap items-center justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setReviewPage((prev) => Math.max(0, prev - 1))}
-                    disabled={safeReviewPage === 0}
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-600/70 bg-slate-950/55 text-slate-100 transition hover:border-brand-300 hover:text-brand-200 disabled:cursor-not-allowed disabled:opacity-45"
-                    aria-label={content.contact.reviewsPrevious}
-                    title={content.contact.reviewsPrevious}
-                  >
-                    <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="m15 18-6-6 6-6" />
-                    </svg>
-                  </button>
-                  <span className="rounded-xl border border-brand-300/35 bg-brand-500/10 px-3 py-2 text-xs font-black text-brand-200">
-                    {safeReviewPage + 1}/{reviewPageCount}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setReviewPage((prev) => Math.min(reviewPageCount - 1, prev + 1))}
-                    disabled={safeReviewPage >= reviewPageCount - 1}
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-600/70 bg-slate-950/55 text-slate-100 transition hover:border-brand-300 hover:text-brand-200 disabled:cursor-not-allowed disabled:opacity-45"
-                    aria-label={content.contact.reviewsNext}
-                    title={content.contact.reviewsNext}
-                  >
-                    <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="m9 6 6 6-6 6" />
-                    </svg>
-                  </button>
                 </div>
+              </div>
               ) : null}
             </div>
           ) : null}
@@ -15757,6 +17392,19 @@ export default function App() {
                   >
                     {editingReviewId ? content.contact.submitEdit : content.contact.submit}
                   </button>
+                  {currentUserReview ? (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteReview(currentUserReview.id)}
+                      disabled={isReviewSaving}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-red-400/60 bg-red-500/10 px-5 py-2.5 text-sm font-bold text-red-300 transition hover:border-red-400 hover:bg-red-500/20 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
+                      </svg>
+                      {content.contact.reviewDelete}
+                    </button>
+                  ) : null}
                 </div>
 
                 {sendFeedback.text ? (
@@ -15779,71 +17427,27 @@ export default function App() {
                   <span>{content.contact.socialTitle}</span>
                 </h3>
                 <div className="mt-4 space-y-3 text-sm text-slate-200">
-                  <a
-                    href="https://www.facebook.com/Hicham-fit"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="group flex items-center gap-3 rounded-xl border border-slate-600/70 bg-slate-950/55 px-3 py-2.5 transition hover:border-brand-300"
-                  >
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-400/60 bg-brand-500/10 text-brand-300">
-                      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true">
-                        <path d="M13.5 22v-8h2.7l.4-3h-3.1V9.1c0-.9.3-1.5 1.6-1.5h1.7V5c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.4V11H8v3h2.6v8h2.9Z" />
-                      </svg>
-                    </span>
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.12em] text-slate-300">{content.contact.labels.facebook}</p>
-                      <p className="font-semibold text-brand-300 group-hover:text-brand-200">Hicham-fit</p>
-                    </div>
-                  </a>
-
-                  <a
-                    href="https://www.tiktok.com/@mechkour_hicham7"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="group flex items-center gap-3 rounded-xl border border-slate-600/70 bg-slate-950/55 px-3 py-2.5 transition hover:border-brand-300"
-                  >
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-400/60 bg-brand-500/10 text-brand-300">
-                      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true">
-                        <path d="M14.8 3.1c.6 1.6 1.9 2.8 3.5 3.2v2.3a6.2 6.2 0 0 1-3.2-.9v5.2a5.9 5.9 0 1 1-5.1-5.9v2.4a3.5 3.5 0 1 0 2.7 3.4V2.5h2.1v.6Z" />
-                      </svg>
-                    </span>
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.12em] text-slate-300">{content.contact.labels.tiktok}</p>
-                      <p className="font-semibold text-brand-300 group-hover:text-brand-200">mechkour_hicham7</p>
-                    </div>
-                  </a>
-
-                  <a
-                    href="https://wa.me/213779477711"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="group flex items-center gap-3 rounded-xl border border-slate-600/70 bg-slate-950/55 px-3 py-2.5 transition hover:border-brand-300"
-                  >
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-400/60 bg-brand-500/10 text-brand-300">
-                      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true">
-                        <path d="M20.5 3.5A11.8 11.8 0 0 0 1.8 17.7L.5 23.5l5.9-1.2A11.8 11.8 0 1 0 20.5 3.5Zm-8.7 18a9.8 9.8 0 0 1-5-1.4l-.3-.2-3.5.7.8-3.4-.2-.4A9.9 9.9 0 1 1 11.8 21.5Zm5.4-7.4c-.3-.1-1.9-1-2.2-1.1-.3-.1-.5-.1-.7.1l-.9 1.1c-.2.2-.4.2-.7.1a8.1 8.1 0 0 1-2.4-1.5 8.9 8.9 0 0 1-1.7-2.1c-.2-.3 0-.5.1-.7l.5-.6.3-.6a.6.6 0 0 0 0-.6c-.1-.1-.7-1.7-1-2.3-.2-.5-.5-.4-.7-.4h-.6a1.2 1.2 0 0 0-.9.4A3.6 3.6 0 0 0 5 9.3a6.2 6.2 0 0 0 1.3 3.3 14.2 14.2 0 0 0 5.3 4.7 17.5 17.5 0 0 0 1.8.7 4.3 4.3 0 0 0 2 .1 3.2 3.2 0 0 0 2.1-1.5 2.6 2.6 0 0 0 .2-1.5c-.1-.1-.3-.2-.6-.3Z" />
-                      </svg>
-                    </span>
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.12em] text-slate-300">{content.contact.labels.whatsapp}</p>
-                      <p className="font-semibold text-brand-300 group-hover:text-brand-200">+213 779 47 77 11</p>
-                    </div>
-                  </a>
-
-                  <a
-                    href="mailto:hichamechkour39@gmail.com"
-                    className="group flex items-center gap-3 rounded-xl border border-slate-600/70 bg-slate-950/55 px-3 py-2.5 transition hover:border-brand-300"
-                  >
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-400/60 bg-brand-500/10 text-brand-300">
-                      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true">
-                        <path d="M3 6.8A1.8 1.8 0 0 1 4.8 5h14.4A1.8 1.8 0 0 1 21 6.8v10.4a1.8 1.8 0 0 1-1.8 1.8H4.8A1.8 1.8 0 0 1 3 17.2V6.8Zm1.8.2 7.2 4.9L19.2 7H4.8Zm14.4 10.2V8.8l-6.7 4.6a.9.9 0 0 1-1 0L4.8 8.8v8.4h14.4Z" />
-                      </svg>
-                    </span>
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.12em] text-slate-300">{content.contact.labels.email}</p>
-                      <p className="font-semibold text-brand-300 group-hover:text-brand-200">hichamechkour39@gmail.com</p>
-                    </div>
-                  </a>
+                  {siteContacts.map((contact, index) => {
+                    const external = !["email", "phone"].includes(contact.kind);
+                    return (
+                      <a
+                        key={`${contact.kind}-${index}`}
+                        href={contactHref(contact)}
+                        {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
+                        className="group flex items-center gap-3 rounded-xl border border-slate-600/70 bg-slate-950/55 px-3 py-2.5 transition hover:border-brand-300"
+                      >
+                        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-brand-400/60 bg-brand-500/10 text-brand-300">
+                          <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true">
+                            <path d={contactIconPath(contact.kind)} />
+                          </svg>
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-xs uppercase tracking-[0.12em] text-slate-300">{contact.label || contact.kind}</p>
+                          <p className="truncate font-semibold text-brand-300 group-hover:text-brand-200">{contactDisplay(contact)}</p>
+                        </div>
+                      </a>
+                    );
+                  })}
                 </div>
 
                 <a
