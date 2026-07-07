@@ -10285,9 +10285,10 @@ const navSectionIds = ["services", "certifications", "experiences", "resultats",
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const authLoginRoute = "/auth?mode=login&form=1";
-// Compte du coach (admin) : détecté par son email pour ouvrir l'espace coach.
-const COACH_EMAIL = "noreply.hicham.fit@gmail.com";
-const isCoachEmail = (email) => !!email && String(email).trim().toLowerCase() === COACH_EMAIL;
+// Comptes coach (admin) : détectés par leur email pour ouvrir l'espace coach.
+const COACH_EMAILS = ["noreply.hicham.fit@gmail.com", "billalmechekour6@gmail.com"];
+const COACH_EMAIL = COACH_EMAILS[0];
+const isCoachEmail = (email) => !!email && COACH_EMAILS.includes(String(email).trim().toLowerCase());
 // Le coach peut changer son email : on mémorise son identifiant pour le reconnaître ensuite.
 const COACH_UID_KEY = "hm-coach-uid";
 const rememberCoachUid = (id) => {

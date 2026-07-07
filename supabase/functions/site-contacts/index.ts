@@ -5,8 +5,8 @@ import {
   jsonResponse,
 } from "../_shared/reset-helpers.ts";
 
-// Seul ce compte (le coach) peut modifier les contacts du footer.
-const COACH_EMAIL = "noreply.hicham.fit@gmail.com";
+// Seuls ces comptes (le coach) peuvent modifier les contacts du footer.
+const COACH_EMAILS = ["noreply.hicham.fit@gmail.com", "billalmechekour6@gmail.com"];
 
 const ALLOWED_KINDS = [
   "facebook",
@@ -113,7 +113,7 @@ Deno.serve(async (request) => {
       (user.app_metadata as Record<string, unknown> | undefined)?.is_coach ||
         (user.user_metadata as Record<string, unknown> | undefined)?.is_coach,
     );
-    if (userEmail !== COACH_EMAIL && !metaIsCoach) {
+    if (!COACH_EMAILS.includes(userEmail) && !metaIsCoach) {
       return errorResponse(
         403,
         "FORBIDDEN",

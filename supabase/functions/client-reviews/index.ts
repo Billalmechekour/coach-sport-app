@@ -21,11 +21,11 @@ const reviewFields = `
   )
 `;
 
-const COACH_EMAIL = "noreply.hicham.fit@gmail.com";
+const COACH_EMAILS = ["noreply.hicham.fit@gmail.com", "billalmechekour6@gmail.com"];
 
 function isCoachUser(user: { email?: string | null; app_metadata?: Record<string, unknown>; user_metadata?: Record<string, unknown> }) {
   const email = String(user.email || "").trim().toLowerCase();
-  if (email === COACH_EMAIL) return true;
+  if (COACH_EMAILS.includes(email)) return true;
   return Boolean(user.app_metadata?.is_coach || user.user_metadata?.is_coach);
 }
 
