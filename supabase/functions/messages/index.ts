@@ -1,9 +1,30 @@
-import {
-  corsHeaders,
-  createAdminClient,
-  errorResponse,
-  jsonResponse,
-} from "../_shared/reset-helpers.ts";
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json; charset=utf-8" },
+  });
+}
+
+function errorResponse(status: number, code: string, message: string) {
+  return jsonResponse({ success: false, error: { code, message } }, status);
+}
+
+function createAdminClient() {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SERVICE_ROLE_KEY") || "";
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}
 
 const COACH_EMAILS = ["noreply.hicham.fit@gmail.com", "billalmechekour6@gmail.com", "hichamechkour39@gmail.com"];
 
@@ -60,10 +81,9 @@ async function loadProfiles(supabase: ReturnType<typeof createAdminClient>, ids:
   return map;
 }
 
-// Crée le bucket chat-media s'il n'existe pas, puis upload le fichier via l'API Storage REST.
 async function ensureBucketAndUpload(base64: string, mimeType: string, kind: string): Promise<string | null> {
   const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SERVICE_ROLE_KEY") || "";
   if (!supabaseUrl || !serviceKey) return null;
 
   const storageBase = `${supabaseUrl}/storage/v1`;
@@ -78,7 +98,7 @@ async function ensureBucketAndUpload(base64: string, mimeType: string, kind: str
       headers: { ...authHeaders, "Content-Type": "application/json" },
       body: JSON.stringify({ id: "chat-media", name: "chat-media", public: true, file_size_limit: 20971520 }),
     });
-  } catch { /* bucket existe déjà */ }
+  } catch { /* ignore */ }
 
   let bytes: Uint8Array;
   try {
@@ -101,7 +121,7 @@ async function ensureBucketAndUpload(base64: string, mimeType: string, kind: str
   return `${storageBase}/object/public/chat-media/${path}`;
 }
 
-Deno.serve(async (request) => {
+serve(async (request) => {
   if (request.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -127,7 +147,6 @@ Deno.serve(async (request) => {
       return jsonResponse({ success: true, url });
     }
 
-    // La conversation ciblée : le coach précise athleteId ; l'athlète = lui-même.
     const targetAthleteId = coach ? String(payload.athleteId || "").trim() : user.id;
 
     if (action === "send") {
@@ -141,12 +160,11 @@ Deno.serve(async (request) => {
         sender: coach ? "coach" : "athlete",
         kind,
         body,
-        read_by_coach: coach,      // le coach a « lu » ce qu'il envoie
-        read_by_athlete: !coach,   // l'athlète a « lu » ce qu'il envoie
+        read_by_coach: coach,
+        read_by_athlete: !coach,
       };
       const { data, error } = await supabase.from("messages").insert(row).select("*").single();
       if (error || !data) {
-        console.error("message send error", error);
         return errorResponse(500, "SEND_FAILED", "Impossible d’envoyer le message.");
       }
       return jsonResponse({ success: true, message: serializeMessage(data as Record<string, unknown>) });
@@ -161,10 +179,8 @@ Deno.serve(async (request) => {
         .order("created_at", { ascending: true })
         .limit(500);
       if (error) {
-        console.error("message thread error", error);
         return errorResponse(500, "THREAD_FAILED", "Impossible de charger la conversation.");
       }
-      // Marque comme lus les messages reçus dans cette conversation.
       if (coach) {
         await supabase.from("messages").update({ read_by_coach: true })
           .eq("athlete_id", targetAthleteId).eq("sender", "athlete").eq("read_by_coach", false);
@@ -190,7 +206,6 @@ Deno.serve(async (request) => {
       return jsonResponse({ success: true });
     }
 
-    // action === "conversations" : réservé au coach → liste des conversations (1 par athlète).
     if (!coach) return errorResponse(403, "FORBIDDEN", "Action réservée au coach.");
 
     const { data, error } = await supabase
@@ -199,7 +214,6 @@ Deno.serve(async (request) => {
       .order("created_at", { ascending: false })
       .limit(2000);
     if (error) {
-      console.error("conversations error", error);
       return errorResponse(500, "CONVERSATIONS_FAILED", "Impossible de charger les conversations.");
     }
 
@@ -209,7 +223,7 @@ Deno.serve(async (request) => {
       if (!aid) continue;
       let entry = byAthlete.get(aid);
       if (!entry) {
-        entry = { last: raw, unread: 0 }; // 1re occurrence = dernier message (tri desc)
+        entry = { last: raw, unread: 0 };
         byAthlete.set(aid, entry);
       }
       if (String(raw.sender) === "athlete" && !raw.read_by_coach) entry.unread += 1;
@@ -236,7 +250,6 @@ Deno.serve(async (request) => {
 
     return jsonResponse({ success: true, conversations });
   } catch (error) {
-    console.error("messages unexpected error", error);
     const message = String(error instanceof Error ? error.message : error);
     if (message === "AUTH_REQUIRED") {
       return errorResponse(401, "AUTH_REQUIRED", "Connecte-toi pour accéder à la messagerie.");
