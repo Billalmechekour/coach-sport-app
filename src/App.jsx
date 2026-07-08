@@ -4234,6 +4234,10 @@ function CoachChatInbox({ onUnread }) {
         if (event.data.size > 0) chunks.push(event.data);
       };
       recorder.onstop = () => {
+        if (recorder.__hmCancel) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
         const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
         const reader = new FileReader();
         reader.onload = () => sendReply({ type: "voice", dataUrl: String(reader.result) });
@@ -4250,6 +4254,13 @@ function CoachChatInbox({ onUnread }) {
 
   const stopChatRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
+    setIsRecording(false);
+  };
+  const cancelChatRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.__hmCancel = true;
       mediaRecorderRef.current.stop();
     }
     setIsRecording(false);
@@ -4410,7 +4421,10 @@ function CoachChatInbox({ onUnread }) {
           {isRecording ? (
             <div className="flex items-center justify-between gap-3 rounded-2xl border border-rose-300 bg-rose-50 px-4 py-3 mb-1">
               <span className="flex items-center gap-2 text-sm font-black text-rose-600"><span className="h-2.5 w-2.5 animate-pulse rounded-full bg-rose-500" /> Enregistrement…</span>
-              <button type="button" onClick={stopChatRecording} className="rounded-xl bg-rose-500 px-3 py-1.5 text-xs font-black text-white transition hover:bg-rose-600">Stop &amp; envoyer</button>
+              <div className="flex gap-2">
+                <button type="button" onClick={cancelChatRecording} className="rounded-xl border border-rose-300 bg-white px-3 py-1.5 text-xs font-bold text-rose-600 transition hover:bg-rose-100">Annuler</button>
+                <button type="button" onClick={stopChatRecording} className="rounded-xl bg-rose-500 px-3 py-1.5 text-xs font-black text-white transition hover:bg-rose-600">Envoyer</button>
+              </div>
             </div>
           ) : (
             <div className="flex items-end gap-1.5">
@@ -4800,6 +4814,10 @@ function CoachInbox() {
         if (event.data.size > 0) chunks.push(event.data);
       };
       recorder.onstop = () => {
+        if (recorder.__hmCancel) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
         const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
         const reader = new FileReader();
         reader.onload = () => pushChatMessage({ type: "voice", dataUrl: String(reader.result) });
@@ -4815,6 +4833,13 @@ function CoachInbox() {
   };
   const stopChatRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
+    setIsRecording(false);
+  };
+  const cancelChatRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.__hmCancel = true;
       mediaRecorderRef.current.stop();
     }
     setIsRecording(false);
@@ -5125,7 +5150,10 @@ function CoachInbox() {
                 {isRecording ? (
                   <div className="flex items-center justify-between gap-3 rounded-2xl border border-rose-300 bg-rose-50 px-4 py-3">
                     <span className="flex items-center gap-2 text-sm font-black text-rose-600"><span className="h-2.5 w-2.5 animate-pulse rounded-full bg-rose-500" /> Enregistrement…</span>
-                    <button type="button" onClick={stopChatRecording} className="rounded-xl bg-rose-500 px-3 py-1.5 text-xs font-black text-white transition hover:bg-rose-600">Stop &amp; envoyer</button>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={cancelChatRecording} className="rounded-xl border border-rose-300 bg-white px-3 py-1.5 text-xs font-bold text-rose-600 transition hover:bg-rose-100">Annuler</button>
+                      <button type="button" onClick={stopChatRecording} className="rounded-xl bg-rose-500 px-3 py-1.5 text-xs font-black text-white transition hover:bg-rose-600">Envoyer</button>
+                    </div>
                   </div>
                 ) : (
                   <div className="flex items-end gap-1.5">
