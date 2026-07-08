@@ -4496,7 +4496,6 @@ function CoachChatInbox({ onUnread }) {
           <p className="py-8 text-center text-sm text-slate-400">Chargement…</p>
         ) : conversations.length === 0 ? (
           <p className="px-4 py-8 text-center text-sm text-slate-400">Aucun message reçu pour le moment.</p>
-          <p className="px-4 py-8 text-center text-sm text-slate-400">Aucun message reçu pour le moment.</p>
         ) : filtered.length === 0 ? (
           <p className="px-4 py-8 text-center text-sm text-slate-400">Aucune conversation ne correspond à ces filtres.</p>
         ) : (
