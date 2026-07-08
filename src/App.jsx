@@ -13312,8 +13312,8 @@ export default function App() {
       return;
     }
 
-    // Le coach ne passe jamais par « compléter le profil » : on le renvoie vers son espace.
-    if (isCompleteProfilePage && currentUser && isCoachUser(currentUser)) {
+    // Le coach ne passe jamais par « compléter le profil » ni par la page d'accueil (vitrine) : on le renvoie vers son espace.
+    if ((isCompleteProfilePage || isHomePage) && currentUser && isCoachUser(currentUser)) {
       navigateTo("/dashboard?view=settings");
       return;
     }
