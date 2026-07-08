@@ -4104,6 +4104,11 @@ function CoachChatInbox({ onUnread, onlineAthletes = new Set() }) {
   const [deletePromptMsgId, setDeletePromptMsgId] = useState(null);
   const [showClearMenu, setShowClearMenu] = useState(false);
   const [debugInfo, setDebugInfo] = useState("");
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [confirmClearChatScope, setConfirmClearChatScope] = useState(null);
   const loadConversations = async (silent = false) => {
     if (!silent) setLoading(true);
     try {
@@ -4118,6 +4123,38 @@ function CoachChatInbox({ onUnread, onlineAthletes = new Set() }) {
       setDebugInfo("❌ Erreur: " + (e.message || "inconnue"));
       console.error("[CHAT-ERROR] loadConversations failed:", e);
     } finally { if (!silent) setLoading(false); }
+  };
+  const executeClearChat = async (scope) => {
+    try {
+      const token = await getHmToken();
+      if (!token || !activeIdRef.current) return;
+      const success = await clearBackendChat({ accessToken: token, athleteId: activeIdRef.current, scope });
+      if (success) {
+        if (scope === "mine") {
+          setThread((prev) => prev.map((m) => m.sender === "coach" ? { ...m, deleted_at: new Date().toISOString() } : m));
+        } else {
+          setThread((prev) => prev.map((m) => ({ ...m, deleted_for_coach: true })));
+        }
+      }
+    } catch { alert("Erreur lors de la suppression"); }
+  };
+  const handleClearChat = async (scope) => {
+    setShowClearMenu(false);
+    setConfirmClearChatScope(scope);
+  };
+  const handleBatchDelete = async () => {
+    setClearing(true);
+    try {
+      const token = await getHmToken();
+      if (!token) return;
+      const ids = Array.from(selectedIds);
+      await callSupabaseFunctionWithAuth("messages", { action: "clear-chat", athleteIds: ids, scope: "all-for-me" }, token);
+      setSelectedIds(new Set());
+      setConfirmDeleteOpen(false);
+      setSelectionMode(false);
+      loadConversations(true);
+    } catch { alert("Erreur lors de la suppression multiple"); }
+    setClearing(false);
   };
   useEffect(() => { loadConversations(); /* eslint-disable-next-line */ }, []);
   useEffect(() => { if (endRef.current) endRef.current.scrollIntoView({ block: "end" }); }, [thread, activeId]);
@@ -4244,22 +4281,7 @@ function CoachChatInbox({ onUnread, onlineAthletes = new Set() }) {
       }
     } catch { alert("Erreur lors de la suppression"); }
   };
-  const handleClearChat = async (scope) => {
-    setShowClearMenu(false);
-    if (!window.confirm("Êtes-vous sûr de vouloir effectuer cette action ?")) return;
-    try {
-      const token = await getHmToken();
-      if (!token || !activeIdRef.current) return;
-      const success = await clearBackendChat({ accessToken: token, athleteId: activeIdRef.current, scope });
-      if (success) {
-        if (scope === "mine") {
-          setThread((prev) => prev.map((m) => m.sender === "coach" ? { ...m, deleted_at: new Date().toISOString() } : m));
-        } else {
-          setThread((prev) => prev.map((m) => ({ ...m, deleted_for_coach: true })));
-        }
-      }
-    } catch { alert("Erreur lors du nettoyage"); }
-  };
+
   const handleReactMessage = async (msgId, emoji) => {
     try {
       const msg = thread.find(m => m.id === msgId);
@@ -4637,6 +4659,37 @@ function CoachChatInbox({ onUnread, onlineAthletes = new Set() }) {
     );
   }
 
+  const customModals = (
+    <>
+      {confirmClearChatScope && (
+        <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-900/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-xl">
+            <h3 className="mb-2 text-lg font-black text-slate-900">Vider la conversation ?</h3>
+            <p className="mb-6 text-sm text-slate-500">Voulez-vous vraiment vider cette conversation ? Cette action est irréversible pour vous.</p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmClearChatScope(null)} className="flex-1 rounded-xl border border-slate-300 bg-white py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">Annuler</button>
+              <button onClick={() => { executeClearChat(confirmClearChatScope); setConfirmClearChatScope(null); }} className="flex-1 rounded-xl bg-rose-500 py-2.5 text-sm font-bold text-white hover:bg-rose-600">Confirmer</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {confirmDeleteOpen && (
+        <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-900/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-xl">
+            <h3 className="mb-2 text-lg font-black text-slate-900">Supprimer les conversations ?</h3>
+            <p className="mb-6 text-sm text-slate-500">Voulez-vous vraiment supprimer {selectedIds.size} conversation(s) ?</p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmDeleteOpen(false)} className="flex-1 rounded-xl border border-slate-300 bg-white py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">Annuler</button>
+              <button onClick={handleBatchDelete} disabled={clearing} className="flex-1 rounded-xl bg-rose-500 py-2.5 text-sm font-bold text-white hover:bg-rose-600 disabled:opacity-50">
+                {clearing ? "Suppression..." : "Confirmer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
   // ----- Vue liste (inbox) -----
   const totalUnread = conversations.reduce((s, c) => s + (Number(c.unread) || 0), 0);
   return (
@@ -4650,6 +4703,9 @@ function CoachChatInbox({ onUnread, onlineAthletes = new Set() }) {
           <button type="button" onClick={() => setShowFilters((v) => !v)} className={`flex h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-bold transition ${showFilters ? "border-brand-400 text-brand-600" : "border-slate-300 text-slate-500 hover:border-brand-400"}`}>
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
             Filtres
+          </button>
+          <button type="button" onClick={() => { setSelectionMode(!selectionMode); setSelectedIds(new Set()); }} className={`flex h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-bold transition ${selectionMode ? "border-brand-400 bg-brand-50 text-brand-600" : "border-slate-300 text-slate-500 hover:border-brand-400"}`}>
+            Sélectionner
           </button>
         </div>
         {showFilters ? (
@@ -4685,32 +4741,48 @@ function CoachChatInbox({ onUnread, onlineAthletes = new Set() }) {
           filtered.map((c) => {
             const unread = c.unread > 0;
             return (
-              <button key={c.athlete_id} type="button" onClick={() => openConversation(c)} className={`mb-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition ${unread ? "bg-brand-50" : "hover:bg-white"}`}>
-                <div className="relative shrink-0">
-                  <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-slate-900 text-sm font-black text-white">
-                    {c.athlete_avatar ? <img src={c.athlete_avatar} alt="" className="h-full w-full object-cover" /> : <span>{getInitials(c.athlete_name)}</span>}
+              <div key={c.athlete_id} className="relative mb-1 flex items-center gap-2 pr-2">
+                {selectionMode && (
+                  <div className="pl-3 py-2 flex items-center justify-center">
+                    <input type="checkbox" checked={selectedIds.has(c.athlete_id)} onChange={() => {
+                      const next = new Set(selectedIds);
+                      if (next.has(c.athlete_id)) next.delete(c.athlete_id); else next.add(c.athlete_id);
+                      setSelectedIds(next);
+                    }} className="h-5 w-5 rounded border-slate-300 text-brand-500 focus:ring-brand-500 cursor-pointer" />
                   </div>
-                  {onlineAthletes.has(c.athlete_id) && (
-                    <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-green-500" />
-                  )}
-                  {unread ? <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-red-500" /> : null}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className={`truncate ${unread ? "font-black text-slate-900" : "font-bold text-slate-700"}`}>{c.athlete_name}</p>
-                    <span className="shrink-0 text-[11px] font-semibold text-slate-400">{fmtWhen(c.last_at)}</span>
+                )}
+                <button type="button" onClick={() => selectionMode ? (() => {
+                  const next = new Set(selectedIds);
+                  if (next.has(c.athlete_id)) next.delete(c.athlete_id); else next.add(c.athlete_id);
+                  setSelectedIds(next);
+                })() : openConversation(c)} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition ${unread ? "bg-brand-50" : "hover:bg-slate-100"}`}>
+                  <div className="relative shrink-0">
+                    <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-slate-900 text-sm font-black text-white">
+                      {c.athlete_avatar ? <img src={c.athlete_avatar} alt="" className="h-full w-full object-cover" /> : <span>{getInitials(c.athlete_name)}</span>}
+                    </div>
+                    {onlineAthletes.has(c.athlete_id) && (
+                      <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-green-500" />
+                    )}
+                    {unread ? <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-red-500" /> : null}
                   </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <p className={`truncate text-xs ${unread ? "text-slate-700" : "text-slate-400"}`}>{preview(c)}</p>
-                    {unread ? <span className="shrink-0 rounded-full bg-red-500 px-1.5 text-[10px] font-black text-white">{c.unread}</span> : null}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className={`truncate ${unread ? "font-black text-slate-900" : "font-bold text-slate-700"}`}>{c.athlete_name}</p>
+                      <span className="shrink-0 text-[11px] font-semibold text-slate-400">{fmtWhen(c.last_at)}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className={`truncate text-xs ${unread ? "text-slate-700" : "text-slate-400"}`}>{preview(c)}</p>
+                      {unread ? <span className="shrink-0 rounded-full bg-red-500 px-1.5 text-[10px] font-black text-white">{c.unread}</span> : null}
+                    </div>
                   </div>
-                </div>
-              </button>
+                </button>
+              </div>
             );
           })
         )}
       </div>
       {totalUnread ? <div className="shrink-0 border-t border-slate-200 px-4 py-2 text-center text-[11px] font-bold text-slate-400">{totalUnread} message{totalUnread > 1 ? "s" : ""} non lu{totalUnread > 1 ? "s" : ""}</div> : null}
+      {customModals}
     </div>
   );
 }
@@ -5115,9 +5187,7 @@ function CoachInbox() {
       setChatMessages((current) => persistChat(current.filter((m) => m.id !== id)));
     }
   };
-  const handleClearChat = async (scope) => {
-    setShowClearMenu(false);
-    if (!window.confirm("Êtes-vous sûr de vouloir effectuer cette action ?")) return;
+  const executeClearChat = async (scope) => {
     try {
       const token = await getHmToken();
       if (!token) return;
@@ -5130,6 +5200,10 @@ function CoachInbox() {
         }
       }
     } catch { alert("Erreur lors du nettoyage"); }
+  };
+  const handleClearChat = async (scope) => {
+    setShowClearMenu(false);
+    setConfirmClearChatScope(scope);
   };
   const startEditMessage = (message) => {
     setEditingMessageId(message.id);
@@ -5316,6 +5390,19 @@ function CoachInbox() {
           document.body
         )
         : null}
+
+      {confirmClearChatScope && (
+        <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-900/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-xl">
+            <h3 className="mb-2 text-lg font-black text-slate-900">Vider la conversation ?</h3>
+            <p className="mb-6 text-sm text-slate-500">Voulez-vous vraiment vider cette conversation ? Cette action est irréversible pour vous.</p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmClearChatScope(null)} className="flex-1 rounded-xl border border-slate-300 bg-white py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">Annuler</button>
+              <button onClick={() => { executeClearChat(confirmClearChatScope); setConfirmClearChatScope(null); }} className="flex-1 rounded-xl bg-rose-500 py-2.5 text-sm font-bold text-white hover:bg-rose-600">Confirmer</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isChatOpen && typeof document !== "undefined"
         ? createPortal(

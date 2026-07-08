@@ -287,26 +287,37 @@ serve(async (request) => {
 
     if (action === "clear-chat") {
       const scope = String(payload.scope || "all-for-me").trim(); // "mine" or "all-for-me"
-      const athleteId = coach ? String(payload.athleteId || "").trim() : user.id;
-      if (!athleteId) return errorResponse(400, "NO_ATHLETE", "Athlète manquant.");
+      
+      let athleteIds: string[] = [];
+      if (coach) {
+        if (Array.isArray(payload.athleteIds)) {
+          athleteIds = payload.athleteIds.map(id => String(id).trim()).filter(Boolean);
+        } else if (payload.athleteId) {
+          athleteIds = [String(payload.athleteId).trim()];
+        }
+      } else {
+        athleteIds = [user.id];
+      }
+      
+      if (!athleteIds.length) return errorResponse(400, "NO_ATHLETE", "Athlète manquant.");
 
       if (scope === "mine") {
         const senderType = coach ? "coach" : "athlete";
         await supabase.from("messages")
           .update({ deleted_at: new Date().toISOString() })
-          .eq("athlete_id", athleteId)
+          .in("athlete_id", athleteIds)
           .eq("sender", senderType)
           .is("deleted_at", null);
       } else {
         if (coach) {
           await supabase.from("messages")
             .update({ deleted_for_coach: true })
-            .eq("athlete_id", athleteId)
+            .in("athlete_id", athleteIds)
             .is("deleted_for_coach", false);
         } else {
           await supabase.from("messages")
             .update({ deleted_for_athlete: true })
-            .eq("athlete_id", athleteId)
+            .in("athlete_id", athleteIds)
             .is("deleted_for_athlete", false);
         }
       }
