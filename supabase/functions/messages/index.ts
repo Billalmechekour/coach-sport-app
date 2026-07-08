@@ -37,7 +37,7 @@ function isCoachUser(user: { email?: string | null; app_metadata?: Record<string
 
 function normalizeAction(value: unknown) {
   const action = String(value || "list").trim().toLowerCase();
-  return ["send", "thread", "conversations", "mark-read", "upload-media"].includes(action) ? action : "thread";
+  return ["send", "thread", "conversations", "mark-read", "upload-media", "react", "edit", "delete"].includes(action) ? action : "thread";
 }
 
 function normalizeKind(value: unknown) {
@@ -55,6 +55,9 @@ function serializeMessage(row: Record<string, unknown>) {
     read_by_coach: Boolean(row.read_by_coach),
     read_by_athlete: Boolean(row.read_by_athlete),
     created_at: String(row.created_at || new Date().toISOString()),
+    reactions: row.reactions || {},
+    edited_at: row.edited_at ? String(row.edited_at) : null,
+    deleted_at: row.deleted_at ? String(row.deleted_at) : null,
   };
 }
 
@@ -204,6 +207,68 @@ serve(async (request) => {
           .eq("athlete_id", user.id).eq("sender", "coach").eq("read_by_athlete", false);
       }
       return jsonResponse({ success: true });
+    }
+
+    if (action === "react") {
+      const messageId = String(payload.messageId || "").trim();
+      const reaction = String(payload.reaction || "").trim();
+      if (!messageId) return errorResponse(400, "MISSING_ID", "ID du message manquant.");
+
+      const { data: msg } = await supabase.from("messages").select("*").eq("id", messageId).single();
+      if (!msg) return errorResponse(404, "NOT_FOUND", "Message introuvable.");
+
+      // Check permissions: coach can react to athlete messages or own, athlete can react to coach messages or own
+      // Actually, anyone in the conversation can react.
+      const isOwner = coach ? msg.sender === "coach" : msg.sender === "athlete";
+      const isRecipient = coach ? msg.athlete_id === targetAthleteId : msg.athlete_id === user.id;
+      if (!isOwner && !isRecipient) return errorResponse(403, "FORBIDDEN", "Accès refusé.");
+
+      const reactions = (msg.reactions as Record<string, string>) || {};
+      const reactorKey = coach ? "coach" : "athlete";
+      
+      if (!reaction) {
+        delete reactions[reactorKey];
+      } else {
+        reactions[reactorKey] = reaction;
+      }
+
+      const { data, error } = await supabase.from("messages").update({ reactions }).eq("id", messageId).select("*").single();
+      if (error || !data) return errorResponse(500, "REACT_FAILED", "Impossible d'ajouter la réaction.");
+      return jsonResponse({ success: true, message: serializeMessage(data as Record<string, unknown>) });
+    }
+
+    if (action === "edit") {
+      const messageId = String(payload.messageId || "").trim();
+      const newBody = String(payload.body || "").trim().slice(0, 4000);
+      if (!messageId || !newBody) return errorResponse(400, "INVALID_INPUT", "ID ou texte manquant.");
+
+      const { data: msg } = await supabase.from("messages").select("*").eq("id", messageId).single();
+      if (!msg) return errorResponse(404, "NOT_FOUND", "Message introuvable.");
+
+      const isOwner = coach ? msg.sender === "coach" : msg.sender === "athlete";
+      if (!isOwner) return errorResponse(403, "FORBIDDEN", "Vous ne pouvez modifier que vos propres messages.");
+      if (msg.deleted_at) return errorResponse(400, "DELETED", "Impossible de modifier un message supprimé.");
+      if (msg.kind !== "text") return errorResponse(400, "NOT_TEXT", "Seuls les messages textes peuvent être modifiés.");
+
+      const { data, error } = await supabase.from("messages").update({ body: newBody, edited_at: new Date().toISOString() }).eq("id", messageId).select("*").single();
+      if (error || !data) return errorResponse(500, "EDIT_FAILED", "Impossible de modifier le message.");
+      return jsonResponse({ success: true, message: serializeMessage(data as Record<string, unknown>) });
+    }
+
+    if (action === "delete") {
+      const messageId = String(payload.messageId || "").trim();
+      if (!messageId) return errorResponse(400, "MISSING_ID", "ID du message manquant.");
+
+      const { data: msg } = await supabase.from("messages").select("*").eq("id", messageId).single();
+      if (!msg) return errorResponse(404, "NOT_FOUND", "Message introuvable.");
+
+      const isOwner = coach ? msg.sender === "coach" : msg.sender === "athlete";
+      if (!isOwner) return errorResponse(403, "FORBIDDEN", "Vous ne pouvez supprimer que vos propres messages.");
+
+      // Soft delete
+      const { data, error } = await supabase.from("messages").update({ deleted_at: new Date().toISOString() }).eq("id", messageId).select("*").single();
+      if (error || !data) return errorResponse(500, "DELETE_FAILED", "Impossible de supprimer le message.");
+      return jsonResponse({ success: true, message: serializeMessage(data as Record<string, unknown>) });
     }
 
     if (!coach) return errorResponse(403, "FORBIDDEN", "Action réservée au coach.");

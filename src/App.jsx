@@ -4099,7 +4099,8 @@ function CoachChatInbox({ onUnread }) {
   const [dateTo, setDateTo] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const endRef = useRef(null);
-
+  const [editingMsg, setEditingMsg] = useState(null);
+  const [activeReactionId, setActiveReactionId] = useState(null);
   const [debugInfo, setDebugInfo] = useState("");
   const loadConversations = async (silent = false) => {
     if (!silent) setLoading(true);
@@ -4210,6 +4211,46 @@ function CoachChatInbox({ onUnread }) {
     } catch (e) {
       alert("Erreur lors de l'envoi : " + (e.message || "Erreur inconnue"));
     } finally { setSending(false); }
+  };
+
+  const handleEditMessage = async (msgId, newText) => {
+    try {
+      const token = await getHmToken();
+      if (!token) return;
+      const success = await editBackendMessage({ accessToken: token, messageId: msgId, body: newText });
+      if (success) {
+        setThread((prev) => prev.map((m) => m.id === msgId ? { ...m, body: newText, edited_at: new Date().toISOString() } : m));
+        setEditingMsg(null);
+      }
+    } catch { alert("Erreur lors de la modification"); }
+  };
+  const handleDeleteMessage = async (msgId) => {
+    if (!window.confirm("Voulez-vous vraiment supprimer ce message ?")) return;
+    try {
+      const token = await getHmToken();
+      if (!token) return;
+      const success = await deleteBackendMessage({ accessToken: token, messageId: msgId });
+      if (success) {
+        setThread((prev) => prev.map((m) => m.id === msgId ? { ...m, deleted_at: new Date().toISOString() } : m));
+      }
+    } catch { alert("Erreur lors de la suppression"); }
+  };
+  const handleReactMessage = async (msgId, reaction) => {
+    try {
+      const token = await getHmToken();
+      if (!token) return;
+      setThread((prev) => prev.map((m) => {
+        if (m.id === msgId) {
+          const newReactions = { ...(m.reactions || {}) };
+          if (reaction) newReactions.coach = reaction;
+          else delete newReactions.coach;
+          return { ...m, reactions: newReactions };
+        }
+        return m;
+      }));
+      setActiveReactionId(null);
+      await reactBackendMessage({ accessToken: token, messageId: msgId, reaction });
+    } catch { /* ignore */ }
   };
 
   const handleChatFile = (event) => {
@@ -4337,24 +4378,29 @@ function CoachChatInbox({ onUnread }) {
 
                 // Rendu du contenu selon le type
                 const isUrl = m.body && (m.body.startsWith("http://") || m.body.startsWith("https://"));
-                const bubbleContent = (() => {
+                const isEditing = editingMsg?.id === m.id;
+                let bubbleContent;
+                if (isEditing) {
+                  bubbleContent = (
+                    <div className="flex flex-col gap-2 min-w-[200px]">
+                      <textarea autoFocus className="w-full resize-none rounded-xl border border-brand-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none" value={editingMsg.text} onChange={(e) => setEditingMsg({ ...editingMsg, text: e.target.value })} rows={2} />
+                      <div className="flex justify-end gap-2">
+                        <button onClick={() => setEditingMsg(null)} className="px-2 py-1 text-xs font-semibold text-slate-500 hover:text-slate-700">Annuler</button>
+                        <button onClick={() => handleEditMessage(m.id, editingMsg.text)} className="rounded bg-brand-500 px-2 py-1 text-xs font-bold text-white hover:bg-brand-600">Valider</button>
+                      </div>
+                    </div>
+                  );
+                } else {
                   if (m.kind === "voice") {
-                    return isUrl
-                      ? <VoicePlayer src={m.body} isMine={mine} />
-                      : <span className="flex items-center gap-1.5 text-[13px] opacity-80"><svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v4M8 23h8"/></svg> Message vocal</span>;
+                    bubbleContent = isUrl ? <VoicePlayer src={m.body} isMine={mine} /> : <span className="flex items-center gap-1.5 text-[13px] opacity-80"><svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v4M8 23h8"/></svg> Message vocal</span>;
+                  } else if (m.kind === "image") {
+                    bubbleContent = isUrl ? <img src={m.body} alt="Image" className="max-h-56 max-w-[240px] rounded-xl object-cover cursor-pointer" onClick={() => window.open(m.body, "_blank")} /> : <span className="flex items-center gap-1.5 text-[13px] opacity-80">📷 Image</span>;
+                  } else if (m.kind === "file") {
+                    bubbleContent = isUrl ? <a href={m.body} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-2 text-[13px] font-semibold underline underline-offset-2 ${mine ? "text-white/90" : "text-brand-600"}`}><svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>Télécharger le fichier</a> : <span className="flex items-center gap-1.5 text-[13px] opacity-80">📎 Fichier</span>;
+                  } else {
+                    bubbleContent = <p className="whitespace-pre-wrap break-words">{m.body}</p>;
                   }
-                  if (m.kind === "image") {
-                    return isUrl
-                      ? <img src={m.body} alt="Image" className="max-h-56 max-w-[240px] rounded-xl object-cover cursor-pointer" onClick={() => window.open(m.body, "_blank")} />
-                      : <span className="flex items-center gap-1.5 text-[13px] opacity-80">📷 Image</span>;
-                  }
-                  if (m.kind === "file") {
-                    return isUrl
-                      ? <a href={m.body} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-2 text-[13px] font-semibold underline underline-offset-2 ${mine ? "text-white/90" : "text-brand-600"}`}><svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>Télécharger le fichier</a>
-                      : <span className="flex items-center gap-1.5 text-[13px] opacity-80">📎 Fichier</span>;
-                  }
-                  return <p className="whitespace-pre-wrap break-words">{m.body}</p>;
-                })();
+                }
 
                 // Séparateur de date
                 const showDate = !prevM || new Date(m.created_at).toDateString() !== new Date(prevM.created_at).toDateString();
@@ -4373,8 +4419,59 @@ function CoachChatInbox({ onUnread }) {
                 const isMedia = m.kind === "voice" || (m.kind === "image" && isUrl);
                 const bubblePad = isMedia ? "p-2" : "px-3.5 py-2.5";
 
+                const reactionsList = Object.entries(m.reactions || {});
+                const reactionChips = reactionsList.length > 0 ? (
+                  <div className={`absolute -bottom-3 ${mine ? "right-2" : "left-2"} flex gap-1 z-10`}>
+                    {reactionsList.map(([userKey, emoji]) => (
+                      <div key={userKey} className="flex h-5 items-center justify-center rounded-full border border-slate-200 bg-white px-1.5 text-[11px] shadow-sm cursor-pointer hover:bg-slate-50" onClick={() => { if (userKey === "coach") handleReactMessage(m.id, "") }}>
+                        {emoji}
+                      </div>
+                    ))}
+                  </div>
+                ) : null;
+                
+                const actionMenu = !isEditing && (
+                  <div className={`absolute top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 ${mine ? "right-full mr-2" : "left-full ml-2"}`}>
+                    <button onClick={() => setActiveReactionId(m.id)} className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm border border-slate-100 hover:text-brand-500 hover:bg-slate-50">😀</button>
+                    {mine && m.kind === "text" && (
+                      <button onClick={() => setEditingMsg({ id: m.id, text: m.body })} className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm border border-slate-100 hover:text-blue-500 hover:bg-slate-50">✏️</button>
+                    )}
+                    {mine && (
+                      <button onClick={() => handleDeleteMessage(m.id)} className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm border border-slate-100 hover:text-red-500 hover:bg-slate-50">🗑️</button>
+                    )}
+                  </div>
+                );
+                
+                const reactionPicker = activeReactionId === m.id && (
+                  <div className={`absolute z-20 -top-10 ${mine ? "right-0" : "left-0"} flex gap-1 rounded-full bg-white p-1.5 shadow-md border border-slate-200`}>
+                    {["👍", "❤️", "😂", "😮", "😢", "💪"].map((emoji) => (
+                      <button key={emoji} onClick={() => handleReactMessage(m.id, emoji)} className="flex h-7 w-7 items-center justify-center rounded-full text-lg transition hover:bg-slate-100 hover:scale-110">{emoji}</button>
+                    ))}
+                  </div>
+                );
+
+                if (m.deleted_at) {
+                  return (
+                    <div key={m.id} className="mb-2">
+                      {showDate && (
+                        <div className="my-4 flex items-center gap-3">
+                          <div className="h-px flex-1 bg-slate-200" />
+                          <span className="rounded-full bg-white px-3 py-1 text-[11px] font-bold text-slate-400 shadow-sm border border-slate-200">{dateLabel}</span>
+                          <div className="h-px flex-1 bg-slate-200" />
+                        </div>
+                      )}
+                      <div className={`flex items-end gap-2 ${mine ? "flex-row-reverse" : "flex-row"} ${sameAsPrev ? "mt-0.5" : "mt-3"}`}>
+                        {!mine && <div className="h-7 w-7 shrink-0 opacity-0" />}
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-[12px] italic text-slate-400">
+                          🚫 Ce message a été supprimé.
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
                 return (
-                  <div key={m.id}>
+                  <div key={m.id} className={`${reactionsList.length > 0 ? "mb-4" : "mb-1"}`}>
                     {showDate && (
                       <div className="my-4 flex items-center gap-3">
                         <div className="h-px flex-1 bg-slate-200" />
@@ -4394,6 +4491,8 @@ function CoachChatInbox({ onUnread }) {
 
                       {/* Bulle */}
                       <div className="group relative max-w-[75%]">
+                        {reactionPicker}
+                        {actionMenu}
                         <div className={`
                           ${bubblePad} text-sm leading-relaxed shadow-sm
                           ${mine
@@ -4402,7 +4501,9 @@ function CoachChatInbox({ onUnread }) {
                           }
                         `}>
                           {bubbleContent}
+                          {m.edited_at && <span className="ml-2 text-[10px] opacity-70 italic">(modifié)</span>}
                         </div>
+                        {reactionChips}
                       </div>
                     </div>
                     {isLastInGroup && (
@@ -4730,7 +4831,16 @@ function CoachInbox() {
         } else {
           body = kind === "image" ? "[Image]" : kind === "voice" ? "[Message vocal]" : `[Fichier] ${message.fileName || ""}`.trim();
         }
-        if (body) { try { await sendBackendMessage({ accessToken: token, body, kind }); } catch (e) { alert("Erreur d'envoi : " + (e.message || "Erreur inconnue")); } }
+        if (body) { 
+          try { 
+            const bMsg = await sendBackendMessage({ accessToken: token, body, kind }); 
+            if (bMsg && bMsg.id) {
+              setChatMessages((curr) => persistChat(curr.map(m => m.id === localId ? { ...m, backendId: bMsg.id } : m)));
+            }
+          } catch (e) { 
+            alert("Erreur d'envoi : " + (e.message || "Erreur inconnue")); 
+          } 
+        }
       })();
     }
   };
@@ -4744,25 +4854,26 @@ function CoachInbox() {
       try {
         const msgs = await fetchMessageThread({ accessToken: token });
         if (cancelled) return;
-        const coachMsgs = msgs.filter((m) => m.sender === "coach");
-        if (!coachMsgs.length) return;
         setChatMessages((current) => {
           const existing = new Set(current.map((m) => m.backendId).filter(Boolean));
-          const toAdd = coachMsgs
-            .filter((m) => !existing.has(m.id))
+          const toAdd = msgs
+            .filter((m) => !existing.has(m.id) && !m.deleted_at)
             .map((m) => {
               const kind = m.kind || "text";
               const isMedia = ["voice", "image", "file"].includes(kind);
+              let athleteReaction = "";
+              if (m.reactions && m.reactions.athlete) athleteReaction = m.reactions.athlete;
               return { 
                 id: `srv-${m.id}`, 
                 backendId: m.id, 
-                from: "coach", 
+                from: m.sender === "coach" ? "coach" : "user", 
                 type: kind === "voice" || kind === "image" || kind === "file" ? kind : "text", 
                 text: isMedia ? "" : m.body, 
                 dataUrl: isMedia ? m.body : undefined,
                 fileName: kind === "file" ? "Document" : undefined,
                 date: m.created_at, 
-                reactions: [] 
+                reactions: athleteReaction ? [athleteReaction] : [],
+                edited: !!m.edited_at
               };
             });
           if (!toAdd.length) return current;
@@ -4844,7 +4955,17 @@ function CoachInbox() {
     }
     setIsRecording(false);
   };
-  const deleteChatMessage = (id) => setChatMessages((current) => persistChat(current.filter((m) => m.id !== id)));
+  const deleteChatMessage = async (id) => {
+    if (!window.confirm("Voulez-vous vraiment supprimer ce message ?")) return;
+    const msg = chatMessages.find(m => m.id === id);
+    if (msg?.backendId) {
+      try {
+        const token = await getHmToken();
+        if (token) await deleteBackendMessage({ accessToken: token, messageId: msg.backendId });
+      } catch { /* ignore */ }
+    }
+    setChatMessages((current) => persistChat(current.filter((m) => m.id !== id)));
+  };
   const startEditMessage = (message) => {
     setEditingMessageId(message.id);
     setEditingText(message.text || "");
@@ -4853,27 +4974,42 @@ function CoachInbox() {
     setEditingMessageId(null);
     setEditingText("");
   };
-  const saveEditMessage = () => {
+  const saveEditMessage = async () => {
     const text = editingText.trim();
     if (!text) return;
+    const msg = chatMessages.find(m => m.id === editingMessageId);
+    if (msg?.backendId) {
+      try {
+        const token = await getHmToken();
+        if (token) await editBackendMessage({ accessToken: token, messageId: msg.backendId, body: text });
+      } catch { /* ignore */ }
+    }
     setChatMessages((current) =>
       persistChat(current.map((m) => (m.id === editingMessageId ? { ...m, text, edited: true } : m)))
     );
     setEditingMessageId(null);
     setEditingText("");
   };
-  const toggleChatReaction = (id, emoji) => {
+  const toggleChatReaction = async (id, emoji) => {
+    const msg = chatMessages.find(m => m.id === id);
+    let newEmoji = "";
     setChatMessages((current) =>
       persistChat(
         current.map((m) => {
           if (m.id !== id) return m;
           const reactions = Array.isArray(m.reactions) ? m.reactions : [];
-          // Un seul emoji à la fois : remplace la réaction existante ou la supprime si c'est la même
-          return { ...m, reactions: reactions.includes(emoji) ? [] : [emoji] };
+          newEmoji = reactions.includes(emoji) ? "" : emoji;
+          return { ...m, reactions: newEmoji ? [newEmoji] : [] };
         })
       )
     );
     setReactionPickerId(null);
+    if (msg?.backendId) {
+      try {
+        const token = await getHmToken();
+        if (token) await reactBackendMessage({ accessToken: token, messageId: msg.backendId, reaction: newEmoji });
+      } catch { /* ignore */ }
+    }
   };
 
   return (
@@ -5058,6 +5194,18 @@ function CoachInbox() {
               <div className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-slate-50 px-4 py-4">
                 {chatMessages.map((message) => {
                   const isCoach = message.from === "coach";
+                  if (message.deleted) {
+                    return (
+                      <div key={message.id} className={`flex flex-col gap-1 ${isCoach ? "items-start" : "items-end"}`}>
+                        <div className={`flex max-w-[90%] items-end gap-1.5`}>
+                          {isCoach && <div className="h-7 w-7 shrink-0" />}
+                          <div className={`rounded-2xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-[12px] italic text-slate-400 ${isCoach ? "rounded-bl-sm" : "rounded-br-sm"}`}>
+                            🚫 Ce message a été supprimé.
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
                   const isEditing = editingMessageId === message.id;
                   const reactions = Array.isArray(message.reactions) ? message.reactions : [];
                   const actionButtons = (
@@ -11016,6 +11164,18 @@ async function sendBackendMessage({ accessToken, athleteId, body, kind = "text" 
 }
 async function markMessagesRead({ accessToken, athleteId }) {
   return callSupabaseFunctionWithAuth("messages", { action: "mark-read", athleteId }, accessToken);
+}
+async function reactBackendMessage({ accessToken, messageId, reaction }) {
+  const data = await callSupabaseFunctionWithAuth("messages", { action: "react", messageId, reaction }, accessToken);
+  return data?.success;
+}
+async function editBackendMessage({ accessToken, messageId, body }) {
+  const data = await callSupabaseFunctionWithAuth("messages", { action: "edit", messageId, body }, accessToken);
+  return data?.success;
+}
+async function deleteBackendMessage({ accessToken, messageId }) {
+  const data = await callSupabaseFunctionWithAuth("messages", { action: "delete", messageId }, accessToken);
+  return data?.success;
 }
 
 // ===== Temps réel (Supabase Realtime / WebSocket) =====
