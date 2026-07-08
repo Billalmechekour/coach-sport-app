@@ -15,7 +15,7 @@ function isCoachUser(user: { email?: string | null; app_metadata?: Record<string
 
 function normalizeAction(value: unknown) {
   const action = String(value || "list").trim().toLowerCase();
-  return ["send", "thread", "conversations", "mark-read"].includes(action) ? action : "thread";
+  return ["send", "thread", "conversations", "mark-read", "upload-media"].includes(action) ? action : "thread";
 }
 
 function normalizeKind(value: unknown) {
@@ -59,6 +59,55 @@ async function loadProfiles(supabase: ReturnType<typeof createAdminClient>, ids:
   return map;
 }
 
+// Crée le bucket chat-media s'il n'existe pas, puis upload le fichier via l'API Storage REST.
+async function ensureBucketAndUpload(base64: string, mimeType: string, kind: string): Promise<string | null> {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  if (!supabaseUrl || !serviceKey) return null;
+
+  const storageBase = `${supabaseUrl}/storage/v1`;
+  const authHeaders = {
+    "Authorization": `Bearer ${serviceKey}`,
+    "apikey": serviceKey,
+  };
+
+  // 1. Créer le bucket si absent (ignore les erreurs si déjà existant)
+  try {
+    await fetch(`${storageBase}/bucket`, {
+      method: "POST",
+      headers: { ...authHeaders, "Content-Type": "application/json" },
+      body: JSON.stringify({ id: "chat-media", name: "chat-media", public: true, file_size_limit: 20971520 }),
+    });
+  } catch { /* bucket existe déjà */ }
+
+  // 2. Décoder base64 → bytes
+  let bytes: Uint8Array;
+  try {
+    const binary = atob(base64);
+    bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  } catch { return null; }
+
+  // 3. Upload
+  const ext = kind === "voice" ? "webm" : kind === "image" ? "jpg" : "bin";
+  const path = `${kind}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const uploadUrl = `${storageBase}/object/chat-media/${path}`;
+
+  const res = await fetch(uploadUrl, {
+    method: "POST",
+    headers: { ...authHeaders, "Content-Type": mimeType || "application/octet-stream" },
+    body: bytes,
+  });
+
+  if (!res.ok) {
+    const err = await res.text().catch(() => "");
+    console.error("storage upload failed", res.status, err);
+    return null;
+  }
+
+  return `${storageBase}/object/public/chat-media/${path}`;
+}
+
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -74,6 +123,18 @@ Deno.serve(async (request) => {
     const user = await getAuthenticatedUser(request, supabase);
     const coach = isCoachUser(user);
 
+    // ── Upload média ──────────────────────────────────────────────────────────
+    if (action === "upload-media") {
+      const kind = normalizeKind(payload.kind);
+      const base64 = String(payload.base64 || "").trim();
+      const mimeType = String(payload.mimeType || "application/octet-stream").trim();
+      if (!base64) return errorResponse(400, "EMPTY", "Données manquantes.");
+
+      const url = await ensureBucketAndUpload(base64, mimeType, kind);
+      if (!url) return errorResponse(500, "UPLOAD_FAILED", "Impossible d'uploader le fichier.");
+      return jsonResponse({ success: true, url });
+    }
+
     // La conversation ciblée : le coach précise athleteId ; l'athlète = lui-même.
     const targetAthleteId = coach ? String(payload.athleteId || "").trim() : user.id;
 
@@ -88,13 +149,13 @@ Deno.serve(async (request) => {
         sender: coach ? "coach" : "athlete",
         kind,
         body,
-        read_by_coach: coach,      // le coach a « lu » ce qu'il envoie
-        read_by_athlete: !coach,   // l'athlète a « lu » ce qu'il envoie
+        read_by_coach: coach,
+        read_by_athlete: !coach,
       };
       const { data, error } = await supabase.from("messages").insert(row).select("*").single();
       if (error || !data) {
         console.error("message send error", error);
-        return errorResponse(500, "SEND_FAILED", "Impossible d’envoyer le message.");
+        return errorResponse(500, "SEND_FAILED", "Impossible d'envoyer le message.");
       }
       return jsonResponse({ success: true, message: serializeMessage(data as Record<string, unknown>) });
     }
@@ -156,7 +217,7 @@ Deno.serve(async (request) => {
       if (!aid) continue;
       let entry = byAthlete.get(aid);
       if (!entry) {
-        entry = { last: raw, unread: 0 }; // 1re occurrence = dernier message (tri desc)
+        entry = { last: raw, unread: 0 };
         byAthlete.set(aid, entry);
       }
       if (String(raw.sender) === "athlete" && !raw.read_by_coach) entry.unread += 1;

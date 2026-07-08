@@ -3882,53 +3882,11 @@ const coachPrograms = [
     sentDate: "2026-06-21",
     remark: "Disponible une fois acheté dans la boutique.",
     priceType: "Payant"
-  },
-  {
-    id: "shred-8w",
-    number: "PRG-009",
-    name: "Programme Shred 8 semaines",
-    sentDate: "2026-06-22",
-    remark: "Programme premium — accessible après paiement.",
-    priceType: "Payant"
-  },
-  {
-    id: "powerlifting-plan",
-    number: "PRG-010",
-    name: "Plan Powerlifting force max",
-    sentDate: "2026-06-23",
-    remark: "Réglez le programme pour le débloquer.",
-    priceType: "Payant"
-  },
-  {
-    id: "competition-prep",
-    number: "PRG-011",
-    name: "Pack Préparation compétition",
-    sentDate: "2026-06-24",
-    remark: "Accompagnement premium, accessible après paiement.",
-    priceType: "Payant"
-  },
-  {
-    id: "elite-coaching",
-    number: "PRG-012",
-    name: "Coaching Élite 1-à-1",
-    sentDate: "2026-06-25",
-    remark: "",
-    priceType: "Payant"
   }
 ];
 
-function parseProductPrice(price) {
-  const match = String(price).match(/(\d+(?:[.,]\d+)?)/);
-  return match ? Number(match[1].replace(",", ".")) : null;
-}
-
-// Taux fixe EUR -> DZD (le coach Hicham fixe le prix en dinars = prix € × 28).
-const EUR_TO_DZD = 28;
-
-// Affiche un prix selon la résidence : en dinars (DZD) pour l'Algérie, sinon en euros.
-function formatRegionalPrice(eurValue, isAlgeria) {
-  if (eurValue == null) return null;
-  return isAlgeria ? `${Math.round(eurValue * EUR_TO_DZD)} DZD` : `${eurValue} €`;
+function formatPrice(eurValue) {
+  return eurValue === 0 ? `DZD` : `${eurValue} €`;
 }
 
 function addShopNotification(text) {
@@ -4031,16 +3989,109 @@ async function generateInvoicePdf({ items, total, customerName, customerEmail, i
   return doc.output("datauristring");
 }
 
+// ===== Composant lecteur vocal (beau design messenger) =====
+function VoicePlayer({ src, isMine }) {
+  const audioRef = React.useRef(null);
+  const [playing, setPlaying] = React.useState(false);
+  const [progress, setProgress] = React.useState(0);
+  const [currentTime, setCurrentTime] = React.useState(0);
+  const [duration, setDuration] = React.useState(0);
+
+  const fmt = (s) => { const m = Math.floor((s || 0) / 60); const sec = Math.floor((s || 0) % 60); return `${m}:${sec.toString().padStart(2, "0")}`; };
+
+  const toggle = () => {
+    if (!audioRef.current) return;
+    if (playing) { audioRef.current.pause(); setPlaying(false); }
+    else { audioRef.current.play().catch(() => {}); setPlaying(true); }
+  };
+
+  const seek = (e) => {
+    if (!audioRef.current || !duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    audioRef.current.currentTime = ratio * duration;
+  };
+
+  // Barres de forme d'onde (hauteurs fixes simulées)
+  const bars = [3,5,8,6,11,7,9,4,8,6,10,5,7,9,6,8,4,3,6,9,7,5,8,6,4,3,7,9,5,8];
+
+  return (
+    <div className={`flex items-center gap-2.5 w-56 select-none`}>
+      <audio
+        ref={audioRef}
+        src={src}
+        onTimeUpdate={() => { const a = audioRef.current; if (!a) return; setCurrentTime(a.currentTime); setProgress(a.duration ? (a.currentTime / a.duration) * 100 : 0); }}
+        onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
+        onEnded={() => { setPlaying(false); setProgress(0); setCurrentTime(0); if (audioRef.current) audioRef.current.currentTime = 0; }}
+      />
+      {/* Bouton play/pause */}
+      <button
+        type="button"
+        onClick={toggle}
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition shadow-sm ${
+          isMine ? "bg-white/25 hover:bg-white/40 text-white" : "bg-brand-500 hover:bg-brand-600 text-white"
+        }`}
+      >
+        {playing
+          ? <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+          : <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor" style={{marginLeft:1}}><path d="M8 5v14l11-7z"/></svg>
+        }
+      </button>
+
+      {/* Zone waveform + temps */}
+      <div className="flex flex-1 flex-col gap-1 min-w-0">
+        {/* Barres cliquables */}
+        <div
+          className="flex items-end gap-[2px] h-8 cursor-pointer"
+          onClick={seek}
+          role="slider"
+          aria-label="Progression audio"
+        >
+          {bars.map((h, i) => {
+            const filled = (i / bars.length) * 100 < progress;
+            return (
+              <div
+                key={i}
+                className={`rounded-full transition-colors flex-1 ${
+                  filled
+                    ? isMine ? "bg-white" : "bg-brand-500"
+                    : isMine ? "bg-white/35" : "bg-slate-300"
+                } ${playing && filled ? "animate-pulse" : ""}`}
+                style={{ height: `${Math.max(3, h * 2.2)}px` }}
+              />
+            );
+          })}
+        </div>
+        {/* Temps */}
+        <span className={`text-[10px] font-bold tabular-nums ${isMine ? "text-white/70" : "text-slate-400"}`}>
+          {playing || currentTime > 0 ? fmt(currentTime) : duration > 0 ? fmt(duration) : "0:00"}
+        </span>
+      </div>
+
+      {/* Icône micro */}
+      <svg viewBox="0 0 24 24" className={`h-4 w-4 shrink-0 ${isMine ? "text-white/60" : "text-slate-400"}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v4M8 23h8"/>
+      </svg>
+    </div>
+  );
+}
+
 // Inbox du coach (thème clair) rendue dans le drawer « Ma messagerie » de la barre du haut.
 function CoachChatInbox({ onUnread }) {
+
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeId, setActiveId] = useState(null);
   const [activeName, setActiveName] = useState("");
+  const [activeAvatar, setActiveAvatar] = useState("");
   const [thread, setThread] = useState([]);
   const [threadLoading, setThreadLoading] = useState(false);
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const chatFileInputRef = useRef(null);
+  const chatImageInputRef = useRef(null);
   const [search, setSearch] = useState("");
   const [readFilter, setReadFilter] = useState("all");
   const [sort, setSort] = useState("recent");
@@ -4067,22 +4118,25 @@ function CoachChatInbox({ onUnread }) {
   useEffect(() => { activeIdRef.current = activeId; }, [activeId]);
   useEffect(() => {
     let unsub = () => {};
-    (async () => {
+    let reconnectTimer = null;
+    const connect = async () => {
       const token = await getHmToken();
       if (!token) return;
-      unsub = subscribeToMessages(token, async (row) => {
+      unsub();
+      unsub = subscribeToMessagesChannel(token, async (row) => {
         loadConversations(true);
         if (activeIdRef.current && row?.athlete_id === activeIdRef.current) {
           const t = await getHmToken();
           if (t) { try { const m = await fetchMessageThread({ accessToken: t, athleteId: activeIdRef.current }); setThread(m); } catch { /* ignore */ } }
         }
-      });
-    })();
-    return () => unsub();
+      }, () => { reconnectTimer = setTimeout(connect, 3000); });
+    };
+    connect();
+    return () => { if (reconnectTimer) clearTimeout(reconnectTimer); unsub(); };
     // eslint-disable-next-line
   }, []);
 
-  // Filet de sécurité (si le WebSocket se coupe) : rafraîchissement discret toutes les 12 s.
+  // Filet de sécurité : rafraîchissement discret toutes les 4 s.
   useEffect(() => {
     const iv = setInterval(async () => {
       const token = await getHmToken();
@@ -4092,13 +4146,13 @@ function CoachChatInbox({ onUnread }) {
       } else {
         loadConversations(true);
       }
-    }, 12000);
+    }, 4000);
     return () => clearInterval(iv);
     // eslint-disable-next-line
   }, [activeId]);
 
   const openConversation = async (conv) => {
-    setActiveId(conv.athlete_id); setActiveName(conv.athlete_name); setThreadLoading(true); setThread([]);
+    setActiveId(conv.athlete_id); setActiveName(conv.athlete_name); setActiveAvatar(conv.athlete_avatar); setThreadLoading(true); setThread([]);
     try {
       const token = await getHmToken();
       if (!token) return;
@@ -4109,18 +4163,77 @@ function CoachChatInbox({ onUnread }) {
     } catch { /* ignore */ } finally { setThreadLoading(false); }
   };
   const backToList = () => { setActiveId(null); setThread([]); loadConversations(true); };
-  const sendReply = async () => {
-    const body = reply.trim();
-    if (!body || !activeId) return;
+  
+  const sendReply = async (message) => {
+    if (!activeId) return;
     setSending(true);
     try {
       const token = await getHmToken();
       if (!token) return;
-      const msg = await sendBackendMessage({ accessToken: token, athleteId: activeId, body, kind: "text" });
-      if (msg) setThread((prev) => [...prev, msg]);
-      setReply("");
-      setConversations((prev) => prev.map((c) => (c.athlete_id === activeId ? { ...c, last_message: body, last_sender: "coach", last_at: new Date().toISOString() } : c)));
+      
+      let body = "";
+      let kind = message?.type || "text";
+
+      if (kind === "text") {
+        body = message?.text?.trim() || reply.trim();
+        if (!body) { setSending(false); return; }
+      } else if (message.dataUrl) {
+        const url = await uploadChatMedia(token, message.dataUrl, kind, message.fileName);
+        body = url || (kind === "image" ? "[Image]" : kind === "voice" ? "[Message vocal]" : `[Fichier] ${message.fileName || ""}`.trim());
+      } else {
+        body = kind === "image" ? "[Image]" : kind === "voice" ? "[Message vocal]" : `[Fichier] ${message.fileName || ""}`.trim();
+      }
+
+      if (body) {
+        const msg = await sendBackendMessage({ accessToken: token, athleteId: activeId, body, kind });
+        if (msg) setThread((prev) => [...prev, msg]);
+        if (kind === "text" && (!message || !message.text)) setReply("");
+        setConversations((prev) => prev.map((c) => (c.athlete_id === activeId ? { ...c, last_message: body, last_kind: kind, last_sender: "coach", last_at: new Date().toISOString() } : c)));
+      }
     } catch { /* ignore */ } finally { setSending(false); }
+  };
+
+  const handleChatFile = (event) => {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const isImage = file.type.startsWith("image/");
+      sendReply({ type: isImage ? "image" : "file", dataUrl: String(reader.result), fileName: file.name });
+    };
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  };
+
+  const startChatRecording = async () => {
+    if (typeof navigator === "undefined" || !navigator.mediaDevices || typeof MediaRecorder === "undefined") return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks = [];
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) chunks.push(event.data);
+      };
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
+        const reader = new FileReader();
+        reader.onload = () => sendReply({ type: "voice", dataUrl: String(reader.result) });
+        reader.readAsDataURL(blob);
+        stream.getTracks().forEach((track) => track.stop());
+      };
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setIsRecording(true);
+    } catch {
+      setIsRecording(false);
+    }
+  };
+
+  const stopChatRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
+    setIsRecording(false);
   };
 
   const filtered = useMemo(() => {
@@ -4152,39 +4265,172 @@ function CoachChatInbox({ onUnread }) {
   if (activeId) {
     return (
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="flex shrink-0 items-center gap-3 border-b border-slate-200 px-4 py-3">
-          <button type="button" onClick={backToList} className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 text-slate-500 transition hover:border-brand-400 hover:text-slate-900" aria-label="Retour">
+        {/* Header */}
+        <div className="flex shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 shadow-sm">
+          <button type="button" onClick={backToList} className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:border-brand-400 hover:text-slate-900" aria-label="Retour">
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18 9 12l6-6" /></svg>
           </button>
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-xs font-black text-white">{getInitials(activeName)}</div>
-          <p className="truncate font-display text-base font-black text-slate-900">{activeName}</p>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-slate-700 to-slate-900 text-xs font-black text-white shadow">
+            {activeAvatar ? <img src={activeAvatar} alt="" className="h-full w-full object-cover" /> : getInitials(activeName)}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-display text-sm font-black text-slate-900">{activeName}</p>
+            <p className="text-[11px] font-semibold text-emerald-500">● En ligne</p>
+          </div>
         </div>
-        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto bg-slate-50 px-4 py-4">
+
+        {/* Messages */}
+        <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50 px-4 py-4" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, #e2e8f0 1px, transparent 0)", backgroundSize: "24px 24px" }}>
           {threadLoading ? (
-            <p className="py-8 text-center text-sm text-slate-400">Chargement…</p>
+            <div className="flex h-full items-center justify-center">
+              <div className="flex flex-col items-center gap-3">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-400 border-t-transparent" />
+                <p className="text-sm font-semibold text-slate-400">Chargement…</p>
+              </div>
+            </div>
           ) : thread.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-400">Aucun message.</p>
+            <div className="flex h-full flex-col items-center justify-center gap-2 py-8">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-200 text-2xl">💬</div>
+              <p className="text-sm font-semibold text-slate-400">Aucun message. Commencez la conversation !</p>
+            </div>
           ) : (
-            thread.map((m) => {
-              const mine = m.sender === "coach";
-              const body = m.kind && m.kind !== "text" ? `[${m.kind === "image" ? "Image" : m.kind === "voice" ? "Message vocal" : "Fichier"}]` : m.body;
-              return (
-                <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm ${mine ? "bg-brand-500 text-white" : "bg-white text-slate-800 border border-slate-200"}`}>
-                    <p className="whitespace-pre-wrap break-words">{body}</p>
-                    <p className={`mt-1 text-[10px] ${mine ? "text-white/70" : "text-slate-400"}`}>{fmtWhen(m.created_at)}</p>
+            <div className="space-y-1">
+              {thread.map((m, idx) => {
+                const mine = m.sender === "coach";
+                const prevM = thread[idx - 1];
+                const nextM = thread[idx + 1];
+                const sameAsPrev = prevM && prevM.sender === m.sender;
+                const sameAsNext = nextM && nextM.sender === m.sender;
+                const isLastInGroup = !sameAsNext;
+                const timeStr = (() => { try { return new Date(m.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }); } catch { return ""; } })();
+
+                // Rendu du contenu selon le type
+                const isUrl = m.body && (m.body.startsWith("http://") || m.body.startsWith("https://"));
+                const bubbleContent = (() => {
+                  if (m.kind === "voice") {
+                    return isUrl
+                      ? <VoicePlayer src={m.body} isMine={mine} />
+                      : <span className="flex items-center gap-1.5 text-[13px] opacity-80"><svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v4M8 23h8"/></svg> Message vocal</span>;
+                  }
+                  if (m.kind === "image") {
+                    return isUrl
+                      ? <img src={m.body} alt="Image" className="max-h-56 max-w-[240px] rounded-xl object-cover cursor-pointer" onClick={() => window.open(m.body, "_blank")} />
+                      : <span className="flex items-center gap-1.5 text-[13px] opacity-80">📷 Image</span>;
+                  }
+                  if (m.kind === "file") {
+                    return isUrl
+                      ? <a href={m.body} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-2 text-[13px] font-semibold underline underline-offset-2 ${mine ? "text-white/90" : "text-brand-600"}`}><svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>Télécharger le fichier</a>
+                      : <span className="flex items-center gap-1.5 text-[13px] opacity-80">📎 Fichier</span>;
+                  }
+                  return <p className="whitespace-pre-wrap break-words">{m.body}</p>;
+                })();
+
+                // Séparateur de date
+                const showDate = !prevM || new Date(m.created_at).toDateString() !== new Date(prevM.created_at).toDateString();
+                const dateLabel = (() => {
+                  try {
+                    const d = new Date(m.created_at);
+                    const today = new Date();
+                    const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+                    if (d.toDateString() === today.toDateString()) return "Aujourd'hui";
+                    if (d.toDateString() === yesterday.toDateString()) return "Hier";
+                    return d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+                  } catch { return ""; }
+                })();
+
+                // Pas de padding pour les médias visuels
+                const isMedia = m.kind === "voice" || (m.kind === "image" && isUrl);
+                const bubblePad = isMedia ? "p-2" : "px-3.5 py-2.5";
+
+                return (
+                  <div key={m.id}>
+                    {showDate && (
+                      <div className="my-4 flex items-center gap-3">
+                        <div className="h-px flex-1 bg-slate-200" />
+                        <span className="rounded-full bg-white px-3 py-1 text-[11px] font-bold text-slate-400 shadow-sm border border-slate-200">{dateLabel}</span>
+                        <div className="h-px flex-1 bg-slate-200" />
+                      </div>
+                    )}
+                    <div className={`flex items-end gap-2 ${mine ? "flex-row-reverse" : "flex-row"} ${sameAsPrev ? "mt-0.5" : "mt-3"}`}>
+                      {/* Avatar athlète (gauche) */}
+                      {!mine && (
+                        <div className={`shrink-0 ${isLastInGroup ? "opacity-100" : "opacity-0"}`}>
+                          <div className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-slate-700 to-slate-900 text-[10px] font-black text-white">
+                            {activeAvatar ? <img src={activeAvatar} alt="" className="h-full w-full object-cover" /> : getInitials(activeName)}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Bulle */}
+                      <div className="group relative max-w-[75%]">
+                        <div className={`
+                          ${bubblePad} text-sm leading-relaxed shadow-sm
+                          ${mine
+                            ? `bg-brand-500 text-white ${sameAsPrev && sameAsNext ? "rounded-2xl rounded-r-md" : sameAsPrev ? "rounded-2xl rounded-tr-md" : sameAsNext ? "rounded-2xl rounded-br-md" : "rounded-2xl"}`
+                            : `bg-white text-slate-800 border border-slate-200 ${sameAsPrev && sameAsNext ? "rounded-2xl rounded-l-md" : sameAsPrev ? "rounded-2xl rounded-tl-md" : sameAsNext ? "rounded-2xl rounded-bl-md" : "rounded-2xl"}`
+                          }
+                        `}>
+                          {bubbleContent}
+                        </div>
+                      </div>
+                    </div>
+                    {isLastInGroup && (
+                      <p className={`mt-1 text-[10px] font-semibold ${mine ? "text-right text-slate-400 pr-0" : "text-left text-slate-400 pl-9"}`}>{timeStr}</p>
+                    )}
                   </div>
-                </div>
-              );
-            })
+                );
+              })}
+            </div>
           )}
           <div ref={endRef} />
         </div>
-        <div className="flex shrink-0 items-end gap-2 border-t border-slate-200 px-4 py-3">
-          <textarea value={reply} onChange={(e) => setReply(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendReply(); } }} rows={1} placeholder="Écrire un message…" className={`${inputCls} max-h-28 flex-1 resize-none`} />
-          <button type="button" onClick={sendReply} disabled={sending || !reply.trim()} className="rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-black text-white transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50">{sending ? "…" : "Envoyer"}</button>
+
+        {/* Zone de saisie */}
+        <div className="shrink-0 border-t border-slate-200 bg-white px-4 py-3">
+          {isRecording ? (
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-rose-300 bg-rose-50 px-4 py-3 mb-1">
+              <span className="flex items-center gap-2 text-sm font-black text-rose-600"><span className="h-2.5 w-2.5 animate-pulse rounded-full bg-rose-500" /> Enregistrement…</span>
+              <button type="button" onClick={stopChatRecording} className="rounded-xl bg-rose-500 px-3 py-1.5 text-xs font-black text-white transition hover:bg-rose-600">Stop &amp; envoyer</button>
+            </div>
+          ) : (
+            <div className="flex items-end gap-1.5">
+              <button type="button" onClick={() => chatFileInputRef.current && chatFileInputRef.current.click()} title="Joindre un fichier" aria-label="Joindre un fichier" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-300 text-slate-500 transition hover:border-brand-400 hover:text-slate-900">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" /></svg>
+              </button>
+              <button type="button" onClick={() => chatImageInputRef.current && chatImageInputRef.current.click()} title="Joindre une photo" aria-label="Joindre une photo" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-300 text-slate-500 transition hover:border-brand-400 hover:text-slate-900">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21" /></svg>
+              </button>
+              <textarea
+                value={reply}
+                onChange={(e) => setReply(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendReply(); } }}
+                rows={1}
+                placeholder={`Répondre à ${activeName}…`}
+                className="max-h-28 min-h-[2.25rem] flex-1 resize-none rounded-2xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-800 outline-none transition focus:border-brand-400 focus:bg-white"
+              />
+              <button type="button" onClick={startChatRecording} title="Message vocal" aria-label="Message vocal" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-300 text-slate-500 transition hover:border-brand-400 hover:text-slate-900">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><path d="M12 19v4M8 23h8" /></svg>
+              </button>
+              <button
+                type="button"
+                onClick={() => sendReply()}
+                disabled={sending || !reply.trim()}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-white shadow transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Envoyer"
+              >
+                {sending
+                  ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><path d="M22 2 11 13" /><path d="M22 2 15 22l-4-9-9-4 20-7Z" /></svg>
+                }
+              </button>
+            </div>
+          )}
+          <input ref={chatFileInputRef} type="file" className="hidden" onChange={handleChatFile} />
+          <input ref={chatImageInputRef} type="file" accept="image/*" className="hidden" onChange={handleChatFile} />
         </div>
       </div>
+
+
     );
   }
 
@@ -4319,17 +4565,10 @@ function CoachInbox() {
     const t = Date.now();
     setLastChatReadAt(t);
     if (typeof window !== "undefined") {
-      try {
-        window.localStorage.setItem("hm-coach-chat-read", String(t));
-      } catch {
-        /* ignore */
-      }
+      try { window.localStorage.setItem("hm-coach-chat-read", String(t)); } catch { /* ignore */ }
     }
   };
-  const openChat = () => {
-    markChatRead();
-    setIsChatOpen(true);
-  };
+  const openChat = () => { markChatRead(); setIsChatOpen(true); };
 
   useEffect(() => {
     const computeCoachOnline = () => {
@@ -4340,6 +4579,7 @@ function CoachInbox() {
     const interval = setInterval(computeCoachOnline, 60000);
     return () => clearInterval(interval);
   }, []);
+
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -4428,28 +4668,34 @@ function CoachInbox() {
     return next;
   };
   const pushChatMessage = (message) => {
+    const localId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     setChatMessages((current) =>
       persistChat([
         ...current,
-        { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, date: new Date().toISOString(), from: "user", ...message }
+        { id: localId, date: new Date().toISOString(), from: "user", ...message }
       ])
     );
-    // Envoi au backend pour que le coach reçoive le message (texte complet ; pièce jointe = libellé).
+    // Envoi au backend (texte direct ; médias uploadés vers Storage puis URL envoyée).
     if (!__hmIsCoach) {
       const kind = message.type === "image" ? "image" : message.type === "voice" ? "voice" : message.type === "file" ? "file" : "text";
-      const body = kind === "text"
-        ? String(message.text || "").trim()
-        : kind === "image" ? "[Image]" : kind === "voice" ? "[Message vocal]" : `[Fichier] ${message.fileName || ""}`.trim();
-      if (body) {
-        (async () => {
-          const token = await getHmToken();
-          if (!token) return;
-          try { await sendBackendMessage({ accessToken: token, body, kind }); } catch { /* ignore */ }
-        })();
-      }
+      (async () => {
+        const token = await getHmToken();
+        if (!token) return;
+        let body;
+        if (kind === "text") {
+          body = String(message.text || "").trim();
+        } else if (message.dataUrl) {
+          // Upload Storage
+          const url = await uploadChatMedia(token, message.dataUrl, kind, message.fileName);
+          body = url || (kind === "image" ? "[Image]" : kind === "voice" ? "[Message vocal]" : `[Fichier] ${message.fileName || ""}`.trim());
+        } else {
+          body = kind === "image" ? "[Image]" : kind === "voice" ? "[Message vocal]" : `[Fichier] ${message.fileName || ""}`.trim();
+        }
+        if (body) { try { await sendBackendMessage({ accessToken: token, body, kind }); } catch { /* ignore */ } }
+      })();
     }
   };
-  // Récupère les réponses du coach : temps réel (WebSocket) + filet de sécurité toutes les 12 s.
+  // Récupère les réponses du coach : temps réel (WebSocket) + filet de sécurité toutes les 4 s.
   useEffect(() => {
     if (__hmIsCoach) return;
     let cancelled = false;
@@ -4475,12 +4721,18 @@ function CoachInbox() {
     pull();
     // Temps réel : dès qu'un message arrive dans MA conversation (RLS), on rafraîchit.
     let unsub = () => {};
-    (async () => {
+    let reconnectTimer = null;
+    const connect = async () => {
       const token = await getHmToken();
-      if (token) unsub = subscribeToMessages(token, (row) => { if (row?.sender === "coach") pull(); });
-    })();
-    const interval = setInterval(pull, 12000);
-    return () => { cancelled = true; clearInterval(interval); unsub(); };
+      if (!token || cancelled) return;
+      unsub();
+      unsub = subscribeToMessagesChannel(token, (row) => { if (row?.sender === "coach") pull(); }, () => {
+        if (!cancelled) reconnectTimer = setTimeout(connect, 3000);
+      });
+    };
+    connect();
+    const interval = setInterval(pull, 4000);
+    return () => { cancelled = true; clearInterval(interval); if (reconnectTimer) clearTimeout(reconnectTimer); unsub(); };
   }, []);
   const sendChatText = () => {
     const text = chatText.trim();
@@ -4552,7 +4804,8 @@ function CoachInbox() {
         current.map((m) => {
           if (m.id !== id) return m;
           const reactions = Array.isArray(m.reactions) ? m.reactions : [];
-          return { ...m, reactions: reactions.includes(emoji) ? reactions.filter((e) => e !== emoji) : [...reactions, emoji] };
+          // Un seul emoji à la fois : remplace la réaction existante ou la supprime si c'est la même
+          return { ...m, reactions: reactions.includes(emoji) ? [] : [emoji] };
         })
       )
     );
@@ -4745,9 +4998,8 @@ function CoachInbox() {
                   const reactions = Array.isArray(message.reactions) ? message.reactions : [];
                   const actionButtons = (
                     <div className="flex items-center gap-0.5">
-                      <button type="button" onClick={() => toggleChatReaction(message.id, "👍")} title="J'aime" aria-label="J'aime" className={`flex h-6 w-6 items-center justify-center rounded-full text-xs transition hover:bg-slate-200 ${reactions.includes("👍") ? "bg-slate-200" : ""}`}>👍</button>
-                      <button type="button" onClick={() => setReactionPickerId((current) => (current === message.id ? null : message.id))} title="Réagir" aria-label="Réagir" className="flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-200 hover:text-slate-700">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><path d="M9 9h.01M15 9h.01" /></svg>
+                      <button type="button" onClick={() => setReactionPickerId((current) => (current === message.id ? null : message.id))} title="Réagir" aria-label="Réagir" className={`flex h-6 w-6 items-center justify-center rounded-full text-xs transition hover:bg-slate-200 hover:text-slate-700 ${reactions.length > 0 ? "bg-slate-200" : "text-slate-400"}`}>
+                        {reactions.length > 0 ? reactions[0] : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><path d="M9 9h.01M15 9h.01" /></svg>}
                       </button>
                       {!isCoach && message.type === "text" ? (
                         <button type="button" onClick={() => startEditMessage(message)} title="Modifier" aria-label="Modifier" className="flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-200 hover:text-slate-700">
@@ -4761,17 +5013,18 @@ function CoachInbox() {
                       ) : null}
                     </div>
                   );
+                  const CHAT_EMOJIS = ["👍","👎","❤️","🔥","😂","😮","😢","😡","💪","🎉","🙏","👏","😍","🤔","💯","🥇","😎","🏆","✅","⚡","💥","🤩","😴","🤣","🫶"];
                   const picker = reactionPickerId === message.id ? (
-                    <div className="flex gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 shadow-md">
-                      {["❤️", "😂", "😮", "😢", "🔥"].map((emoji) => (
-                        <button key={emoji} type="button" onClick={() => toggleChatReaction(message.id, emoji)} className="text-base transition hover:scale-125">{emoji}</button>
+                    <div className="flex max-w-[16rem] flex-wrap gap-1 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-xl">
+                      {CHAT_EMOJIS.map((emoji) => (
+                        <button key={emoji} type="button" onClick={() => toggleChatReaction(message.id, emoji)} className={`text-base transition hover:scale-125 rounded-full p-0.5 ${reactions.includes(emoji) ? "bg-brand-100 ring-1 ring-brand-400" : ""}`}>{emoji}</button>
                       ))}
                     </div>
                   ) : null;
                   const reactionChips = reactions.length ? (
                     <div className={`flex flex-wrap gap-1 ${isCoach ? "justify-start pl-9" : "justify-end"}`}>
                       {reactions.map((emoji) => (
-                        <button key={emoji} type="button" onClick={() => toggleChatReaction(message.id, emoji)} className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-xs shadow-sm">{emoji}</button>
+                        <button key={emoji} type="button" onClick={() => toggleChatReaction(message.id, emoji)} className="rounded-full border border-brand-300 bg-brand-50 px-2 py-0.5 text-xs shadow-sm font-bold text-slate-700 hover:bg-brand-100 transition">{emoji}</button>
                       ))}
                     </div>
                   ) : null;
@@ -4793,7 +5046,7 @@ function CoachInbox() {
                     <>
                       {message.type === "text" ? <p className="whitespace-pre-wrap break-words">{message.text}</p> : null}
                       {message.type === "image" ? <img src={message.dataUrl} alt={message.fileName || "image"} className="max-h-52 rounded-xl" /> : null}
-                      {message.type === "voice" ? <audio controls src={message.dataUrl} className="w-52" /> : null}
+                      {message.type === "voice" ? <VoicePlayer src={message.dataUrl} isMine={!isCoach} /> : null}
                       {message.type === "file" ? (
                         <a href={message.dataUrl} download={message.fileName} className="flex items-center gap-2 font-bold underline">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" /></svg>
@@ -7515,24 +7768,29 @@ function ShopPage({
   };
 
   const pushChatMessage = (message) => {
+    const localId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     setChatMessages((current) =>
       persistChat([
         ...current,
-        { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, date: new Date().toISOString(), from: "user", ...message }
+        { id: localId, date: new Date().toISOString(), from: "user", ...message }
       ])
     );
     if (!__hmIsCoach) {
       const kind = message.type === "image" ? "image" : message.type === "voice" ? "voice" : message.type === "file" ? "file" : "text";
-      const body = kind === "text"
-        ? String(message.text || "").trim()
-        : kind === "image" ? "[Image]" : kind === "voice" ? "[Message vocal]" : `[Fichier] ${message.fileName || ""}`.trim();
-      if (body) {
-        (async () => {
-          const token = await getHmToken();
-          if (!token) return;
-          try { await sendBackendMessage({ accessToken: token, body, kind }); } catch { /* ignore */ }
-        })();
-      }
+      (async () => {
+        const token = await getHmToken();
+        if (!token) return;
+        let body;
+        if (kind === "text") {
+          body = String(message.text || "").trim();
+        } else if (message.dataUrl) {
+          const url = await uploadChatMedia(token, message.dataUrl, kind, message.fileName);
+          body = url || (kind === "image" ? "[Image]" : kind === "voice" ? "[Message vocal]" : `[Fichier] ${message.fileName || ""}`.trim());
+        } else {
+          body = kind === "image" ? "[Image]" : kind === "voice" ? "[Message vocal]" : `[Fichier] ${message.fileName || ""}`.trim();
+        }
+        if (body) { try { await sendBackendMessage({ accessToken: token, body, kind }); } catch { /* ignore */ } }
+      })();
     }
   };
 
@@ -7616,9 +7874,10 @@ function ShopPage({
         current.map((message) => {
           if (message.id !== id) return message;
           const reactions = Array.isArray(message.reactions) ? message.reactions : [];
+          // Un seul emoji à la fois : remplace la réaction existante ou la supprime si c'est la même
           return {
             ...message,
-            reactions: reactions.includes(emoji) ? reactions.filter((entry) => entry !== emoji) : [...reactions, emoji]
+            reactions: reactions.includes(emoji) ? [] : [emoji]
           };
         })
       )
@@ -8746,25 +9005,18 @@ function ShopPage({
                     <div className="flex items-center gap-0.5">
                       <button
                         type="button"
-                        onClick={() => toggleChatReaction(message.id, "👍")}
-                        title="J'aime"
-                        aria-label="J'aime"
-                        className={`flex h-6 w-6 items-center justify-center rounded-full text-xs transition hover:bg-slate-200 ${reactions.includes("👍") ? "bg-slate-200" : ""}`}
-                      >
-                        👍
-                      </button>
-                      <button
-                        type="button"
                         onClick={() => setReactionPickerId((current) => (current === message.id ? null : message.id))}
                         title="Réagir"
                         aria-label="Réagir"
-                        className="flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
+                        className={`flex h-6 w-6 items-center justify-center rounded-full text-xs transition hover:bg-slate-200 hover:text-slate-700 ${reactions.length > 0 ? "bg-slate-200" : "text-slate-400"}`}
                       >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true">
-                          <circle cx="12" cy="12" r="10" />
-                          <path d="M8 14s1.5 2 4 2 4-2 4-2" />
-                          <path d="M9 9h.01M15 9h.01" />
-                        </svg>
+                        {reactions.length > 0 ? reactions[0] : (
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                            <path d="M9 9h.01M15 9h.01" />
+                          </svg>
+                        )}
                       </button>
                       {!isCoach && message.type === "text" ? (
                         <button
@@ -8796,11 +9048,12 @@ function ShopPage({
                     </div>
                   );
 
+                  const CHAT_EMOJIS = ["👍","👎","❤️","🔥","😂","😮","😢","😡","💪","🎉","🙏","👏","😍","🤔","💯","🥇","😎","🏆","✅","⚡","💥","🤩","😴","🤣","🫶"];
                   const picker =
                     reactionPickerId === message.id ? (
-                      <div className="flex gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 shadow-md">
-                        {["❤️", "😂", "😮", "😢", "🔥"].map((emoji) => (
-                          <button key={emoji} type="button" onClick={() => toggleChatReaction(message.id, emoji)} className="text-base transition hover:scale-125">
+                      <div className="flex max-w-[16rem] flex-wrap gap-1 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-xl">
+                        {CHAT_EMOJIS.map((emoji) => (
+                          <button key={emoji} type="button" onClick={() => toggleChatReaction(message.id, emoji)} className={`text-base transition hover:scale-125 rounded-full p-0.5 ${reactions.includes(emoji) ? "bg-brand-100 ring-1 ring-brand-400" : ""}`}>
                             {emoji}
                           </button>
                         ))}
@@ -8814,7 +9067,7 @@ function ShopPage({
                           key={emoji}
                           type="button"
                           onClick={() => toggleChatReaction(message.id, emoji)}
-                          className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-xs shadow-sm"
+                          className="rounded-full border border-brand-300 bg-brand-50 px-2 py-0.5 text-xs shadow-sm font-bold text-slate-700 hover:bg-brand-100 transition"
                         >
                           {emoji}
                         </button>
@@ -8850,7 +9103,7 @@ function ShopPage({
                     <>
                       {message.type === "text" ? <p className="whitespace-pre-wrap break-words">{message.text}</p> : null}
                       {message.type === "image" ? <img src={message.dataUrl} alt={message.fileName || "image"} className="max-h-52 rounded-xl" /> : null}
-                      {message.type === "voice" ? <audio controls src={message.dataUrl} className="w-52" /> : null}
+                      {message.type === "voice" ? <VoicePlayer src={message.dataUrl} isMine={!isCoach} /> : null}
                       {message.type === "file" ? (
                         <a href={message.dataUrl} download={message.fileName} className="flex items-center gap-2 font-bold underline">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
@@ -10645,7 +10898,37 @@ async function getHmToken() {
 let __hmIsCoach = false;
 function setHmIsCoach(v) { __hmIsCoach = !!v; }
 
+// Upload un média (vocal, image, fichier) vers Supabase Storage → retourne l'URL publique ou null.
+// Upload un média via la edge function messages (action upload-media).
+// La edge function crée le bucket automatiquement et retourne l'URL publique.
+async function uploadChatMedia(accessToken, dataUrl, kind, _fileName) {
+  if (!hasSupabaseConfig || !dataUrl || !accessToken) return null;
+  try {
+    const comma = dataUrl.indexOf(",");
+    if (comma === -1) return null;
+    const header = dataUrl.slice(0, comma);
+    const base64 = dataUrl.slice(comma + 1);
+    const mimeMatch = header.match(/:(.*?);/);
+    const mimeType = mimeMatch ? mimeMatch[1] : "application/octet-stream";
+
+    const res = await fetch(`${supabaseUrl}/functions/v1/messages`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "apikey": supabaseAnonKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ action: "upload-media", kind, base64, mimeType }),
+    });
+    if (!res.ok) return null;
+    const json = await res.json().catch(() => ({}));
+    return json?.url || null;
+  } catch { return null; }
+}
+
+
 async function fetchCoachConversations(accessToken) {
+
   const data = await callSupabaseFunctionWithAuth("messages", { action: "conversations" }, accessToken);
   return Array.isArray(data?.conversations) ? data.conversations : [];
 }
@@ -10672,9 +10955,9 @@ function getRealtimeClient() {
   }
   return __hmRealtimeClient;
 }
-// S'abonne aux nouveaux messages. Le filtrage est fait par les règles RLS (le coach reçoit tout,
-// l'athlète uniquement sa propre conversation). Retourne une fonction pour se désabonner.
-function subscribeToMessages(accessToken, onInsert) {
+// S'abonne aux nouveaux messages. Retourne une fonction pour se désabonner.
+// onDisconnect est appelé si le canal Realtime se déconnecte (reconnexion automatique possible).
+function subscribeToMessagesChannel(accessToken, onInsert, onDisconnect) {
   const client = getRealtimeClient();
   if (!client || !accessToken) return () => {};
   try { client.realtime.setAuth(accessToken); } catch { /* ignore */ }
@@ -10683,8 +10966,16 @@ function subscribeToMessages(accessToken, onInsert) {
     .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
       try { onInsert(payload.new); } catch { /* ignore */ }
     })
-    .subscribe();
+    .subscribe((status) => {
+      if ((status === "CLOSED" || status === "CHANNEL_ERROR") && typeof onDisconnect === "function") {
+        try { onDisconnect(); } catch { /* ignore */ }
+      }
+    });
   return () => { try { client.removeChannel(channel); } catch { /* ignore */ } };
+}
+// Alias sans callback de déconnexion (rétro-compat).
+function subscribeToMessages(accessToken, onInsert) {
+  return subscribeToMessagesChannel(accessToken, onInsert, null);
 }
 
 async function callSupabaseFunction(functionName, payload) {

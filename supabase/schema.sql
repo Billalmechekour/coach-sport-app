@@ -401,3 +401,33 @@ for update
 to authenticated
 using (auth.uid() = id)
 with check (auth.uid() = id);
+
+-- ===== Stockage médias messagerie (vocaux, images, fichiers) =====
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'chat-media',
+  'chat-media',
+  true,
+  20971520,
+  array['audio/webm','audio/ogg','audio/mp4','audio/mpeg','image/jpeg','image/png','image/gif','image/webp','application/pdf','application/octet-stream']
+)
+on conflict (id) do nothing;
+
+drop policy if exists "chat-media: authenticated upload" on storage.objects;
+create policy "chat-media: authenticated upload"
+on storage.objects for insert
+to authenticated
+with check (bucket_id = 'chat-media');
+
+drop policy if exists "chat-media: public read" on storage.objects;
+create policy "chat-media: public read"
+on storage.objects for select
+to anon, authenticated
+using (bucket_id = 'chat-media');
+
+drop policy if exists "chat-media: owner delete" on storage.objects;
+create policy "chat-media: owner delete"
+on storage.objects for delete
+to authenticated
+using (bucket_id = 'chat-media' and owner = auth.uid());
+
