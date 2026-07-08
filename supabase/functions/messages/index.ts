@@ -37,7 +37,7 @@ function isCoachUser(user: { email?: string | null; app_metadata?: Record<string
 
 function normalizeAction(value: unknown) {
   const action = String(value || "list").trim().toLowerCase();
-  return ["send", "thread", "conversations", "mark-read", "upload-media", "react", "edit", "delete"].includes(action) ? action : "thread";
+  return ["send", "thread", "conversations", "mark-read", "upload-media", "react", "edit", "delete", "clear-chat"].includes(action) ? action : "thread";
 }
 
 function normalizeKind(value: unknown) {
@@ -58,6 +58,8 @@ function serializeMessage(row: Record<string, unknown>) {
     reactions: row.reactions || {},
     edited_at: row.edited_at ? String(row.edited_at) : null,
     deleted_at: row.deleted_at ? String(row.deleted_at) : null,
+    deleted_for_coach: Boolean(row.deleted_for_coach),
+    deleted_for_athlete: Boolean(row.deleted_for_athlete),
   };
 }
 
@@ -256,18 +258,54 @@ serve(async (request) => {
 
     if (action === "delete") {
       const messageId = String(payload.messageId || "").trim();
+      const scope = String(payload.scope || "everyone").trim(); // "me" or "everyone"
       if (!messageId) return errorResponse(400, "MISSING_ID", "ID du message manquant.");
 
       const { data: msg } = await supabase.from("messages").select("*").eq("id", messageId).single();
       if (!msg) return errorResponse(404, "NOT_FOUND", "Message introuvable.");
 
       const isOwner = coach ? msg.sender === "coach" : msg.sender === "athlete";
-      if (!isOwner) return errorResponse(403, "FORBIDDEN", "Vous ne pouvez supprimer que vos propres messages.");
+      
+      let updatePayload: any = {};
+      if (scope === "everyone") {
+        if (!isOwner) return errorResponse(403, "FORBIDDEN", "Vous ne pouvez supprimer pour tout le monde que vos propres messages.");
+        updatePayload = { deleted_at: new Date().toISOString() };
+      } else {
+        if (coach) updatePayload = { deleted_for_coach: true };
+        else updatePayload = { deleted_for_athlete: true };
+      }
 
-      // Soft delete
-      const { data, error } = await supabase.from("messages").update({ deleted_at: new Date().toISOString() }).eq("id", messageId).select("*").single();
+      const { data, error } = await supabase.from("messages").update(updatePayload).eq("id", messageId).select("*").single();
       if (error || !data) return errorResponse(500, "DELETE_FAILED", "Impossible de supprimer le message.");
       return jsonResponse({ success: true, message: serializeMessage(data as Record<string, unknown>) });
+    }
+
+    if (action === "clear-chat") {
+      const scope = String(payload.scope || "all-for-me").trim(); // "mine" or "all-for-me"
+      const athleteId = coach ? String(payload.athleteId || "").trim() : user.id;
+      if (!athleteId) return errorResponse(400, "NO_ATHLETE", "Athlète manquant.");
+
+      if (scope === "mine") {
+        const senderType = coach ? "coach" : "athlete";
+        await supabase.from("messages")
+          .update({ deleted_at: new Date().toISOString() })
+          .eq("athlete_id", athleteId)
+          .eq("sender", senderType)
+          .is("deleted_at", null);
+      } else {
+        if (coach) {
+          await supabase.from("messages")
+            .update({ deleted_for_coach: true })
+            .eq("athlete_id", athleteId)
+            .is("deleted_for_coach", false);
+        } else {
+          await supabase.from("messages")
+            .update({ deleted_for_athlete: true })
+            .eq("athlete_id", athleteId)
+            .is("deleted_for_athlete", false);
+        }
+      }
+      return jsonResponse({ success: true });
     }
 
     if (!coach) return errorResponse(403, "FORBIDDEN", "Action réservée au coach.");

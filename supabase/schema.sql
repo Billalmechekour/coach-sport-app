@@ -442,3 +442,8 @@ FOR SELECT TO authenticated USING (
   (auth.jwt()->>'email' IN ('noreply.hicham.fit@gmail.com', 'billalmechekour6@gmail.com', 'hichamechkour39@gmail.com')) OR 
   (auth.jwt()->'app_metadata'->>'is_coach' = 'true')
 );
+
+-- Migration: Add targeted deletion columns
+ALTER TABLE messages ADD COLUMN deleted_for_coach BOOLEAN DEFAULT false;
+ALTER TABLE messages ADD COLUMN deleted_for_athlete BOOLEAN DEFAULT false;
+

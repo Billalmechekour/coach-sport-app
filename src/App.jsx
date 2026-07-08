@@ -4224,16 +4224,39 @@ function CoachChatInbox({ onUnread }) {
       }
     } catch { alert("Erreur lors de la modification"); }
   };
-  const handleDeleteMessage = async (msgId) => {
-    if (!window.confirm("Voulez-vous vraiment supprimer ce message ?")) return;
+  const handleDeleteMessage = (msgId) => {
+    setDeletePromptMsgId(msgId);
+  };
+  const handleConfirmDelete = async (msgId, scope) => {
+    setDeletePromptMsgId(null);
     try {
       const token = await getHmToken();
       if (!token) return;
-      const success = await deleteBackendMessage({ accessToken: token, messageId: msgId });
+      const success = await deleteBackendMessage({ accessToken: token, messageId: msgId, scope });
       if (success) {
-        setThread((prev) => prev.map((m) => m.id === msgId ? { ...m, deleted_at: new Date().toISOString() } : m));
+        if (scope === "everyone") {
+          setThread((prev) => prev.map((m) => m.id === msgId ? { ...m, deleted_at: new Date().toISOString() } : m));
+        } else {
+          setThread((prev) => prev.map((m) => m.id === msgId ? { ...m, deleted_for_coach: true } : m));
+        }
       }
     } catch { alert("Erreur lors de la suppression"); }
+  };
+  const handleClearChat = async (scope) => {
+    setShowClearMenu(false);
+    if (!window.confirm("Êtes-vous sûr de vouloir effectuer cette action ?")) return;
+    try {
+      const token = await getHmToken();
+      if (!token || !activeIdRef.current) return;
+      const success = await clearBackendChat({ accessToken: token, athleteId: activeIdRef.current, scope });
+      if (success) {
+        if (scope === "mine") {
+          setThread((prev) => prev.map((m) => m.sender === "coach" ? { ...m, deleted_at: new Date().toISOString() } : m));
+        } else {
+          setThread((prev) => prev.map((m) => ({ ...m, deleted_for_coach: true })));
+        }
+      }
+    } catch { alert("Erreur lors du nettoyage"); }
   };
   const handleReactMessage = async (msgId, emoji) => {
     try {
@@ -4344,19 +4367,29 @@ function CoachChatInbox({ onUnread }) {
     return (
       <div className="flex min-h-0 flex-1 flex-col">
         {/* Header */}
-        <div className="flex shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 shadow-sm">
-          <button type="button" onClick={backToList} className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:border-brand-400 hover:text-slate-900" aria-label="Retour">
-            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18 9 12l6-6" /></svg>
-          </button>
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-slate-700 to-slate-900 text-xs font-black text-white shadow">
-            {activeAvatar ? <img src={activeAvatar} alt="" className="h-full w-full object-cover" /> : getInitials(activeName)}
+          <div className="flex shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 shadow-sm relative">
+            <button type="button" onClick={backToList} className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:border-brand-400 hover:text-slate-900" aria-label="Retour">
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18 9 12l6-6" /></svg>
+            </button>
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-slate-700 to-slate-900 text-xs font-black text-white shadow">
+              {activeAvatar ? <img src={activeAvatar} alt="" className="h-full w-full object-cover" /> : getInitials(activeName)}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-display text-sm font-black text-slate-900">{activeName}</p>
+              <p className="text-[11px] font-semibold text-emerald-500">● En ligne</p>
+            </div>
+            <div className="relative">
+              <button onClick={() => setShowClearMenu(!showClearMenu)} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 transition">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+              </button>
+              {showClearMenu && (
+                <div className="absolute right-0 top-full mt-1 w-48 rounded-xl bg-white p-1 shadow-lg border border-slate-200 z-50">
+                  <button onClick={() => handleClearChat("all-for-me")} className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 transition">Vider ma conversation</button>
+                  <button onClick={() => handleClearChat("mine")} className="w-full rounded-lg px-3 py-2 text-left text-sm text-red-600 hover:bg-rose-50 transition">Supprimer mes messages</button>
+                </div>
+              )}
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-display text-sm font-black text-slate-900">{activeName}</p>
-            <p className="text-[11px] font-semibold text-emerald-500">● En ligne</p>
-            <p className="text-[10px] font-mono text-orange-500">[DEBUG] {thread.length} msgs | dernier: {thread.length ? `[${thread[thread.length-1]?.sender}] ${(thread[thread.length-1]?.body || "").slice(0,25)}` : "vide"}</p>
-          </div>
-        </div>
 
         {/* Messages */}
         <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50 px-4 py-4" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, #e2e8f0 1px, transparent 0)", backgroundSize: "24px 24px" }}>
@@ -4373,11 +4406,11 @@ function CoachChatInbox({ onUnread }) {
               <p className="text-sm font-semibold text-slate-400">Aucun message. Commencez la conversation !</p>
             </div>
           ) : (
-            <div className="space-y-1">
-              {thread.map((m, idx) => {
+            <div className="space-y-1 pb-10">
+              {thread.filter(m => !m.deleted_for_coach).map((m, idx, arr) => {
                 const mine = m.sender === "coach";
-                const prevM = thread[idx - 1];
-                const nextM = thread[idx + 1];
+                const prevM = arr[idx - 1];
+                const nextM = arr[idx + 1];
                 const sameAsPrev = prevM && prevM.sender === m.sender;
                 const sameAsNext = nextM && nextM.sender === m.sender;
                 const isLastInGroup = !sameAsNext;
@@ -4463,6 +4496,15 @@ function CoachChatInbox({ onUnread }) {
                   </div>
                 );
 
+                const deletePrompt = deletePromptMsgId === m.id && (
+                  <div className={`absolute z-30 top-1/2 -translate-y-1/2 flex flex-col gap-1 rounded-xl bg-white p-2 shadow-xl border border-slate-200 w-48 ${mine ? "right-[calc(100%+0.5rem)]" : "left-[calc(100%+0.5rem)]"}`}>
+                    <p className="text-xs font-bold text-slate-800 mb-1 px-1">Supprimer le message</p>
+                    <button onClick={() => handleConfirmDelete(m.id, "me")} className="w-full text-left px-2 py-1.5 text-xs text-slate-600 hover:bg-slate-50 rounded-lg transition">Pour moi</button>
+                    {mine && <button onClick={() => handleConfirmDelete(m.id, "everyone")} className="w-full text-left px-2 py-1.5 text-xs text-red-600 hover:bg-rose-50 rounded-lg transition">Pour tout le monde</button>}
+                    <button onClick={() => setDeletePromptMsgId(null)} className="w-full text-left px-2 py-1.5 text-xs text-slate-400 hover:bg-slate-50 rounded-lg transition border-t border-slate-100 mt-1">Annuler</button>
+                  </div>
+                );
+
                 if (m.deleted_at) {
                   return (
                     <div key={m.id} className="mb-2">
@@ -4505,6 +4547,7 @@ function CoachChatInbox({ onUnread }) {
                       {/* Bulle */}
                       <div className="group relative max-w-[75%]">
                         {reactionPicker}
+                        {deletePrompt}
                         {actionMenu}
                         <div className={`
                           ${bubblePad} text-sm leading-relaxed shadow-sm
@@ -4884,12 +4927,15 @@ function CoachInbox() {
               const reactionsStr = JSON.stringify(ex.reactions || {});
               const newReactionsStr = JSON.stringify(reactionsObj);
 
-              if (ex.text !== newText || ex.edited !== newEdited || ex.deleted !== newDeleted || reactionsStr !== newReactionsStr) {
+              if (m.deleted_for_athlete) {
+                next.splice(existingIdx, 1);
+                changed = true;
+              } else if (ex.text !== newText || ex.edited !== newEdited || ex.deleted !== newDeleted || reactionsStr !== newReactionsStr) {
                 next[existingIdx] = { ...ex, text: newText, edited: newEdited, deleted: newDeleted, reactions: reactionsObj };
                 changed = true;
               }
             } else {
-              if (!m.deleted_at) {
+              if (!m.deleted_at && !m.deleted_for_athlete) {
                 next.push({
                   id: `srv-${m.id}`,
                   backendId: m.id,
@@ -4986,16 +5032,39 @@ function CoachInbox() {
     }
     setIsRecording(false);
   };
-  const deleteChatMessage = async (id) => {
-    if (!window.confirm("Voulez-vous vraiment supprimer ce message ?")) return;
+  const deleteChatMessage = (id) => {
+    setDeletePromptMsgId(id);
+  };
+  const confirmDeleteChatMessage = async (id, scope) => {
+    setDeletePromptMsgId(null);
     const msg = chatMessages.find(m => m.id === id);
     if (msg?.backendId) {
       try {
         const token = await getHmToken();
-        if (token) await deleteBackendMessage({ accessToken: token, messageId: msg.backendId });
+        if (token) await deleteBackendMessage({ accessToken: token, messageId: msg.backendId, scope });
       } catch { /* ignore */ }
     }
-    setChatMessages((current) => persistChat(current.filter((m) => m.id !== id)));
+    if (scope === "everyone") {
+      setChatMessages((current) => persistChat(current.map(m => m.id === id ? { ...m, deleted: true } : m)));
+    } else {
+      setChatMessages((current) => persistChat(current.filter((m) => m.id !== id)));
+    }
+  };
+  const handleClearChat = async (scope) => {
+    setShowClearMenu(false);
+    if (!window.confirm("Êtes-vous sûr de vouloir effectuer cette action ?")) return;
+    try {
+      const token = await getHmToken();
+      if (!token) return;
+      const success = await clearBackendChat({ accessToken: token, athleteId: "me", scope });
+      if (success) {
+        if (scope === "mine") {
+          setChatMessages((prev) => persistChat(prev.map(m => m.from === "user" && m.id !== "coach-welcome" ? { ...m, deleted: true } : m)));
+        } else {
+          setChatMessages((prev) => persistChat(prev.filter(m => m.id === "coach-welcome")));
+        }
+      }
+    } catch { alert("Erreur lors du nettoyage"); }
   };
   const startEditMessage = (message) => {
     setEditingMessageId(message.id);
@@ -5240,10 +5309,11 @@ function CoachInbox() {
                       </div>
                     );
                   }
+                  const isWelcomeMsg = message.id === "coach-welcome";
                   const isEditing = editingMessageId === message.id;
                   const reactionsObjCheck = message.reactions || {};
                   const reactionsListCheck = Object.values(reactionsObjCheck);
-                  const actionButtons = (
+                  const actionButtons = !isWelcomeMsg && (
                     <div className="flex items-center gap-0.5">
                       <button type="button" onClick={() => setReactionPickerId((current) => (current === message.id ? null : message.id))} title="Réagir" aria-label="Réagir" className={`flex h-6 w-6 items-center justify-center rounded-full text-xs transition hover:bg-slate-200 hover:text-slate-700 ${reactionsListCheck.length > 0 ? "bg-slate-200" : "text-slate-400"}`}>
                         {reactionsListCheck.length > 0 ? reactionsListCheck[0] : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><path d="M9 9h.01M15 9h.01" /></svg>}
@@ -5254,9 +5324,19 @@ function CoachInbox() {
                         </button>
                       ) : null}
                       {!isCoach ? (
-                        <button type="button" onClick={() => deleteChatMessage(message.id)} title="Supprimer" aria-label="Supprimer" className="flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition hover:bg-rose-100 hover:text-rose-500">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
-                        </button>
+                        <div className="relative">
+                          <button type="button" onClick={() => deleteChatMessage(message.id)} title="Supprimer" aria-label="Supprimer" className="flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition hover:bg-rose-100 hover:text-rose-500">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
+                          </button>
+                          {deletePromptMsgId === message.id && (
+                            <div className="absolute right-0 bottom-full mb-1 flex flex-col gap-1 rounded-xl bg-white p-2 shadow-xl border border-slate-200 w-48 z-30">
+                              <p className="text-[11px] font-bold text-slate-800 mb-1 px-1">Supprimer le message</p>
+                              <button onClick={() => confirmDeleteChatMessage(message.id, "me")} className="w-full text-left px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-50 rounded-md transition">Pour moi</button>
+                              <button onClick={() => confirmDeleteChatMessage(message.id, "everyone")} className="w-full text-left px-2 py-1 text-[11px] font-semibold text-red-600 hover:bg-rose-50 rounded-md transition">Pour tout le monde</button>
+                              <button onClick={() => setDeletePromptMsgId(null)} className="w-full text-left px-2 py-1 text-[11px] font-semibold text-slate-400 hover:bg-slate-50 rounded-md transition border-t border-slate-100 mt-1">Annuler</button>
+                            </div>
+                          )}
+                        </div>
                       ) : null}
                     </div>
                   );
@@ -11210,8 +11290,12 @@ async function editBackendMessage({ accessToken, messageId, body }) {
   const data = await callSupabaseFunctionWithAuth("messages", { action: "edit", messageId, body }, accessToken);
   return data?.success;
 }
-async function deleteBackendMessage({ accessToken, messageId }) {
-  const data = await callSupabaseFunctionWithAuth("messages", { action: "delete", messageId }, accessToken);
+async function deleteBackendMessage({ accessToken, messageId, scope }) {
+  const data = await callSupabaseFunctionWithAuth("messages", { action: "delete", messageId, scope }, accessToken);
+  return data?.success;
+}
+async function clearBackendChat({ accessToken, athleteId, scope }) {
+  const data = await callSupabaseFunctionWithAuth("messages", { action: "clear-chat", athleteId, scope }, accessToken);
   return data?.success;
 }
 
