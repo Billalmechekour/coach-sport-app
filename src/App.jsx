@@ -4711,7 +4711,21 @@ function CoachInbox() {
           const existing = new Set(current.map((m) => m.backendId).filter(Boolean));
           const toAdd = coachMsgs
             .filter((m) => !existing.has(m.id))
-            .map((m) => ({ id: `srv-${m.id}`, backendId: m.id, from: "coach", type: "text", text: m.body, date: m.created_at, reactions: [] }));
+            .map((m) => {
+              const kind = m.kind || "text";
+              const isMedia = ["voice", "image", "file"].includes(kind);
+              return { 
+                id: `srv-${m.id}`, 
+                backendId: m.id, 
+                from: "coach", 
+                type: kind === "voice" || kind === "image" || kind === "file" ? kind : "text", 
+                text: isMedia ? "" : m.body, 
+                dataUrl: isMedia ? m.body : undefined,
+                fileName: kind === "file" ? "Document" : undefined,
+                date: m.created_at, 
+                reactions: [] 
+              };
+            });
           if (!toAdd.length) return current;
           const merged = [...current, ...toAdd].sort((a, b) => new Date(a.date) - new Date(b.date));
           return persistChat(merged);
