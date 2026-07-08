@@ -4101,6 +4101,8 @@ function CoachChatInbox({ onUnread }) {
   const endRef = useRef(null);
   const [editingMsg, setEditingMsg] = useState(null);
   const [activeReactionId, setActiveReactionId] = useState(null);
+  const [deletePromptMsgId, setDeletePromptMsgId] = useState(null);
+  const [showClearMenu, setShowClearMenu] = useState(false);
   const [debugInfo, setDebugInfo] = useState("");
   const loadConversations = async (silent = false) => {
     if (!silent) setLoading(true);
