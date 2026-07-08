@@ -10946,14 +10946,18 @@ async function uploadChatMedia(accessToken, dataUrl, kind, _fileName) {
 async function fetchCoachConversations(accessToken) {
 
   const data = await callSupabaseFunctionWithAuth("messages", { action: "conversations" }, accessToken);
+  console.log("[DEBUG-MSG] fetchCoachConversations response:", JSON.stringify(data).slice(0, 500));
   return Array.isArray(data?.conversations) ? data.conversations : [];
 }
 async function fetchMessageThread({ accessToken, athleteId }) {
   const data = await callSupabaseFunctionWithAuth("messages", { action: "thread", athleteId }, accessToken);
+  console.log("[DEBUG-MSG] fetchMessageThread response:", JSON.stringify(data).slice(0, 500));
   return Array.isArray(data?.messages) ? data.messages : [];
 }
 async function sendBackendMessage({ accessToken, athleteId, body, kind = "text" }) {
+  console.log("[DEBUG-MSG] sendBackendMessage called with:", { athleteId, body: body?.slice(0, 50), kind });
   const data = await callSupabaseFunctionWithAuth("messages", { action: "send", athleteId, body, kind }, accessToken);
+  console.log("[DEBUG-MSG] sendBackendMessage response:", JSON.stringify(data).slice(0, 500));
   return data?.message || null;
 }
 async function markMessagesRead({ accessToken, athleteId }) {
