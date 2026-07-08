@@ -4100,15 +4100,21 @@ function CoachChatInbox({ onUnread }) {
   const [showFilters, setShowFilters] = useState(false);
   const endRef = useRef(null);
 
+  const [debugInfo, setDebugInfo] = useState("");
   const loadConversations = async (silent = false) => {
     if (!silent) setLoading(true);
     try {
       const token = await getHmToken();
-      if (!token) return;
+      if (!token) { setDebugInfo("❌ Pas de token ! Session expirée ?"); if (!silent) setLoading(false); return; }
+      setDebugInfo("⏳ Chargement...");
       const list = await fetchCoachConversations(token);
+      setDebugInfo("✅ " + list.length + " conversation(s) trouvée(s)");
       setConversations(list);
       if (typeof onUnread === "function") onUnread(list.reduce((s, c) => s + (Number(c.unread) || 0), 0));
-    } catch { /* ignore */ } finally { if (!silent) setLoading(false); }
+    } catch (e) {
+      setDebugInfo("❌ Erreur: " + (e.message || "inconnue"));
+      console.error("[CHAT-ERROR] loadConversations failed:", e);
+    } finally { if (!silent) setLoading(false); }
   };
   useEffect(() => { loadConversations(); /* eslint-disable-next-line */ }, []);
   useEffect(() => { if (endRef.current) endRef.current.scrollIntoView({ block: "end" }); }, [thread, activeId]);
@@ -4481,9 +4487,15 @@ function CoachChatInbox({ onUnread }) {
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50 px-2 py-2">
+        {debugInfo && (
+          <div className="mb-4 rounded-xl border-2 border-orange-500/20 bg-orange-50 px-3 py-2 text-xs font-mono text-orange-600">
+            {debugInfo}
+          </div>
+        )}
         {loading ? (
           <p className="py-8 text-center text-sm text-slate-400">Chargement…</p>
         ) : conversations.length === 0 ? (
+          <p className="px-4 py-8 text-center text-sm text-slate-400">Aucun message reçu pour le moment.</p>
           <p className="px-4 py-8 text-center text-sm text-slate-400">Aucun message reçu pour le moment.</p>
         ) : filtered.length === 0 ? (
           <p className="px-4 py-8 text-center text-sm text-slate-400">Aucune conversation ne correspond à ces filtres.</p>
