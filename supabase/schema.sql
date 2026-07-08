@@ -438,7 +438,7 @@ ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "messages_realtime_policy" ON messages;
 CREATE POLICY "messages_realtime_policy" ON messages
 FOR SELECT TO authenticated USING (
-  athlete_id = auth.uid() OR 
-  (auth.jwt()->>'email' IN ('noreply.hicham.fit@gmail.com', 'billalmechekour6@gmail.com')) OR 
+  athlete_id::text = auth.uid()::text OR 
+  (auth.jwt()->>'email' IN ('noreply.hicham.fit@gmail.com', 'billalmechekour6@gmail.com', 'hichamechkour39@gmail.com')) OR 
   (auth.jwt()->'app_metadata'->>'is_coach' = 'true')
 );
