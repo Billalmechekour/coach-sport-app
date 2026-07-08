@@ -10946,18 +10946,21 @@ async function uploadChatMedia(accessToken, dataUrl, kind, _fileName) {
 async function fetchCoachConversations(accessToken) {
 
   const data = await callSupabaseFunctionWithAuth("messages", { action: "conversations" }, accessToken);
-  console.log("[DEBUG-MSG] fetchCoachConversations response:", JSON.stringify(data).slice(0, 500));
-  return Array.isArray(data?.conversations) ? data.conversations : [];
+  const convs = Array.isArray(data?.conversations) ? data.conversations : [];
+  console.log("[DEBUG-MSG] fetchCoachConversations:", convs.length, "conversations.", convs.length ? "Dernier msg:" + convs[0]?.last_message + " unread:" + convs[0]?.unread : "");
+  return convs;
 }
 async function fetchMessageThread({ accessToken, athleteId }) {
   const data = await callSupabaseFunctionWithAuth("messages", { action: "thread", athleteId }, accessToken);
-  console.log("[DEBUG-MSG] fetchMessageThread response:", JSON.stringify(data).slice(0, 500));
-  return Array.isArray(data?.messages) ? data.messages : [];
+  const msgs = Array.isArray(data?.messages) ? data.messages : [];
+  const last = msgs[msgs.length - 1];
+  console.log("[DEBUG-MSG] fetchMessageThread:", msgs.length, "messages.", last ? "Dernier: [" + last.sender + "] " + last.body?.slice(0, 40) + " @ " + last.created_at : "vide");
+  return msgs;
 }
 async function sendBackendMessage({ accessToken, athleteId, body, kind = "text" }) {
   console.log("[DEBUG-MSG] sendBackendMessage called with:", { athleteId, body: body?.slice(0, 50), kind });
   const data = await callSupabaseFunctionWithAuth("messages", { action: "send", athleteId, body, kind }, accessToken);
-  console.log("[DEBUG-MSG] sendBackendMessage response:", JSON.stringify(data).slice(0, 500));
+  console.log("[DEBUG-MSG] sendBackendMessage response:", data?.success ? "OK id=" + data?.message?.id : "FAIL");
   return data?.message || null;
 }
 async function markMessagesRead({ accessToken, athleteId }) {
