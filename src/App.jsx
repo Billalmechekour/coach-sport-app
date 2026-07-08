@@ -8068,7 +8068,9 @@ function ShopPage({
         const client = getRealtimeClient();
         if (!client) return;
         
-        const presenceKey = currentUser?.id || `athlete-${Math.random().toString(36).slice(2)}`;
+        let cId = null;
+        try { cId = JSON.parse(window.localStorage.getItem("hm-current-user"))?.id; } catch {}
+        const presenceKey = cId || `athlete-${Math.random().toString(36).slice(2)}`;
         channel = client.channel('hm-presence', {
           config: { presence: { key: presenceKey } }
         });
@@ -8088,7 +8090,7 @@ function ShopPage({
         
         channel.subscribe(async (status) => {
           if (status === 'SUBSCRIBED') {
-            await channel.track({ isCoach: false, athleteId: currentUser?.id });
+            await channel.track({ isCoach: false, athleteId: cId });
           }
         });
       } catch (e) { console.error("Presence error", e); }
@@ -8100,7 +8102,7 @@ function ShopPage({
         try { channel.untrack(); getRealtimeClient()?.removeChannel(channel); } catch {}
       }
     };
-  }, [currentUser?.id]);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
