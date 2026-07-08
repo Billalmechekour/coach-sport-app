@@ -4855,30 +4855,52 @@ function CoachInbox() {
         const msgs = await fetchMessageThread({ accessToken: token });
         if (cancelled) return;
         setChatMessages((current) => {
-          const existing = new Set(current.map((m) => m.backendId).filter(Boolean));
-          const toAdd = msgs
-            .filter((m) => !existing.has(m.id) && !m.deleted_at)
-            .map((m) => {
-              const kind = m.kind || "text";
-              const isMedia = ["voice", "image", "file"].includes(kind);
-              let athleteReaction = "";
-              if (m.reactions && m.reactions.athlete) athleteReaction = m.reactions.athlete;
-              return { 
-                id: `srv-${m.id}`, 
-                backendId: m.id, 
-                from: m.sender === "coach" ? "coach" : "user", 
-                type: kind === "voice" || kind === "image" || kind === "file" ? kind : "text", 
-                text: isMedia ? "" : m.body, 
-                dataUrl: isMedia ? m.body : undefined,
-                fileName: kind === "file" ? "Document" : undefined,
-                date: m.created_at, 
-                reactions: athleteReaction ? [athleteReaction] : [],
-                edited: !!m.edited_at
-              };
-            });
-          if (!toAdd.length) return current;
-          const merged = [...current, ...toAdd].sort((a, b) => new Date(a.date) - new Date(b.date));
-          return persistChat(merged);
+          const next = [...current];
+          let changed = false;
+          msgs.forEach((m) => {
+            const kind = m.kind || "text";
+            const isMedia = ["voice", "image", "file"].includes(kind);
+            let athleteReaction = "";
+            let coachReaction = "";
+            if (m.reactions && m.reactions.athlete) athleteReaction = m.reactions.athlete;
+            if (m.reactions && m.reactions.coach) coachReaction = m.reactions.coach;
+            const allReactions = [athleteReaction, coachReaction].filter(Boolean);
+
+            const existingIdx = next.findIndex(x => x.backendId === m.id);
+            if (existingIdx >= 0) {
+              const ex = next[existingIdx];
+              const newText = isMedia ? "" : m.body;
+              const newEdited = !!m.edited_at;
+              const newDeleted = !!m.deleted_at;
+              const reactionsStr = JSON.stringify(ex.reactions || []);
+              const newReactionsStr = JSON.stringify(allReactions);
+
+              if (ex.text !== newText || ex.edited !== newEdited || ex.deleted !== newDeleted || reactionsStr !== newReactionsStr) {
+                next[existingIdx] = { ...ex, text: newText, edited: newEdited, deleted: newDeleted, reactions: allReactions };
+                changed = true;
+              }
+            } else {
+              if (!m.deleted_at) {
+                next.push({
+                  id: `srv-${m.id}`,
+                  backendId: m.id,
+                  from: m.sender === "coach" ? "coach" : "user",
+                  type: kind === "voice" || kind === "image" || kind === "file" ? kind : "text",
+                  text: isMedia ? "" : m.body,
+                  dataUrl: isMedia ? m.body : undefined,
+                  fileName: kind === "file" ? "Document" : undefined,
+                  date: m.created_at,
+                  reactions: allReactions,
+                  edited: !!m.edited_at,
+                  deleted: false
+                });
+                changed = true;
+              }
+            }
+          });
+          if (!changed) return current;
+          next.sort((a, b) => new Date(a.date) - new Date(b.date));
+          return persistChat(next);
         });
       } catch { /* ignore */ }
     };
