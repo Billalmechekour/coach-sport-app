@@ -4190,7 +4190,9 @@ function CoachChatInbox({ onUnread }) {
         if (kind === "text" && (!message || !message.text)) setReply("");
         setConversations((prev) => prev.map((c) => (c.athlete_id === activeId ? { ...c, last_message: body, last_kind: kind, last_sender: "coach", last_at: new Date().toISOString() } : c)));
       }
-    } catch { /* ignore */ } finally { setSending(false); }
+    } catch (e) {
+      alert("Erreur lors de l'envoi : " + (e.message || "Erreur inconnue"));
+    } finally { setSending(false); }
   };
 
   const handleChatFile = (event) => {
@@ -4691,7 +4693,7 @@ function CoachInbox() {
         } else {
           body = kind === "image" ? "[Image]" : kind === "voice" ? "[Message vocal]" : `[Fichier] ${message.fileName || ""}`.trim();
         }
-        if (body) { try { await sendBackendMessage({ accessToken: token, body, kind }); } catch { /* ignore */ } }
+        if (body) { try { await sendBackendMessage({ accessToken: token, body, kind }); } catch (e) { alert("Erreur d'envoi : " + (e.message || "Erreur inconnue")); } }
       })();
     }
   };
