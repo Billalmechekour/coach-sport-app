@@ -4356,7 +4356,7 @@ function CoachChatInbox({ onUnread }) {
     return list;
   }, [conversations, search, readFilter, sort, dateFrom, dateTo]);
 
-  const fmtWhen = (iso) => { try { return new Date(iso).toLocaleString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return ""; } };
+  const fmtWhen = (iso) => { try { return new Date(iso).toLocaleString("fr-FR", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }).replace(" à ", ", "); } catch { return ""; } };
   const preview = (c) => {
     const prefix = c.last_sender === "coach" ? "Vous : " : "";
     const body = c.last_kind && c.last_kind !== "text" ? `[${c.last_kind === "image" ? "Image" : c.last_kind === "voice" ? "Vocal" : "Fichier"}]` : c.last_message;
@@ -4690,6 +4690,9 @@ function CoachChatInbox({ onUnread }) {
                   <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-slate-900 text-sm font-black text-white">
                     {c.athlete_avatar ? <img src={c.athlete_avatar} alt="" className="h-full w-full object-cover" /> : <span>{getInitials(c.athlete_name)}</span>}
                   </div>
+                  {onlineAthletes.has(c.athlete_id) && (
+                    <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-green-500" />
+                  )}
                   {unread ? <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-red-500" /> : null}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -4789,15 +4792,54 @@ function CoachInbox() {
   };
   const openChat = () => { markChatRead(); setIsChatOpen(true); };
 
+  const [onlineAthletes, setOnlineAthletes] = useState(new Set());
+
   useEffect(() => {
-    const computeCoachOnline = () => {
-      const hour = new Date().getHours();
-      setCoachOnline(hour >= 8 && hour < 22);
+    let channel;
+    const initPresence = async () => {
+      try {
+        const client = getRealtimeClient();
+        if (!client) return;
+        
+        const presenceKey = __hmIsCoach ? 'coach' : (currentUser?.id || `athlete-${Math.random().toString(36).slice(2)}`);
+        channel = client.channel('hm-presence', {
+          config: { presence: { key: presenceKey } }
+        });
+        
+        channel.on('presence', { event: 'sync' }, () => {
+          const state = channel.presenceState();
+          let isCoachHere = false;
+          const athletes = new Set();
+          
+          Object.values(state).forEach(arr => {
+            arr.forEach(p => {
+              if (p.isCoach) isCoachHere = true;
+              else if (p.athleteId) athletes.add(p.athleteId);
+            });
+          });
+          
+          setCoachOnline(isCoachHere);
+          setOnlineAthletes(athletes);
+        });
+        
+        channel.subscribe(async (status) => {
+          if (status === 'SUBSCRIBED') {
+            await channel.track({ 
+              isCoach: __hmIsCoach, 
+              athleteId: __hmIsCoach ? null : currentUser?.id 
+            });
+          }
+        });
+      } catch (e) { console.error("Presence error", e); }
     };
-    computeCoachOnline();
-    const interval = setInterval(computeCoachOnline, 60000);
-    return () => clearInterval(interval);
-  }, []);
+    initPresence();
+    
+    return () => {
+      if (channel) {
+        try { channel.untrack(); getRealtimeClient()?.removeChannel(channel); } catch {}
+      }
+    };
+  }, [currentUser?.id]);
 
 
   useEffect(() => {
@@ -8020,14 +8062,45 @@ function ShopPage({
   const [coachOnline, setCoachOnline] = useState(false);
 
   useEffect(() => {
-    const computeCoachOnline = () => {
-      const hour = new Date().getHours();
-      setCoachOnline(hour >= 8 && hour < 22);
+    let channel;
+    const initPresence = async () => {
+      try {
+        const client = getRealtimeClient();
+        if (!client) return;
+        
+        const presenceKey = currentUser?.id || `athlete-${Math.random().toString(36).slice(2)}`;
+        channel = client.channel('hm-presence', {
+          config: { presence: { key: presenceKey } }
+        });
+        
+        channel.on('presence', { event: 'sync' }, () => {
+          const state = channel.presenceState();
+          let isCoachHere = false;
+          
+          Object.values(state).forEach(arr => {
+            arr.forEach(p => {
+              if (p.isCoach) isCoachHere = true;
+            });
+          });
+          
+          setCoachOnline(isCoachHere);
+        });
+        
+        channel.subscribe(async (status) => {
+          if (status === 'SUBSCRIBED') {
+            await channel.track({ isCoach: false, athleteId: currentUser?.id });
+          }
+        });
+      } catch (e) { console.error("Presence error", e); }
     };
-    computeCoachOnline();
-    const interval = setInterval(computeCoachOnline, 60000);
-    return () => clearInterval(interval);
-  }, []);
+    initPresence();
+    
+    return () => {
+      if (channel) {
+        try { channel.untrack(); getRealtimeClient()?.removeChannel(channel); } catch {}
+      }
+    };
+  }, [currentUser?.id]);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -11774,7 +11847,7 @@ function CoachMessagesPage({ refreshSession, onToast, onUnreadChange, authInputC
   }, [conversations, search, readFilter, sort, dateFrom, dateTo]);
 
   const fmtWhen = (iso) => {
-    try { return new Date(iso).toLocaleString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }); }
+    try { return new Date(iso).toLocaleString("fr-FR", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }).replace(" à ", ", "); }
     catch { return ""; }
   };
   const preview = (c) => {
