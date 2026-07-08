@@ -4289,6 +4289,7 @@ function CoachChatInbox({ onUnread }) {
           <div className="min-w-0 flex-1">
             <p className="truncate font-display text-sm font-black text-slate-900">{activeName}</p>
             <p className="text-[11px] font-semibold text-emerald-500">● En ligne</p>
+            <p className="text-[10px] font-mono text-orange-500">[DEBUG] {thread.length} msgs | dernier: {thread.length ? `[${thread[thread.length-1]?.sender}] ${(thread[thread.length-1]?.body || "").slice(0,25)}` : "vide"}</p>
           </div>
         </div>
 
