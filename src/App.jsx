@@ -4713,6 +4713,15 @@ function CoachChatInbox({ onUnread }) {
 }
 
 function CoachInbox() {
+  const [currentUser] = useState(() => {
+    try {
+      if (typeof window === "undefined") return null;
+      const saved = window.localStorage.getItem("hm-current-user");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [selectedNotifs, setSelectedNotifs] = useState([]);
   const [notifFilter, setNotifFilter] = useState("all");
@@ -11302,9 +11311,8 @@ async function uploadChatMedia(accessToken, dataUrl, kind, _fileName) {
 
 
 async function fetchCoachConversations(accessToken) {
-
   const data = await callSupabaseFunctionWithAuth("messages", { action: "conversations" }, accessToken);
-  const convs = Array.isArray(data?.conversations) ? data.conversations : [];
+  const convs = Array.isArray(data?.conversations) ? data.conversations.map(c => ({ ...c, athlete_name: formatPersonName(c.athlete_name) })) : [];
   console.log("[DEBUG-MSG] fetchCoachConversations:", convs.length, "conversations.", convs.length ? "Dernier msg:" + convs[0]?.last_message + " unread:" + convs[0]?.unread : "");
   return convs;
 }
