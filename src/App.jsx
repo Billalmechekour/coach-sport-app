@@ -4136,17 +4136,28 @@ function CoachChatInbox({ onUnread }) {
     // eslint-disable-next-line
   }, []);
 
-  // Filet de sécurité : rafraîchissement discret toutes les 4 s.
+  // Filet de sécurité : rafraîchissement discret toutes les 2 s.
   useEffect(() => {
     const iv = setInterval(async () => {
       const token = await getHmToken();
       if (!token) return;
       if (activeId) {
-        try { const m = await fetchMessageThread({ accessToken: token, athleteId: activeId }); setThread((p) => (p.length !== m.length ? m : p)); } catch { /* ignore */ }
+        try {
+          const m = await fetchMessageThread({ accessToken: token, athleteId: activeId });
+          setThread((prev) => {
+            const prevLastId = prev.length ? prev[prev.length - 1]?.id : null;
+            const newLastId = m.length ? m[m.length - 1]?.id : null;
+            if (prevLastId !== newLastId || prev.length !== m.length) {
+              console.log("[CHAT] Thread mis à jour:", m.length, "messages (dernier:", m[m.length - 1]?.body?.slice(0, 30), ")");
+              return m;
+            }
+            return prev;
+          });
+        } catch { /* ignore */ }
       } else {
         loadConversations(true);
       }
-    }, 4000);
+    }, 2000);
     return () => clearInterval(iv);
     // eslint-disable-next-line
   }, [activeId]);
@@ -4747,7 +4758,7 @@ function CoachInbox() {
       });
     };
     connect();
-    const interval = setInterval(pull, 4000);
+    const interval = setInterval(pull, 2000);
     return () => { cancelled = true; clearInterval(interval); if (reconnectTimer) clearTimeout(reconnectTimer); unsub(); };
   }, []);
   const sendChatText = () => {
