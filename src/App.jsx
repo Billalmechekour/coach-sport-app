@@ -4077,7 +4077,7 @@ function VoicePlayer({ src, isMine }) {
 }
 
 // Inbox du coach (thème clair) rendue dans le drawer « Ma messagerie » de la barre du haut.
-function CoachChatInbox({ onUnread }) {
+function CoachChatInbox({ onUnread, onlineAthletes = new Set() }) {
 
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -5371,7 +5371,7 @@ function CoachInbox() {
               </div>
 
               {__hmIsCoach ? (
-                <CoachChatInbox />
+                <CoachChatInbox onlineAthletes={onlineAthletes} />
               ) : (
               <>
               <div className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-slate-50 px-4 py-4">
