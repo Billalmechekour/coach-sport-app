@@ -4390,11 +4390,6 @@ function CoachChatInbox({ onUnread }) {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 opacity-70"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                     Vider ma conversation
                   </button>
-                  <div className="h-px bg-slate-200/60 my-1 mx-2" />
-                  <button onClick={() => handleClearChat("mine")} className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-bold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 opacity-70"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
-                    Supprimer mes messages
-                  </button>
                 </div>
               )}
             </div>
@@ -4470,9 +4465,9 @@ function CoachChatInbox({ onUnread }) {
 
                 const reactionsList = Object.entries(m.reactions || {});
                 const reactionChips = reactionsList.length > 0 ? (
-                  <div className={`absolute -bottom-3 ${mine ? "right-2" : "left-2"} flex gap-1 z-10`}>
+                  <div className={`flex flex-wrap gap-1 mt-0.5 ${mine ? "justify-end pr-2" : "justify-start pl-2"}`}>
                     {reactionsList.map(([userKey, emoji]) => (
-                      <div key={userKey} className="flex h-5 items-center justify-center rounded-full border border-slate-200 bg-white px-1.5 text-[11px] shadow-sm cursor-pointer hover:bg-slate-50" onClick={() => { if (userKey === "coach") handleReactMessage(m.id, "") }}>
+                      <div key={userKey} className="flex h-5 items-center justify-center rounded-full border border-brand-300 bg-brand-50 px-1.5 text-[11px] shadow-sm font-bold text-slate-700 cursor-pointer hover:bg-brand-100 transition" onClick={() => { if (userKey === "coach") handleReactMessage(m.id, "") }}>
                         {emoji}
                       </div>
                     ))}
@@ -4573,7 +4568,14 @@ function CoachChatInbox({ onUnread }) {
                       </div>
                     </div>
                     {isLastInGroup && (
-                      <p className={`mt-1 text-[10px] font-semibold ${mine ? "text-right text-slate-400 pr-0" : "text-left text-slate-400 pl-9"}`}>{timeStr}</p>
+                      <p className={`mt-1 text-[10px] font-semibold flex items-center gap-1 ${mine ? "justify-end text-slate-400" : "justify-start text-slate-400 pl-9"}`}>
+                        {timeStr}
+                        {mine && (
+                          <span className={`ml-0.5 ${m.read_by_athlete ? "text-brand-500 font-bold" : "text-slate-400"}`}>
+                            · {m.read_by_athlete ? "Vu" : "Envoyé"}
+                          </span>
+                        )}
+                      </p>
                     )}
                   </div>
                 );
@@ -5308,11 +5310,6 @@ function CoachInbox() {
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 opacity-70"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                           Vider ma conversation
                         </button>
-                        <div className="h-px bg-slate-200/60 my-1 mx-2" />
-                        <button onClick={() => handleClearChat("mine")} className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-bold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 opacity-70"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
-                          Supprimer mes messages
-                        </button>
                       </div>
                     )}
                   </div>
@@ -5391,9 +5388,14 @@ function CoachInbox() {
                     </div>
                   ) : null;
                   const timeLine = (
-                    <p className={`mt-1 flex items-center gap-1 text-[10px] ${isCoach ? "justify-start text-slate-400" : "justify-end text-slate-900/60"}`}>
+                    <p className={`mt-1 flex items-center gap-1 text-[10px] font-semibold ${isCoach ? "justify-start text-slate-400" : "justify-end text-slate-900/60"}`}>
                       {message.edited ? <span>(modifié)</span> : null}
                       {new Date(message.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                      {!isCoach && message.id !== "coach-welcome" && (
+                        <span className={`ml-0.5 ${message.read_by_coach ? "text-brand-700 font-bold" : "text-slate-900/60"}`}>
+                          · {message.read_by_coach ? "Vu" : "Envoyé"}
+                        </span>
+                      )}
                     </p>
                   );
                   const bubbleInner = isEditing ? (
@@ -5433,9 +5435,16 @@ function CoachInbox() {
                   }
                   return (
                     <div key={message.id} className="flex flex-col items-end gap-1">
-                      <div className="flex max-w-[90%] items-center gap-1.5">
+                      <div className="flex max-w-[90%] items-end gap-1.5">
                         {actionButtons}
                         <div className="rounded-2xl rounded-br-sm bg-brand-400 px-3 py-2 text-sm text-slate-950">{bubbleInner}</div>
+                        {currentUser?.avatarUrl ? (
+                          <img src={currentUser.avatarUrl} alt="" className="h-7 w-7 shrink-0 rounded-full object-cover" />
+                        ) : (
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-slate-700 to-slate-900 text-[10px] font-black text-white">
+                            {getInitials(currentUser?.fullName || "Athlète")}
+                          </div>
+                        )}
                       </div>
                       {picker}
                       {reactionChips}

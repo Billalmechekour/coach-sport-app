@@ -80,7 +80,12 @@ async function loadProfiles(supabase: ReturnType<typeof createAdminClient>, ids:
     .select("id,first_name,last_name,avatar_url")
     .in("id", ids);
   for (const row of (data || []) as Record<string, unknown>[]) {
-    const name = `${String(row.first_name || "").trim()} ${String(row.last_name || "").trim()}`.trim();
+    let rawName = `${String(row.first_name || "").trim()} ${String(row.last_name || "").trim()}`.trim();
+    if (!rawName) rawName = "Athlète";
+    
+    // Capitaliser chaque mot
+    const name = rawName.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+    
     map.set(String(row.id), { name, avatar: String(row.avatar_url || "").trim() });
   }
   return map;
