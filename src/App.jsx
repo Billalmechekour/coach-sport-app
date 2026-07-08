@@ -4890,7 +4890,7 @@ function CoachInbox() {
       const token = await getHmToken();
       if (!token || cancelled) return;
       unsub();
-      unsub = subscribeToMessagesChannel(token, (row) => { if (row?.sender === "coach") pull(); }, () => {
+      unsub = subscribeToMessagesChannel(token, (row) => { pull(); }, () => {
         if (!cancelled) reconnectTimer = setTimeout(connect, 3000);
       });
     };
@@ -11197,8 +11197,12 @@ function subscribeToMessagesChannel(accessToken, onInsert, onDisconnect) {
   try { client.realtime.setAuth(accessToken); } catch { /* ignore */ }
   const channel = client
     .channel(`hm-messages-${Math.random().toString(36).slice(2, 8)}`)
-    .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
-      try { onInsert(payload.new); } catch { /* ignore */ }
+    .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, (payload) => {
+      try { 
+        if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
+          onInsert(payload.new); 
+        }
+      } catch { /* ignore */ }
     })
     .subscribe((status) => {
       if ((status === "CLOSED" || status === "CHANNEL_ERROR") && typeof onDisconnect === "function") {
