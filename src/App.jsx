@@ -3991,11 +3991,11 @@ async function generateInvoicePdf({ items, total, customerName, customerEmail, i
 
 // ===== Composant lecteur vocal (beau design messenger) =====
 function VoicePlayer({ src, isMine }) {
-  const audioRef = React.useRef(null);
-  const [playing, setPlaying] = React.useState(false);
-  const [progress, setProgress] = React.useState(0);
-  const [currentTime, setCurrentTime] = React.useState(0);
-  const [duration, setDuration] = React.useState(0);
+  const audioRef = useRef(null);
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
 
   const fmt = (s) => { const m = Math.floor((s || 0) / 60); const sec = Math.floor((s || 0) % 60); return `${m}:${sec.toString().padStart(2, "0")}`; };
 
