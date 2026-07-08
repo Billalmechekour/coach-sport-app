@@ -5,9 +5,10 @@ import {
   jsonResponse,
 } from "../_shared/reset-helpers.ts";
 
-const COACH_EMAILS = ["noreply.hicham.fit@gmail.com", "billalmechekour6@gmail.com"];
+const COACH_EMAILS = ["noreply.hicham.fit@gmail.com", "billalmechekour6@gmail.com", "hichamechkour39@gmail.com"];
 
 function isCoachUser(user: { email?: string | null; app_metadata?: Record<string, unknown>; user_metadata?: Record<string, unknown> }) {
+  if (!user) return false;
   const email = String(user.email || "").trim().toLowerCase();
   if (COACH_EMAILS.includes(email)) return true;
   return Boolean(user.app_metadata?.is_coach || user.user_metadata?.is_coach);
@@ -71,7 +72,6 @@ async function ensureBucketAndUpload(base64: string, mimeType: string, kind: str
     "apikey": serviceKey,
   };
 
-  // 1. Créer le bucket si absent (ignore les erreurs si déjà existant)
   try {
     await fetch(`${storageBase}/bucket`, {
       method: "POST",
@@ -80,7 +80,6 @@ async function ensureBucketAndUpload(base64: string, mimeType: string, kind: str
     });
   } catch { /* bucket existe déjà */ }
 
-  // 2. Décoder base64 → bytes
   let bytes: Uint8Array;
   try {
     const binary = atob(base64);
@@ -88,7 +87,6 @@ async function ensureBucketAndUpload(base64: string, mimeType: string, kind: str
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   } catch { return null; }
 
-  // 3. Upload
   const ext = kind === "voice" ? "webm" : kind === "image" ? "jpg" : "bin";
   const path = `${kind}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
   const uploadUrl = `${storageBase}/object/chat-media/${path}`;
@@ -99,12 +97,7 @@ async function ensureBucketAndUpload(base64: string, mimeType: string, kind: str
     body: bytes,
   });
 
-  if (!res.ok) {
-    const err = await res.text().catch(() => "");
-    console.error("storage upload failed", res.status, err);
-    return null;
-  }
-
+  if (!res.ok) return null;
   return `${storageBase}/object/public/chat-media/${path}`;
 }
 
@@ -123,7 +116,6 @@ Deno.serve(async (request) => {
     const user = await getAuthenticatedUser(request, supabase);
     const coach = isCoachUser(user);
 
-    // ── Upload média ──────────────────────────────────────────────────────────
     if (action === "upload-media") {
       const kind = normalizeKind(payload.kind);
       const base64 = String(payload.base64 || "").trim();
@@ -149,13 +141,13 @@ Deno.serve(async (request) => {
         sender: coach ? "coach" : "athlete",
         kind,
         body,
-        read_by_coach: coach,
-        read_by_athlete: !coach,
+        read_by_coach: coach,      // le coach a « lu » ce qu'il envoie
+        read_by_athlete: !coach,   // l'athlète a « lu » ce qu'il envoie
       };
       const { data, error } = await supabase.from("messages").insert(row).select("*").single();
       if (error || !data) {
         console.error("message send error", error);
-        return errorResponse(500, "SEND_FAILED", "Impossible d'envoyer le message.");
+        return errorResponse(500, "SEND_FAILED", "Impossible d’envoyer le message.");
       }
       return jsonResponse({ success: true, message: serializeMessage(data as Record<string, unknown>) });
     }
@@ -217,7 +209,7 @@ Deno.serve(async (request) => {
       if (!aid) continue;
       let entry = byAthlete.get(aid);
       if (!entry) {
-        entry = { last: raw, unread: 0 };
+        entry = { last: raw, unread: 0 }; // 1re occurrence = dernier message (tri desc)
         byAthlete.set(aid, entry);
       }
       if (String(raw.sender) === "athlete" && !raw.read_by_coach) entry.unread += 1;
