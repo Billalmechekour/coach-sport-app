@@ -218,9 +218,8 @@ serve(async (request) => {
       if (!msg) return errorResponse(404, "NOT_FOUND", "Message introuvable.");
 
       // Check permissions: coach can react to athlete messages or own, athlete can react to coach messages or own
-      // Actually, anyone in the conversation can react.
       const isOwner = coach ? msg.sender === "coach" : msg.sender === "athlete";
-      const isRecipient = coach ? msg.athlete_id === targetAthleteId : msg.athlete_id === user.id;
+      const isRecipient = coach ? true : msg.athlete_id === user.id;
       if (!isOwner && !isRecipient) return errorResponse(403, "FORBIDDEN", "Accès refusé.");
 
       const reactions = (msg.reactions as Record<string, string>) || {};

@@ -4235,21 +4235,28 @@ function CoachChatInbox({ onUnread }) {
       }
     } catch { alert("Erreur lors de la suppression"); }
   };
-  const handleReactMessage = async (msgId, reaction) => {
+  const handleReactMessage = async (msgId, emoji) => {
     try {
+      const msg = thread.find(m => m.id === msgId);
+      if (!msg) return;
+      
       const token = await getHmToken();
       if (!token) return;
+      
+      const currentCoachReaction = msg.reactions?.coach;
+      const reactionToSend = currentCoachReaction === emoji ? "" : emoji;
+
       setThread((prev) => prev.map((m) => {
         if (m.id === msgId) {
           const newReactions = { ...(m.reactions || {}) };
-          if (reaction) newReactions.coach = reaction;
+          if (reactionToSend) newReactions.coach = reactionToSend;
           else delete newReactions.coach;
           return { ...m, reactions: newReactions };
         }
         return m;
       }));
       setActiveReactionId(null);
-      await reactBackendMessage({ accessToken: token, messageId: msgId, reaction });
+      await reactBackendMessage({ accessToken: token, messageId: msgId, reaction: reactionToSend });
     } catch { /* ignore */ }
   };
 
@@ -4451,7 +4458,7 @@ function CoachChatInbox({ onUnread }) {
                 const reactionPicker = activeReactionId === m.id && (
                   <div className={`absolute z-20 top-1/2 -translate-y-1/2 flex flex-wrap gap-1 rounded-2xl bg-white p-2 shadow-[0_4px_20px_rgba(0,0,0,0.15)] border border-slate-200 w-64 ${mine ? "right-[calc(100%+0.5rem)]" : "left-[calc(100%+0.5rem)]"}`}>
                     {["👍","👎","❤️","🔥","😂","😮","😢","😡","💪","🎉","🙏","👏","😍","🤔","💯","🥇","😎","🏆","✅","⚡","💥","🤩","😴","🤣","🫶"].map((emoji) => (
-                      <button key={emoji} onClick={() => handleReactMessage(m.id, emoji)} className="flex h-8 w-8 items-center justify-center rounded-full text-lg transition hover:bg-slate-100 hover:scale-125">{emoji}</button>
+                      <button key={emoji} onClick={() => handleReactMessage(m.id, emoji)} className={`flex h-8 w-8 items-center justify-center rounded-full text-lg transition hover:scale-125 ${m.reactions?.coach === emoji ? "bg-brand-100 ring-1 ring-brand-400" : "hover:bg-slate-100"}`}>{emoji}</button>
                     ))}
                   </div>
                 );
