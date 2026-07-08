@@ -431,3 +431,14 @@ on storage.objects for delete
 to authenticated
 using (bucket_id = 'chat-media' and owner = auth.uid());
 
+-- ===== Realtime pour la messagerie =====
+ALTER PUBLICATION supabase_realtime ADD TABLE messages;
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "messages_realtime_policy" ON messages;
+CREATE POLICY "messages_realtime_policy" ON messages
+FOR SELECT TO authenticated USING (
+  athlete_id = auth.uid() OR 
+  (auth.jwt()->>'email' IN ('noreply.hicham.fit@gmail.com', 'billalmechekour6@gmail.com')) OR 
+  (auth.jwt()->'app_metadata'->>'is_coach' = 'true')
+);
