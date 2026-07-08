@@ -4432,20 +4432,26 @@ function CoachChatInbox({ onUnread }) {
                 
                 const actionMenu = !isEditing && (
                   <div className={`absolute top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 ${mine ? "right-full mr-2" : "left-full ml-2"}`}>
-                    <button onClick={() => setActiveReactionId(m.id)} className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm border border-slate-100 hover:text-brand-500 hover:bg-slate-50">😀</button>
+                    <button onClick={() => setActiveReactionId(m.id)} className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm border border-slate-200 hover:text-brand-500 hover:bg-slate-50 transition" title="Réagir">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01"/><path d="M15 9h.01"/></svg>
+                    </button>
                     {mine && m.kind === "text" && (
-                      <button onClick={() => setEditingMsg({ id: m.id, text: m.body })} className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm border border-slate-100 hover:text-blue-500 hover:bg-slate-50">✏️</button>
+                      <button onClick={() => setEditingMsg({ id: m.id, text: m.body })} className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm border border-slate-200 hover:text-blue-500 hover:bg-slate-50 transition" title="Modifier">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                      </button>
                     )}
                     {mine && (
-                      <button onClick={() => handleDeleteMessage(m.id)} className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm border border-slate-100 hover:text-red-500 hover:bg-slate-50">🗑️</button>
+                      <button onClick={() => handleDeleteMessage(m.id)} className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm border border-slate-200 hover:text-red-500 hover:bg-rose-50 transition" title="Supprimer">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                      </button>
                     )}
                   </div>
                 );
                 
                 const reactionPicker = activeReactionId === m.id && (
-                  <div className={`absolute z-20 -top-10 ${mine ? "right-0" : "left-0"} flex gap-1 rounded-full bg-white p-1.5 shadow-md border border-slate-200`}>
-                    {["👍", "❤️", "😂", "😮", "😢", "💪"].map((emoji) => (
-                      <button key={emoji} onClick={() => handleReactMessage(m.id, emoji)} className="flex h-7 w-7 items-center justify-center rounded-full text-lg transition hover:bg-slate-100 hover:scale-110">{emoji}</button>
+                  <div className={`absolute z-20 top-1/2 -translate-y-1/2 flex flex-wrap gap-1 rounded-2xl bg-white p-2 shadow-[0_4px_20px_rgba(0,0,0,0.15)] border border-slate-200 w-64 ${mine ? "right-[calc(100%+0.5rem)]" : "left-[calc(100%+0.5rem)]"}`}>
+                    {["👍","👎","❤️","🔥","😂","😮","😢","😡","💪","🎉","🙏","👏","😍","🤔","💯","🥇","😎","🏆","✅","⚡","💥","🤩","😴","🤣","🫶"].map((emoji) => (
+                      <button key={emoji} onClick={() => handleReactMessage(m.id, emoji)} className="flex h-8 w-8 items-center justify-center rounded-full text-lg transition hover:bg-slate-100 hover:scale-125">{emoji}</button>
                     ))}
                   </div>
                 );
@@ -4860,11 +4866,7 @@ function CoachInbox() {
           msgs.forEach((m) => {
             const kind = m.kind || "text";
             const isMedia = ["voice", "image", "file"].includes(kind);
-            let athleteReaction = "";
-            let coachReaction = "";
-            if (m.reactions && m.reactions.athlete) athleteReaction = m.reactions.athlete;
-            if (m.reactions && m.reactions.coach) coachReaction = m.reactions.coach;
-            const allReactions = [athleteReaction, coachReaction].filter(Boolean);
+            const reactionsObj = m.reactions || {};
 
             const existingIdx = next.findIndex(x => x.backendId === m.id);
             if (existingIdx >= 0) {
@@ -4872,11 +4874,11 @@ function CoachInbox() {
               const newText = isMedia ? "" : m.body;
               const newEdited = !!m.edited_at;
               const newDeleted = !!m.deleted_at;
-              const reactionsStr = JSON.stringify(ex.reactions || []);
-              const newReactionsStr = JSON.stringify(allReactions);
+              const reactionsStr = JSON.stringify(ex.reactions || {});
+              const newReactionsStr = JSON.stringify(reactionsObj);
 
               if (ex.text !== newText || ex.edited !== newEdited || ex.deleted !== newDeleted || reactionsStr !== newReactionsStr) {
-                next[existingIdx] = { ...ex, text: newText, edited: newEdited, deleted: newDeleted, reactions: allReactions };
+                next[existingIdx] = { ...ex, text: newText, edited: newEdited, deleted: newDeleted, reactions: reactionsObj };
                 changed = true;
               }
             } else {
@@ -4890,7 +4892,7 @@ function CoachInbox() {
                   dataUrl: isMedia ? m.body : undefined,
                   fileName: kind === "file" ? "Document" : undefined,
                   date: m.created_at,
-                  reactions: allReactions,
+                  reactions: reactionsObj,
                   edited: !!m.edited_at,
                   deleted: false
                 });
@@ -5019,9 +5021,12 @@ function CoachInbox() {
       persistChat(
         current.map((m) => {
           if (m.id !== id) return m;
-          const reactions = Array.isArray(m.reactions) ? m.reactions : [];
-          newEmoji = reactions.includes(emoji) ? "" : emoji;
-          return { ...m, reactions: newEmoji ? [newEmoji] : [] };
+          const currentReactions = m.reactions || {};
+          newEmoji = currentReactions.athlete === emoji ? "" : emoji;
+          const nextReactions = { ...currentReactions };
+          if (newEmoji) nextReactions.athlete = newEmoji;
+          else delete nextReactions.athlete;
+          return { ...m, reactions: nextReactions };
         })
       )
     );
@@ -5229,11 +5234,12 @@ function CoachInbox() {
                     );
                   }
                   const isEditing = editingMessageId === message.id;
-                  const reactions = Array.isArray(message.reactions) ? message.reactions : [];
+                  const reactionsObjCheck = message.reactions || {};
+                  const reactionsListCheck = Object.values(reactionsObjCheck);
                   const actionButtons = (
                     <div className="flex items-center gap-0.5">
-                      <button type="button" onClick={() => setReactionPickerId((current) => (current === message.id ? null : message.id))} title="Réagir" aria-label="Réagir" className={`flex h-6 w-6 items-center justify-center rounded-full text-xs transition hover:bg-slate-200 hover:text-slate-700 ${reactions.length > 0 ? "bg-slate-200" : "text-slate-400"}`}>
-                        {reactions.length > 0 ? reactions[0] : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><path d="M9 9h.01M15 9h.01" /></svg>}
+                      <button type="button" onClick={() => setReactionPickerId((current) => (current === message.id ? null : message.id))} title="Réagir" aria-label="Réagir" className={`flex h-6 w-6 items-center justify-center rounded-full text-xs transition hover:bg-slate-200 hover:text-slate-700 ${reactionsListCheck.length > 0 ? "bg-slate-200" : "text-slate-400"}`}>
+                        {reactionsListCheck.length > 0 ? reactionsListCheck[0] : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><path d="M9 9h.01M15 9h.01" /></svg>}
                       </button>
                       {!isCoach && message.type === "text" ? (
                         <button type="button" onClick={() => startEditMessage(message)} title="Modifier" aria-label="Modifier" className="flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-200 hover:text-slate-700">
@@ -5247,18 +5253,20 @@ function CoachInbox() {
                       ) : null}
                     </div>
                   );
+                  const reactionsObj = message.reactions || {};
+                  const reactionsList = Object.entries(reactionsObj);
                   const CHAT_EMOJIS = ["👍","👎","❤️","🔥","😂","😮","😢","😡","💪","🎉","🙏","👏","😍","🤔","💯","🥇","😎","🏆","✅","⚡","💥","🤩","😴","🤣","🫶"];
                   const picker = reactionPickerId === message.id ? (
-                    <div className="flex max-w-[16rem] flex-wrap gap-1 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-xl">
+                    <div className="flex max-w-[16rem] flex-wrap gap-1 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-xl z-20 absolute top-1/2 -translate-y-1/2 left-8">
                       {CHAT_EMOJIS.map((emoji) => (
-                        <button key={emoji} type="button" onClick={() => toggleChatReaction(message.id, emoji)} className={`text-base transition hover:scale-125 rounded-full p-0.5 ${reactions.includes(emoji) ? "bg-brand-100 ring-1 ring-brand-400" : ""}`}>{emoji}</button>
+                        <button key={emoji} type="button" onClick={() => toggleChatReaction(message.id, emoji)} className={`text-base transition hover:scale-125 rounded-full p-0.5 ${reactionsObj.athlete === emoji ? "bg-brand-100 ring-1 ring-brand-400" : ""}`}>{emoji}</button>
                       ))}
                     </div>
                   ) : null;
-                  const reactionChips = reactions.length ? (
+                  const reactionChips = reactionsList.length ? (
                     <div className={`flex flex-wrap gap-1 ${isCoach ? "justify-start pl-9" : "justify-end"}`}>
-                      {reactions.map((emoji) => (
-                        <button key={emoji} type="button" onClick={() => toggleChatReaction(message.id, emoji)} className="rounded-full border border-brand-300 bg-brand-50 px-2 py-0.5 text-xs shadow-sm font-bold text-slate-700 hover:bg-brand-100 transition">{emoji}</button>
+                      {reactionsList.map(([userKey, emoji]) => (
+                        <button key={userKey} type="button" onClick={() => { if (userKey === "athlete") toggleChatReaction(message.id, emoji) }} className="rounded-full border border-brand-300 bg-brand-50 px-2 py-0.5 text-xs shadow-sm font-bold text-slate-700 hover:bg-brand-100 transition">{emoji}</button>
                       ))}
                     </div>
                   ) : null;
