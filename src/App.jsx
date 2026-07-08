@@ -4385,9 +4385,16 @@ function CoachChatInbox({ onUnread }) {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
               </button>
               {showClearMenu && (
-                <div className="absolute right-0 top-full mt-1 w-48 rounded-xl bg-white p-1 shadow-lg border border-slate-200 z-50">
-                  <button onClick={() => handleClearChat("all-for-me")} className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 transition">Vider ma conversation</button>
-                  <button onClick={() => handleClearChat("mine")} className="w-full rounded-lg px-3 py-2 text-left text-sm text-red-600 hover:bg-rose-50 transition">Supprimer mes messages</button>
+                <div className="absolute right-0 top-full mt-2 w-64 rounded-2xl bg-white/95 backdrop-blur-md p-1.5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-200/60 z-50 transform origin-top-right transition-all animate-in fade-in zoom-in-95">
+                  <button onClick={() => handleClearChat("all-for-me")} className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 opacity-70"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Vider ma conversation
+                  </button>
+                  <div className="h-px bg-slate-200/60 my-1 mx-2" />
+                  <button onClick={() => handleClearChat("mine")} className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-bold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 opacity-70"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                    Supprimer mes messages
+                  </button>
                 </div>
               )}
             </div>
@@ -4499,11 +4506,12 @@ function CoachChatInbox({ onUnread }) {
                 );
 
                 const deletePrompt = deletePromptMsgId === m.id && (
-                  <div className={`absolute z-30 top-1/2 -translate-y-1/2 flex flex-col gap-1 rounded-xl bg-white p-2 shadow-xl border border-slate-200 w-48 ${mine ? "right-[calc(100%+0.5rem)]" : "left-[calc(100%+0.5rem)]"}`}>
-                    <p className="text-xs font-bold text-slate-800 mb-1 px-1">Supprimer le message</p>
-                    <button onClick={() => handleConfirmDelete(m.id, "me")} className="w-full text-left px-2 py-1.5 text-xs text-slate-600 hover:bg-slate-50 rounded-lg transition">Pour moi</button>
-                    {mine && <button onClick={() => handleConfirmDelete(m.id, "everyone")} className="w-full text-left px-2 py-1.5 text-xs text-red-600 hover:bg-rose-50 rounded-lg transition">Pour tout le monde</button>}
-                    <button onClick={() => setDeletePromptMsgId(null)} className="w-full text-left px-2 py-1.5 text-xs text-slate-400 hover:bg-slate-50 rounded-lg transition border-t border-slate-100 mt-1">Annuler</button>
+                  <div className={`absolute z-30 top-1/2 -translate-y-1/2 flex flex-col gap-1 rounded-2xl bg-white/95 backdrop-blur-md p-1.5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-200/60 w-52 animate-in fade-in zoom-in-95 ${mine ? "right-[calc(100%+0.75rem)]" : "left-[calc(100%+0.75rem)]"}`}>
+                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-1 px-2 pt-1">Supprimer</p>
+                    <button onClick={() => handleConfirmDelete(m.id, "me")} className="w-full text-left px-3 py-2 text-[13px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl transition-colors">Pour moi</button>
+                    {mine && <button onClick={() => handleConfirmDelete(m.id, "everyone")} className="w-full text-left px-3 py-2 text-[13px] font-black text-rose-600 hover:bg-rose-50 hover:text-rose-700 rounded-xl transition-colors">Pour tout le monde</button>}
+                    <div className="h-px bg-slate-200/60 my-0.5 mx-2" />
+                    <button onClick={() => setDeletePromptMsgId(null)} className="w-full text-left px-3 py-2 text-[13px] font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-700 rounded-xl transition-colors">Annuler</button>
                   </div>
                 );
 
@@ -4730,6 +4738,8 @@ function CoachInbox() {
   const [editingText, setEditingText] = useState("");
   const [reactionPickerId, setReactionPickerId] = useState(null);
   const [coachOnline, setCoachOnline] = useState(false);
+  const [deletePromptMsgId, setDeletePromptMsgId] = useState(null);
+  const [showClearMenu, setShowClearMenu] = useState(false);
   const [chatMessages, setChatMessages] = useState(() => {
     const welcome = {
       id: "coach-welcome",
@@ -5287,9 +5297,29 @@ function CoachInbox() {
                     </>
                   )}
                 </div>
-                <button type="button" onClick={() => { stopChatRecording(); setIsChatOpen(false); }} aria-label="Fermer" className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-500 transition hover:border-brand-400 hover:text-slate-900">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
-                </button>
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <button onClick={() => setShowClearMenu(!showClearMenu)} className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-400 hover:border-brand-400 hover:text-brand-500 transition">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+                    </button>
+                    {showClearMenu && (
+                      <div className="absolute right-0 top-full mt-2 w-64 rounded-2xl bg-white/95 backdrop-blur-md p-1.5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-200/60 z-50 transform origin-top-right transition-all animate-in fade-in zoom-in-95">
+                        <button onClick={() => handleClearChat("all-for-me")} className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 opacity-70"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                          Vider ma conversation
+                        </button>
+                        <div className="h-px bg-slate-200/60 my-1 mx-2" />
+                        <button onClick={() => handleClearChat("mine")} className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-bold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 opacity-70"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                          Supprimer mes messages
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <button type="button" onClick={() => { stopChatRecording(); setIsChatOpen(false); }} aria-label="Fermer" className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-500 transition hover:border-brand-400 hover:text-slate-900">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                  </button>
+                </div>
               </div>
 
               {__hmIsCoach ? (
@@ -5331,11 +5361,12 @@ function CoachInbox() {
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
                           </button>
                           {deletePromptMsgId === message.id && (
-                            <div className="absolute right-0 bottom-full mb-1 flex flex-col gap-1 rounded-xl bg-white p-2 shadow-xl border border-slate-200 w-48 z-30">
-                              <p className="text-[11px] font-bold text-slate-800 mb-1 px-1">Supprimer le message</p>
-                              <button onClick={() => confirmDeleteChatMessage(message.id, "me")} className="w-full text-left px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-50 rounded-md transition">Pour moi</button>
-                              <button onClick={() => confirmDeleteChatMessage(message.id, "everyone")} className="w-full text-left px-2 py-1 text-[11px] font-semibold text-red-600 hover:bg-rose-50 rounded-md transition">Pour tout le monde</button>
-                              <button onClick={() => setDeletePromptMsgId(null)} className="w-full text-left px-2 py-1 text-[11px] font-semibold text-slate-400 hover:bg-slate-50 rounded-md transition border-t border-slate-100 mt-1">Annuler</button>
+                            <div className="absolute right-0 bottom-full mb-2 flex flex-col gap-1 rounded-2xl bg-white/95 backdrop-blur-md p-1.5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-200/60 w-52 z-30 animate-in fade-in zoom-in-95">
+                              <p className="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-1 px-2 pt-1">Supprimer</p>
+                              <button onClick={() => confirmDeleteChatMessage(message.id, "me")} className="w-full text-left px-3 py-2 text-[13px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl transition-colors">Pour moi</button>
+                              <button onClick={() => confirmDeleteChatMessage(message.id, "everyone")} className="w-full text-left px-3 py-2 text-[13px] font-black text-rose-600 hover:bg-rose-50 hover:text-rose-700 rounded-xl transition-colors">Pour tout le monde</button>
+                              <div className="h-px bg-slate-200/60 my-0.5 mx-2" />
+                              <button onClick={() => setDeletePromptMsgId(null)} className="w-full text-left px-3 py-2 text-[13px] font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-700 rounded-xl transition-colors">Annuler</button>
                             </div>
                           )}
                         </div>
